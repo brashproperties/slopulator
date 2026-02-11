@@ -1080,18 +1080,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculate button
     document.getElementById('calculateBtn').addEventListener('click', runCalculations);
     
-    // Comp Me Daddy button
-    document.getElementById('compMeDaddyBtn').addEventListener('click', openCompMeDaddy);
+    // Comp Me Daddy button (with null check)
+    const compMeDaddyBtn = document.getElementById('compMeDaddyBtn');
+    if (compMeDaddyBtn) {
+        compMeDaddyBtn.addEventListener('click', openCompMeDaddy);
+    }
     
-    // Comp Me Daddy search button
-    document.getElementById('compMeDaddySearchBtn').addEventListener('click', runCompMeDaddyAnalysis);
+    // Comp Me Daddy search button (with null check)
+    const compMeDaddySearchBtn = document.getElementById('compMeDaddySearchBtn');
+    if (compMeDaddySearchBtn) {
+        compMeDaddySearchBtn.addEventListener('click', runCompMeDaddyAnalysis);
+    }
     
-    // Comp Me Daddy address input (Enter key)
-    document.getElementById('compMeDaddyAddress').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            runCompMeDaddyAnalysis();
-        }
-    });
+    // Comp Me Daddy address input (Enter key) (with null check)
+    const compMeDaddyAddress = document.getElementById('compMeDaddyAddress');
+    if (compMeDaddyAddress) {
+        compMeDaddyAddress.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                runCompMeDaddyAnalysis();
+            }
+        });
+    }
     
     // Save/Load/Print buttons
     document.getElementById('saveEvalBtn').addEventListener('click', saveEvaluation);
