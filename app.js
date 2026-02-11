@@ -382,9 +382,6 @@ async function loadPropertyData(address, lat, lon) {
         populateCompsTable(data.comps);
         document.getElementById('compsSection').style.display = 'table-row';
         
-        // Show the "Comp Me Daddy" button
-        showCompMeDaddyButton();
-        
         // Create sparkles
         const searchBtn = document.getElementById('searchBtn');
         createSparkles(searchBtn);
@@ -722,18 +719,55 @@ function showCompMeDaddyButton() {
 }
 
 function openCompMeDaddy() {
-    if (!currentPropertyData) {
-        alert('Search for a property first! 🔍');
-        return;
-    }
-    
     document.getElementById('compMeDaddyPage').style.display = 'block';
     document.body.style.overflow = 'hidden';
     
-    // Load all the data
-    loadRentCastAVM();
+    // If we already have property data from main search, pre-fill it
+    if (currentPropertyData && currentAddress) {
+        document.getElementById('compMeDaddyAddress').value = currentAddress;
+        // Auto-trigger analysis
+        runCompMeDaddyAnalysis();
+    }
+}
+
+async function runCompMeDaddyAnalysis() {
+    const address = document.getElementById('compMeDaddyAddress').value;
+    if (!address || address.length < 5) {
+        alert('Please enter a valid address! 🏠');
+        return;
+    }
+    
+    currentAddress = address;
+    
+    // Show loading state
+    document.getElementById('rentcastAVMLoading').style.display = 'block';
+    document.getElementById('rentcastAVMData').style.display = 'none';
+    document.getElementById('detailedCompsBody').innerHTML = '<tr><td colspan="6" align="center"><font color="#00FF00">Loading comps...</font></td></tr>';
+    document.getElementById('finishAnalysis').innerHTML = '<font color="#00FF00" face="Courier New">Analyzing market data...</font>';
+    
+    // Load mock property data for this address
+    await loadPropertyDataForCompMeDaddy(address);
+    
+    // Load all the analysis
+    await loadRentCastAVM();
     populateDetailedComps();
     generateFinishAnalysis();
+}
+
+async function loadPropertyDataForCompMeDaddy(address) {
+    // Generate mock data for the entered address
+    // In production, this would call your actual property data API
+    const mockData = mockPropertyData(address, 0, 0);
+    currentPropertyData = mockData;
+    
+    // Pre-populate the fields if they exist
+    const zestimateEl = document.getElementById('zestimate');
+    const realtorEl = document.getElementById('realtorEstimate');
+    
+    // Store values in the Comp Me Daddy page context
+    if (!window.compMeDaddyData) window.compMeDaddyData = {};
+    window.compMeDaddyData.zestimate = mockData.zestimate || 0;
+    window.compMeDaddyData.realtor_estimate = mockData.realtor_estimate || 0;
 }
 
 function closeCompMeDaddy() {
@@ -806,8 +840,10 @@ async function loadRentCastAVM() {
         
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
-        const realtorEst = parseFloat(document.getElementById('realtorEstimate').value) || 0;
+        // Check for Comp Me Daddy data context first, then fall back to main page inputs
+        const cmdData = window.compMeDaddyData || {};
+        const zestimate = cmdData.zestimate || parseFloat(document.getElementById('zestimate')?.value) || 0;
+        const realtorEst = cmdData.realtor_estimate || parseFloat(document.getElementById('realtorEstimate')?.value) || 0;
         const comps = currentPropertyData?.comps || [];
         
         let rentcastValue = 0;
@@ -1046,6 +1082,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Comp Me Daddy button
     document.getElementById('compMeDaddyBtn').addEventListener('click', openCompMeDaddy);
+    
+    // Comp Me Daddy search button
+    document.getElementById('compMeDaddySearchBtn').addEventListener('click', runCompMeDaddyAnalysis);
+    
+    // Comp Me Daddy address input (Enter key)
+    document.getElementById('compMeDaddyAddress').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            runCompMeDaddyAnalysis();
+        }
+    });
     
     // Save/Load/Print buttons
     document.getElementById('saveEvalBtn').addEventListener('click', saveEvaluation);

@@ -102,7 +102,8 @@
                                             <b>🔎 SEARCH NOW!!! 🔎</b>
                                         </button>
                                         <br><br>
-                                        <button id="compMeDaddyBtn" class="retro-button-comp" style="display:none; background: linear-gradient(45deg, #FF00FF, #00FFFF);">
+                                        <br><br>
+                                        <button id="compMeDaddyBtn" class="retro-button-comp" style="background: linear-gradient(45deg, #FF00FF, #00FFFF);">
                                             <marquee behavior="alternate" scrollamount="5" width="200">
                                                 <b>💎 COMP ME DADDY 💎</b>
                                             </marquee>
@@ -515,6 +516,26 @@
                                 <button onclick="closeCompMeDaddy()" class="retro-button-small">
                                     <b>👈 BACK TO SLOPULATOR</b>
                                 </button>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- ADDRESS INPUT SECTION -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#330033" style="border:5px ridge #FF00FF;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#00FFFF" size="5">
+                                    <b>🔍 ENTER PROPERTY ADDRESS 🔍</b>
+                                </font>
+                                <br><br>
+                                <input type="text" id="compMeDaddyAddress" class="retro-input" placeholder="e.g., 123 Main St, Evansville, IN" size="50">
+                                <br><br>
+                                <button id="compMeDaddySearchBtn" class="retro-button">
+                                    <b>🔎 ANALYZE COMPS 🔎</b>
+                                </button>
+                                <div id="compMeDaddySuggestions" class="suggestions"></div>
                             </td>
                         </tr>
                     </table>
