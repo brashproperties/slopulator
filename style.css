@@ -329,6 +329,50 @@ blink {
 }
 
 /* ============================================
+   COMP ME DADDY BUTTON
+   ============================================ */
+
+.retro-button-comp {
+    background: linear-gradient(45deg, #FF00FF, #00FFFF, #FF00FF);
+    background-size: 200% 200%;
+    color: #FFFF00;
+    border: 4px outset #FF00FF;
+    padding: 12px 30px;
+    font-family: 'Comic Sans MS', cursive;
+    font-size: 1.2rem;
+    cursor: pointer;
+    text-shadow: 2px 2px 4px #000;
+    box-shadow: 0 0 25px rgba(255,0,255,0.8);
+    animation: comp-button-shimmer 2s linear infinite, comp-button-pulse 1.5s ease-in-out infinite;
+    margin-top: 10px;
+}
+
+@keyframes comp-button-shimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes comp-button-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(255,0,255,0.8); }
+    50% { transform: scale(1.08); box-shadow: 0 0 40px rgba(0,255,255,1); }
+}
+
+.retro-button-comp:hover {
+    background: linear-gradient(45deg, #00FFFF, #FF00FF, #00FFFF);
+    background-size: 200% 200%;
+    border-color: #00FFFF;
+    box-shadow: 0 0 40px #00FFFF;
+    color: #000;
+    transform: scale(1.15) rotate(-3deg);
+}
+
+.retro-button-comp:active {
+    border-style: inset;
+    transform: scale(0.95);
+}
+
+/* ============================================
    BIG BLINKING NUMBERS
    ============================================ */
 

@@ -382,6 +382,9 @@ async function loadPropertyData(address, lat, lon) {
         populateCompsTable(data.comps);
         document.getElementById('compsSection').style.display = 'table-row';
         
+        // Show the "Comp Me Daddy" button
+        showCompMeDaddyButton();
+        
         // Create sparkles
         const searchBtn = document.getElementById('searchBtn');
         createSparkles(searchBtn);
@@ -702,6 +705,297 @@ function closeModal() {
 }
 
 // ============================================
+// COMP ME DADDY - DETAILED ANALYSIS
+// ============================================
+
+function showCompMeDaddyButton() {
+    const btn = document.getElementById('compMeDaddyBtn');
+    if (btn && currentPropertyData) {
+        btn.style.display = 'inline-block';
+        // Add sparkle animation
+        setInterval(() => {
+            if (btn.style.display !== 'none') {
+                createSparkles(btn);
+            }
+        }, 3000);
+    }
+}
+
+function openCompMeDaddy() {
+    if (!currentPropertyData) {
+        alert('Search for a property first! 🔍');
+        return;
+    }
+    
+    document.getElementById('compMeDaddyPage').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    // Load all the data
+    loadRentCastAVM();
+    populateDetailedComps();
+    generateFinishAnalysis();
+}
+
+function closeCompMeDaddy() {
+    document.getElementById('compMeDaddyPage').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// RentCast API Integration
+const RENTCAST_API_KEY = 'c5ad833affcf4a648df2ca97b5a870ff';
+
+async function loadRentCastAVM() {
+    const loadingDiv = document.getElementById('rentcastAVMLoading');
+    const dataDiv = document.getElementById('rentcastAVMData');
+    
+    loadingDiv.style.display = 'block';
+    dataDiv.style.display = 'none';
+    
+    try {
+        const address = encodeURIComponent(currentAddress);
+        const url = `https://api.rentcast.io/v1/avm/value?address=${address}`;
+        
+        // Real RentCast API call
+        const response = await fetch(url, { 
+            headers: { 
+                'X-Api-Key': RENTCAST_API_KEY,
+                'Accept': 'application/json'
+            } 
+        });
+        
+        if (!response.ok) {
+            throw new Error(`RentCast API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Extract RentCast data
+        const rentcastValue = data.price || 0;
+        const lowRange = data.priceRangeLow || Math.round(rentcastValue * 0.92);
+        const highRange = data.priceRangeHigh || Math.round(rentcastValue * 1.08);
+        const confidenceScore = data.confidenceScore || 0;
+        
+        // Determine confidence level
+        let confidence = 'MEDIUM';
+        let confidenceColor = '#FFFF00';
+        if (confidenceScore >= 80) {
+            confidence = 'HIGH';
+            confidenceColor = '#00FF00';
+        } else if (confidenceScore < 50) {
+            confidence = 'LOW';
+            confidenceColor = '#FF0000';
+        }
+        
+        document.getElementById('rentcastEstimate').textContent = formatCurrency(rentcastValue);
+        document.getElementById('rentcastEstimate').style.color = '#00FFFF';
+        
+        const confEl = document.getElementById('rentcastConfidence');
+        confEl.textContent = confidence + (confidenceScore > 0 ? ` (${confidenceScore}%)` : '');
+        confEl.style.color = confidenceColor;
+        
+        document.getElementById('rentcastRange').textContent = `${formatCurrency(lowRange)} - ${formatCurrency(highRange)}`;
+        
+        loadingDiv.style.display = 'none';
+        dataDiv.style.display = 'block';
+        
+    } catch (error) {
+        console.error('RentCast error:', error);
+        
+        // Fallback to local estimates if RentCast fails
+        loadingDiv.innerHTML = '<font color="#FF9900">RentCast API error. Falling back to local estimates...</font>';
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
+        const realtorEst = parseFloat(document.getElementById('realtorEstimate').value) || 0;
+        const comps = currentPropertyData?.comps || [];
+        
+        let rentcastValue = 0;
+        if (zestimate && realtorEst) {
+            rentcastValue = (zestimate * 0.4) + (realtorEst * 0.6);
+        } else if (zestimate) {
+            rentcastValue = zestimate * 0.95;
+        } else if (realtorEst) {
+            rentcastValue = realtorEst;
+        } else if (comps.length > 0) {
+            rentcastValue = comps.reduce((a, b) => a + b.sale_price, 0) / comps.length;
+        }
+        
+        rentcastValue = Math.round(rentcastValue);
+        const lowRange = Math.round(rentcastValue * 0.92);
+        const highRange = Math.round(rentcastValue * 1.08);
+        
+        document.getElementById('rentcastEstimate').textContent = formatCurrency(rentcastValue);
+        document.getElementById('rentcastEstimate').style.color = '#00FFFF';
+        document.getElementById('rentcastConfidence').textContent = 'FALLBACK';
+        document.getElementById('rentcastConfidence').style.color = '#FF9900';
+        document.getElementById('rentcastRange').textContent = `${formatCurrency(lowRange)} - ${formatCurrency(highRange)}`;
+        
+        loadingDiv.style.display = 'none';
+        dataDiv.style.display = 'block';
+    }
+}
+
+function populateDetailedComps() {
+    const tbody = document.getElementById('detailedCompsBody');
+    const comps = currentPropertyData?.comps || [];
+    
+    if (!comps.length) {
+        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available!</font></td></tr>';
+        return;
+    }
+    
+    // Get subject property sqft for calculations
+    const subjectSqft = parseInt(document.getElementById('sqft')?.value) || 1500;
+    
+    tbody.innerHTML = comps.map((comp, index) => {
+        const pricePerSqft = comp.sqft > 0 ? Math.round(comp.sale_price / comp.sqft) : 0;
+        const distance = ((index * 0.3) + 0.2).toFixed(1); // Simulated distance
+        const finishLevel = determineFinishLevel(comp, pricePerSqft);
+        const finishColor = getFinishColor(finishLevel);
+        
+        return `
+            <tr bgcolor="${index % 2 === 0 ? '#000033' : '#000066'}">
+                <td><font color="#00FFFF">${comp.address}</font></td>
+                <td><font color="#00FF00">${formatCurrency(comp.sale_price)}</font></td>
+                <td><font color="#FF9900">$${pricePerSqft}</font></td>
+                <td><font color="#FFFF00">${comp.sale_date}</font></td>
+                <td><font color="#00FFFF">${distance} mi</font></td>
+                <td><font color="${finishColor}"><b>${finishLevel}</b></font></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function determineFinishLevel(comp, pricePerSqft) {
+    // Analyze comp to determine finish level
+    // This is based on price per sqft relative to market
+    
+    if (pricePerSqft > 180) return 'LUXURY';
+    if (pricePerSqft > 140) return 'HIGH-END';
+    if (pricePerSqft > 110) return 'UPDATED';
+    if (pricePerSqft > 85) return 'AVERAGE';
+    if (pricePerSqft > 60) return 'NEEDS WORK';
+    return 'FIXER-UPPER';
+}
+
+function getFinishColor(level) {
+    const colors = {
+        'LUXURY': '#FF00FF',
+        'HIGH-END': '#00FFFF',
+        'UPDATED': '#00FF00',
+        'AVERAGE': '#FFFF00',
+        'NEEDS WORK': '#FF9900',
+        'FIXER-UPPER': '#FF0000'
+    };
+    return colors[level] || '#FFFFFF';
+}
+
+function generateFinishAnalysis() {
+    const comps = currentPropertyData?.comps || [];
+    const container = document.getElementById('finishAnalysis');
+    
+    if (!comps.length) {
+        container.innerHTML = '<font color="#FF0000">No data available for analysis.</font>';
+        return;
+    }
+    
+    // Calculate metrics
+    const prices = comps.map(c => c.sale_price);
+    const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+    const sqfts = comps.map(c => c.sqft);
+    const avgSqft = sqfts.reduce((a, b) => a + b, 0) / sqfts.length;
+    const avgPricePerSqft = Math.round(avgPrice / avgSqft);
+    
+    // Count finish levels
+    const finishCounts = {};
+    comps.forEach(comp => {
+        const ppsf = comp.sqft > 0 ? Math.round(comp.sale_price / comp.sqft) : 0;
+        const level = determineFinishLevel(comp, ppsf);
+        finishCounts[level] = (finishCounts[level] || 0) + 1;
+    });
+    
+    // Find dominant finish level
+    let dominantLevel = 'AVERAGE';
+    let maxCount = 0;
+    for (const [level, count] of Object.entries(finishCounts)) {
+        if (count > maxCount) {
+            maxCount = count;
+            dominantLevel = level;
+        }
+    }
+    
+    // Generate color commentary
+    let commentary = '';
+    
+    if (dominantLevel === 'LUXURY' || dominantLevel === 'HIGH-END') {
+        commentary = `
+            <font color="#FF00FF" size="5"><b>💎 LUXURY MARKET DETECTED! 💎</b></font><br><br>
+            <font color="#00FFFF">Your comps are averaging <b>$${avgPricePerSqft}/sqft</b> - this is a HIGH-END area!</font><br><br>
+            <font color="#FFFF00">💡 <b>THE COLOR:</b> These buyers expect granite, hardwood, and stainless steel. 
+            Don't cheap out on finishes or you'll get slaughtered on price. Budget $40-60/sqft for reno if you want to compete.</font><br><br>
+            <font color="#00FF00">🏆 <b>OPPORTUNITY:</b> Look for the "NEEDS WORK" comps - there's a ${Math.round(avgPricePerSqft * 0.3)}/sqft spread between fixers and luxury.</font>
+        `;
+    } else if (dominantLevel === 'UPDATED') {
+        commentary = `
+            <font color="#00FF00" size="5"><b>✨ SOLID MIDDLE MARKET ✨</b></font><br><br>
+            <font color="#00FFFF">Your comps are averaging <b>$${avgPricePerSqft}/sqft</b> - this is a nice updated area.</font><br><br>
+            <font color="#FFFF00">💡 <b>THE COLOR:</b> Buyers here want move-in ready but aren't expecting luxury. 
+            LVP flooring, quartz counters, and decent appliances will get you there. Budget $25-35/sqft for reno.</font><br><br>
+            <font color="#00FF00">🏆 <b>OPPORTUNITY:</b> Anything dated is your friend. Look for "AVERAGE" or "NEEDS WORK" comps.</font>
+        `;
+    } else if (dominantLevel === 'AVERAGE') {
+        commentary = `
+            <font color="#FFFF00" size="5"><b>🏠 BREAD-AND-BUTTER MARKET 🏠</b></font><br><br>
+            <font color="#00FFFF">Your comps are averaging <b>$${avgPricePerSqft}/sqft</b> - this is an average working-class area.</font><br><br>
+            <font color="#FFFF00">💡 <b>THE COLOR:</b> These buyers are practical. They want clean, functional, and affordable. 
+            Don't over-improve! Laminate counters, LVP floors, and white appliances are fine. Budget $15-25/sqft for reno.</font><br><br>
+            <font color="#FF9900">⚠️ <b>WARNING:</b> Don't put $50k into a kitchen here. You'll never get it back.</font>
+        `;
+    } else {
+        commentary = `
+            <font color="#FF9900" size="5"><b>🔨 VALUE-ADD OPPORTUNITY! 🔨</font></b><br><br>
+            <font color="#00FFFF">Your comps are averaging <b>$${avgPricePerSqft}/sqft</b> - this area needs some love.</font><br><br>
+            <font color="#FFFF00">💡 <b>THE COLOR:</b> Most comps are dated or rough. Even basic updates will make you stand out. 
+            Paint, flooring, and kitchen/bath refreshes are your friends. Budget $10-20/sqft for reno.</font><br><br>
+            <font color="#00FF00">🏆 <b>OPPORTUNITY:</b> Big spreads between fixers and average. Perfect for BRRRR or flip strategy.</font>
+        `;
+    }
+    
+    // Add market summary
+    const newestComp = comps.reduce((a, b) => a.sale_date > b.sale_date ? a : b);
+    const oldestComp = comps.reduce((a, b) => a.sale_date < b.sale_date ? a : b);
+    
+    commentary += `<br><br><hr><br>
+        <font color="#FF00FF" size="4"><b>📊 MARKET SUMMARY:</b></font><br><br>
+        <table border="1" cellpadding="5" cellspacing="0" width="100%">
+            <tr bgcolor="#000066">
+                <td><font color="#FFFF00">Average Price:</font></td>
+                <td><font color="#00FF00">${formatCurrency(Math.round(avgPrice))}</font></td>
+            </tr>
+            <tr bgcolor="#000033">
+                <td><font color="#FFFF00">Average $/sqft:</font></td>
+                <td><font color="#00FF00">$${avgPricePerSqft}</font></td>
+            </tr>
+            <tr bgcolor="#000066">
+                <td><font color="#FFFF00">Price Range:</font></td>
+                <td><font color="#00FF00">${formatCurrency(Math.min(...prices))} - ${formatCurrency(Math.max(...prices))}</font></td>
+            </tr>
+            <tr bgcolor="#000033">
+                <td><font color="#FFFF00">Comp Date Range:</font></td>
+                <td><font color="#00FF00">${oldestComp.sale_date} to ${newestComp.sale_date}</font></td>
+            </tr>
+            <tr bgcolor="#000066">
+                <td><font color="#FFFF00">Dominant Finish:</font></td>
+                <td><font color="${getFinishColor(dominantLevel)}">${dominantLevel}</font></td>
+            </tr>
+        </table>
+    `;
+    
+    container.innerHTML = commentary;
+}
+
+// ============================================
 // EVENT LISTENERS
 // ============================================
 
@@ -750,6 +1044,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculate button
     document.getElementById('calculateBtn').addEventListener('click', runCalculations);
     
+    // Comp Me Daddy button
+    document.getElementById('compMeDaddyBtn').addEventListener('click', openCompMeDaddy);
+    
     // Save/Load/Print buttons
     document.getElementById('saveEvalBtn').addEventListener('click', saveEvaluation);
     
@@ -796,5 +1093,6 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeModal();
         closeEasterEgg();
+        closeCompMeDaddy();
     }
 });

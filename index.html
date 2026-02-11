@@ -101,6 +101,12 @@
                                         <button id="searchBtn" class="retro-button">
                                             <b>🔎 SEARCH NOW!!! 🔎</b>
                                         </button>
+                                        <br><br>
+                                        <button id="compMeDaddyBtn" class="retro-button-comp" style="display:none; background: linear-gradient(45deg, #FF00FF, #00FFFF);">
+                                            <marquee behavior="alternate" scrollamount="5" width="200">
+                                                <b>💎 COMP ME DADDY 💎</b>
+                                            </marquee>
+                                        </button>
                                     </td>
                                 </tr>
                             </table>
@@ -482,6 +488,130 @@
                     <img src="https://web.archive.org/web/20091027082445/http://www.geocities.com/televisioncity/5828/money.gif" alt="Money">
                     <br><br>
                     <button onclick="closeEasterEgg()" class="retro-button-small">OK COOL!</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- COMP ME DADDY - Detailed Analysis Page -->
+    <div id="compMeDaddyPage" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; overflow-y:auto;">
+        <table border="0" cellpadding="10" cellspacing="0" width="100%" height="100%">
+            <tr>
+                <td align="center" valign="top">
+                    <br><br>
+                    <table border="5" cellpadding="20" cellspacing="0" width="95%" bgcolor="#000033" style="border:8px ridge #FF00FF;">
+                        <tr>
+                            <td align="center">
+                                <marquee behavior="alternate" scrollamount="10" bgcolor="#FF00FF">
+                                    <font size="6" face="Comic Sans MS" color="#FFFF00">
+                                        <b>💎💎💎 COMP ME DADDY - DETAILED ANALYSIS 💎💎💎</b>
+                                    </font>
+                                </marquee>
+                                <br><br>
+                                <font face="Papyrus" color="#00FFFF" size="4">
+                                    <blink>★ DEEP DIVE INTO YOUR COMPS ★</blink>
+                                </font>
+                                <br><br>
+                                <button onclick="closeCompMeDaddy()" class="retro-button-small">
+                                    <b>👈 BACK TO SLOPULATOR</b>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- RentCast AVM Section -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000066" style="border:5px groove #00FF00;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#FFFF00" size="5">
+                                    <b>🏦 RENTCAST AVM - AUTOMATED VALUATION 🏦</b>
+                                </font>
+                                <br><br>
+                                <div id="rentcastAVMLoading">
+                                    <font color="#00FF00" face="Courier New">Loading RentCast data...</font>
+                                    <br>
+                                    <img src="https://web.archive.org/web/20091027082445/http://www.geocities.com/televisioncity/5828/computer.gif" alt="Loading">
+                                </div>
+                                <div id="rentcastAVMData" style="display:none;">
+                                    <table border="2" cellpadding="10" cellspacing="0" width="100%">
+                                        <tr>
+                                            <td bgcolor="#330033" align="center">
+                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>RENTCAST ESTIMATE</b></font>
+                                                <br>
+                                                <font color="#00FFFF" size="6" id="rentcastEstimate">$0</font>
+                                            </td>
+                                            <td bgcolor="#330033" align="center">
+                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>CONFIDENCE</b></font>
+                                                <br>
+                                                <font color="#00FF00" size="6" id="rentcastConfidence">HIGH</font>
+                                            </td>
+                                            <td bgcolor="#330033" align="center">
+                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>PRICE RANGE</b></font>
+                                                <br>
+                                                <font color="#FFFF00" size="5" id="rentcastRange">$0 - $0</font>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- Finish Level Analysis -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#003300" style="border:5px groove #FF9900;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#FF9900" size="5">
+                                    <b>🔨 FINISH LEVEL COLOR COMMENTARY 🔨</b>
+                                </font>
+                                <br><br>
+                                <div id="finishAnalysis" style="text-align:left;">
+                                    <font color="#00FF00" face="Courier New">Analyzing finishes...</font>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- Detailed Comps Table -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000033" style="border:5px ridge #00FFFF;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#00FFFF" size="5">
+                                    <b>📊 DETAILED COMP ANALYSIS 📊</b>
+                                </font>
+                                <br><br>
+                                <table border="3" cellpadding="8" cellspacing="0" width="100%" id="detailedCompsTable">
+                                    <thead>
+                                        <tr bgcolor="#330066">
+                                            <th><font color="#FFFF00">ADDRESS</font></th>
+                                            <th><font color="#FFFF00">PRICE</font></th>
+                                            <th><font color="#FFFF00">$/SQFT</font></th>
+                                            <th><font color="#FFFF00">DATE SOLD</font></th>
+                                            <th><font color="#FFFF00">MILES AWAY</font></th>
+                                            <th><font color="#FFFF00">FINISH LEVEL</font></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailedCompsBody">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- Bottom CTA -->
+                    <button onclick="closeCompMeDaddy()" class="retro-button">
+                        <b>👈 BACK TO SLOPULATOR</b>
+                    </button>
+                    <br><br>
                 </td>
             </tr>
         </table>
