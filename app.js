@@ -1286,9 +1286,6 @@ function populateDetailedComps() {
     }
 
     tbody.innerHTML = comps.map((comp, index) => {
-        // Debug: log first comp to see structure
-        if (index === 0) console.log('Comp object:', JSON.stringify(comp, null, 2));
-        
         // Handle different API response formats - try all possible property names
         const salePrice = Number(comp.lastSalePrice || comp.salePrice || comp.price || comp.soldPrice || 0);
         const sqft = Number(comp.squareFootage || comp.sqft || comp.livingArea || comp.square_footage || 0);
@@ -1297,9 +1294,9 @@ function populateDetailedComps() {
         const finishLevel = determineFinishLevel(comp, pricePerSqft === '-' ? 0 : pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
         
-        // Parse sale date from various formats
+        // Parse date from various formats (listedDate for active listings)
         let saleDate = 'N/A';
-        const dateStr = comp.saleDate || comp.lastSaleDate || comp.sale_date || comp.date;
+        const dateStr = comp.listedDate || comp.saleDate || comp.lastSaleDate || comp.removedDate;
         if (dateStr) {
             try {
                 const d = new Date(dateStr);
@@ -1706,11 +1703,13 @@ function displayCompsDashboard(comps, subjectProperty, avmData) {
     `;
     
     comps.forEach((comp, index) => {
-        const pricePerSqft = comp.squareFootage > 0 
-            ? (comp.lastSalePrice / comp.squareFootage).toFixed(0) 
+        const salePrice = Number(comp.price || comp.lastSalePrice || 0);
+        const sqft = Number(comp.squareFootage || 0);
+        const pricePerSqft = sqft > 0 
+            ? (salePrice / sqft).toFixed(0) 
             : 'N/A';
-        const saleDate = comp.lastSaleDate 
-            ? new Date(comp.lastSaleDate).toLocaleDateString() 
+        const saleDate = comp.listedDate || comp.lastSaleDate
+            ? new Date(comp.listedDate || comp.lastSaleDate).toLocaleDateString() 
             : 'N/A';
         const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
         
@@ -1722,7 +1721,7 @@ function displayCompsDashboard(comps, subjectProperty, avmData) {
                     <b>📍 Address:</b><br>
                     <span style="color: #00ffff;">${comp.formattedAddress || comp.addressLine1 || 'N/A'}</span><br><br>
                     
-                    <b>💰 Sale Price:</b> <span style="color: #00ff00; font-size: 16px;">${formatCurrency(comp.lastSalePrice)}</span><br>
+                    <b>💰 Sale Price:</b> <span style="color: #00ff00; font-size: 16px;">${formatCurrency(salePrice)}</span><br>
                     <b>📅 Sold:</b> ${saleDate}<br>
                     <b>📏 Distance:</b> ${distance} miles<br>
                     <b>📐 Sqft:</b> ${comp.squareFootage || 'N/A'}<br>
