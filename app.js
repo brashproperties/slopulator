@@ -30,9 +30,8 @@ function initVisitorCounter() {
     // Animate the counter
     animateVisitorCounter();
     
-    // Also update footer hit counter
-    const footerCount = Math.floor(visitorCount * 2.5) + Math.floor(Math.random() * 100);
-    document.getElementById('footer-hit-count').textContent = footerCount.toString().padStart(7, '0');
+    // Also update footer hit counter to match main counter
+    document.getElementById('footer-hit-count').textContent = visitorCount.toString().padStart(7, '0');
 }
 
 function animateVisitorCounter() {
@@ -120,7 +119,7 @@ function fireConfetti() {
                 position: fixed;
                 width: ${10 + Math.random() * 10}px;
                 height: ${10 + Math.random() * 10}px;
-                background: ${colors[Math.floor(Math.random() * colors.length)]];
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
                 left: 50%;
                 top: 50%;
                 z-index: 99999;
@@ -244,28 +243,66 @@ function debounce(func, wait) {
 // ADDRESS AUTOCOMPLETE (OpenStreetMap)
 // ============================================
 
-const fetchAddressSuggestions = debounce(async (query) => {
+// Address autocomplete using RentCast API
+let lastQuery = '';
+let autocompleteTimeout;
+
+async function fetchAddressSuggestions(query) {
+    clearTimeout(autocompleteTimeout);
+    
     const suggestionsEl = document.getElementById('addressSuggestions');
+    
+    if (!suggestionsEl) return;
     
     if (query.length < 3) {
         suggestionsEl.style.display = 'none';
         return;
     }
-
-    try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=us`, {
-            headers: { 'User-Agent': 'Slopulator/1.0 (bradley@brashproperties.com)' }
-        });
-        
-        if (!response.ok) throw new Error('Geocoding failed');
-        
-        const data = await response.json();
-        displaySuggestions(data);
-    } catch (error) {
-        console.error('Geocoding error:', error);
-        suggestionsEl.style.display = 'none';
-    }
-}, 300);
+    
+    if (query === lastQuery) return;
+    lastQuery = query;
+    
+    // Debounce for 200ms
+    autocompleteTimeout = setTimeout(async () => {
+        try {
+            // Try RentCast API first
+            const response = await fetch(`https://api.rentcast.io/v1/properties?address=${encodeURIComponent(query)}&limit=5`, {
+                headers: { 
+                    'X-Api-Key': RENTCAST_API_KEY,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    const suggestions = data.map(p => ({
+                        display_name: p.addressLine1 + (p.addressLine2 ? ', ' + p.addressLine2 : '') + ', ' + p.city + ', ' + p.state + ' ' + p.zipCode,
+                        lat: p.latitude,
+                        lon: p.longitude
+                    }));
+                    displaySuggestions(suggestions);
+                    return;
+                }
+            }
+            
+            // Fallback to Nominatim if RentCast fails
+            const osmResponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=us`, {
+                headers: { 'User-Agent': 'Slopulator/1.0' }
+            });
+            
+            if (osmResponse.ok) {
+                const osmData = await osmResponse.json();
+                displaySuggestions(osmData);
+            } else {
+                suggestionsEl.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Autocomplete error:', error);
+            suggestionsEl.style.display = 'none';
+        }
+    }, 200);
+}
 
 function displaySuggestions(suggestions) {
     const suggestionsEl = document.getElementById('addressSuggestions');
@@ -345,6 +382,10 @@ function mockPropertyData(address, lat, lon) {
     const rentRate = 0.008 + ((hash % 40) / 10000);
     const rentEstimate = Math.round(basePrice * rentRate / 100) * 100;
     
+    // Calculate insurance based on sqft ($0.50 per sqft annually)
+    const insurancePerSqft = 0.50;
+    const annualInsurance = Math.round(sqft * insurancePerSqft);
+    
     return {
         zestimate: Math.round(zestimate / 1000) * 1000,
         realtor_estimate: Math.round(realtorEstimate / 1000) * 1000,
@@ -352,6 +393,8 @@ function mockPropertyData(address, lat, lon) {
         annual_taxes: annualTaxes,
         monthly_taxes: Math.round(annualTaxes / 12),
         rent_estimate: rentEstimate,
+        annual_insurance: annualInsurance,
+        monthly_insurance: Math.round(annualInsurance / 12),
         property_details: {
             bedrooms: bedrooms,
             bathrooms: bathrooms,
@@ -362,14 +405,67 @@ function mockPropertyData(address, lat, lon) {
     };
 }
 
-async function loadPropertyData(address, lat, lon) {
+// Make loadPropertyData available globally for inline scripts
+window.loadPropertyData = async function(address, lat, lon) {
     showLoading();
     
     try {
-        // Simulate API delay for effect
-        await new Promise(r => setTimeout(r, 1500));
+        // Try RentCast API first
+        let data = null;
         
-        const data = mockPropertyData(address, lat, lon);
+        try {
+            const rentcastUrl = `https://api.rentcast.io/v1/avm/value?address=${encodeURIComponent(address)}`;
+            const response = await fetch(rentcastUrl, {
+                headers: {
+                    'X-Api-Key': RENTCAST_API_KEY,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const rentcastData = await response.json();
+                
+                // Fetch property details for taxes
+                const propertyUrl = `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(address)}`;
+                const propResponse = await fetch(propertyUrl, {
+                    headers: {
+                        'X-Api-Key': RENTCAST_API_KEY,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                let propertyData = {};
+                if (propResponse.ok) {
+                    const propData = await propResponse.json();
+                    if (propData && propData.length > 0) {
+                        propertyData = propData[0];
+                    }
+                }
+                
+                data = {
+                    zestimate: rentcastData.price || 0,
+                    realtor_estimate: rentcastData.priceRangeHigh || rentcastData.price || 0,
+                    rent_estimate: rentcastData.rent || 0,
+                    annual_taxes: propertyData.propertyTaxes?.annualAmount || 0,
+                    monthly_taxes: propertyData.propertyTaxes?.annualAmount ? Math.round(propertyData.propertyTaxes.annualAmount / 12) : 0,
+                    annual_insurance: Math.round((propertyData.squareFootage || 1500) * 0.50),
+                    property_details: {
+                        sqft: propertyData.squareFootage || propertyData.livingArea || 1500,
+                        bedrooms: propertyData.bedrooms || 0,
+                        bathrooms: propertyData.bathrooms || 0,
+                        year_built: propertyData.yearBuilt || 0
+                    }
+                };
+            }
+        } catch (err) {
+            console.warn('RentCast API failed, using mock data:', err);
+        }
+        
+        // Fallback to mock data if API fails
+        if (!data) {
+            data = mockPropertyData(address, lat, lon);
+        }
+        
         currentPropertyData = data;
         
         // Populate fields
@@ -377,9 +473,17 @@ async function loadPropertyData(address, lat, lon) {
         document.getElementById('realtorEstimate').value = data.realtor_estimate || '';
         document.getElementById('rentEstimate').value = data.rent_estimate || '';
         document.getElementById('monthlyTaxes').value = data.monthly_taxes || '';
+        document.getElementById('annualInsurance').value = data.annual_insurance || '';
+        document.getElementById('sqft').value = data.property_details?.sqft || '';
+        
+        // Ensure loan term is set to default if empty
+        const loanTermEl = document.getElementById('loanTerm');
+        if (loanTermEl && !loanTermEl.value) {
+            loanTermEl.value = 20;
+        }
         
         // Populate comps table
-        populateCompsTable(data.comps);
+        populateCompsTable(data.comps || []);
         document.getElementById('compsSection').style.display = 'table-row';
         
         // Create sparkles
@@ -495,33 +599,41 @@ async function runCalculations() {
     const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
     const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
     const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
-    const realtorEstimate = parseFloat(document.getElementById('realtorEstimate').value) || 0;
+    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow').value) || zestimate;
+    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh').value) || zestimate;
     const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
     const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
-    const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 1200;
+    const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
     const interestRate = parseFloat(document.getElementById('interestRate').value) || 6.8;
+    const loanTerm = parseInt(document.getElementById('loanTerm').value) || 20;
     
-    if (!purchasePrice || !zestimate || !realtorEstimate) {
-        alert('Please fill in at least Purchase Price, Zestimate, and Realtor Estimate! 🏠');
+    if (!purchasePrice) {
+        alert('Please fill in Purchase Price! 🏠');
         return;
     }
     
     showLoading();
     
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 800));
     
-    const comps = currentPropertyData?.comps || [];
-    const arv = calculateARV(zestimate, realtorEstimate, comps);
-    const rentalAnalysis = calculateRentalCashflow(purchasePrice, repairs, rentEstimate, monthlyTaxes, insuranceAnnual, interestRate);
-    const flipAnalysis = calculateFlipAnalysis(purchasePrice, repairs, arv, interestRate);
+    // Use RentCast AVM as ARV
+    const arv = zestimate || priceRangeHigh;
     
-    calculationResults = {
-        arv: arv,
-        rental_analysis: rentalAnalysis,
-        flip_analysis: flipAnalysis
-    };
+    // Comprehensive Analysis
+    const analysis = performComprehensiveAnalysis({
+        purchasePrice,
+        repairs,
+        arv,
+        rentEstimate,
+        monthlyTaxes,
+        insuranceAnnual,
+        interestRate,
+        loanTerm
+    });
     
-    displayResults();
+    calculationResults = analysis;
+    
+    displayComprehensiveResults(analysis);
     
     hideLoading();
     
@@ -532,56 +644,213 @@ async function runCalculations() {
     playRetroSound('ka-ching');
 }
 
-function displayResults() {
-    if (!calculationResults) return;
+function performComprehensiveAnalysis(data) {
+    const { purchasePrice, repairs, arv, rentEstimate, monthlyTaxes, insuranceAnnual, interestRate, loanTerm } = data;
     
-    const { arv, rental_analysis, flip_analysis } = calculationResults;
+    const totalInvestment = purchasePrice + repairs;
+    const monthlyInsurance = insuranceAnnual / 12;
     
-    // Show sections
-    document.getElementById('arvSection').style.display = 'table-row';
-    document.getElementById('resultsSection').style.display = 'table-row';
+    // FLIP ANALYSIS
+    // 8% interest only on total investment for 6 months
+    const holdingCosts = totalInvestment * (interestRate / 100) * 0.5; // 6 months = 0.5 years
+    // Closing/broker fees ~6% of ARV
+    const closingCosts = arv * 0.06;
+    const totalFlipCosts = totalInvestment + holdingCosts + closingCosts;
+    const flipProfit = arv - totalFlipCosts;
     
-    // ARV with blinking effect
-    const arvEl = document.getElementById('arvValue');
-    arvEl.textContent = formatCurrency(arv);
-    arvEl.style.animation = 'none';
-    setTimeout(() => arvEl.style.animation = '', 100);
+    // RENTAL ANALYSIS
+    // PITI calculation
+    const loanAmount = totalInvestment;
+    const monthlyRate = (interestRate / 100) / 12;
+    const numPayments = loanTerm * 12;
+    const monthlyPI = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+    const piti = monthlyPI + monthlyTaxes + monthlyInsurance;
     
-    // Rental Analysis
-    document.getElementById('rentalGross').textContent = formatCurrency(rental_analysis.monthly_rent);
-    document.getElementById('rentalEffective').textContent = formatCurrency(rental_analysis.effective_monthly_rent);
-    document.getElementById('rentalMortgage').textContent = '-' + formatCurrency(rental_analysis.mortgage_payment);
-    document.getElementById('rentalTaxes').textContent = '-' + formatCurrency(rental_analysis.monthly_taxes);
-    document.getElementById('rentalInsurance').textContent = '-' + formatCurrency(rental_analysis.monthly_insurance);
-    document.getElementById('rentalMaintenance').textContent = '-' + formatCurrency(rental_analysis.maintenance_reserve);
-    document.getElementById('rentalTotalExpenses').textContent = '-' + formatCurrency(rental_analysis.total_monthly_expenses);
+    // LTV based on AVM
+    const currentLTV = (loanAmount / arv) * 100;
     
-    const cashflowEl = document.getElementById('rentalCashflow');
-    cashflowEl.textContent = (rental_analysis.monthly_cashflow >= 0 ? '' : '-') + formatCurrency(Math.abs(rental_analysis.monthly_cashflow));
-    cashflowEl.color = rental_analysis.monthly_cashflow >= 0 ? '#00FF00' : '#FF0000';
+    // Cash flow at 95% occupancy
+    const effectiveMonthlyRent = rentEstimate * 0.95;
+    const monthlyCashFlow = effectiveMonthlyRent - piti;
+    const annualCashFlow = monthlyCashFlow * 12;
     
-    document.getElementById('rentalAnnualCashflow').textContent = formatCurrency(rental_analysis.annual_cashflow);
-    document.getElementById('rentalCashOnCash').textContent = formatPercent(rental_analysis.cash_on_cash_return);
+    // BRRR ANALYSIS
+    const maxRefinance = arv * 0.80; // 80% LTV
+    const cashInvested = totalInvestment; // Assuming 100% financing for BRRR
+    const cashLeftInDeal = Math.max(0, cashInvested - maxRefinance);
+    const canPullOut100 = maxRefinance >= cashInvested;
     
-    // Flip Analysis
-    document.getElementById('flipARV').textContent = formatCurrency(flip_analysis.arv);
-    document.getElementById('flipPurchase').textContent = '-' + formatCurrency(flip_analysis.purchase_price);
-    document.getElementById('flipRepairs').textContent = '-' + formatCurrency(flip_analysis.repairs);
-    document.getElementById('flipHolding').textContent = '-' + formatCurrency(flip_analysis.holding_costs);
-    document.getElementById('flipSelling').textContent = '-' + formatCurrency(flip_analysis.selling_costs);
-    document.getElementById('flipTotalInvestment').textContent = '-' + formatCurrency(flip_analysis.purchase_price + flip_analysis.repairs);
+    // DEAL RATING
+    let rating, recommendation, actionPlan;
     
-    const profitEl = document.getElementById('flipProfit');
-    profitEl.textContent = (flip_analysis.profit >= 0 ? '' : '-') + formatCurrency(Math.abs(flip_analysis.profit));
-    profitEl.color = flip_analysis.profit >= 0 ? '#00FF00' : '#FF0000';
+    // Calculate scores
+    const flipScore = flipProfit > 30000 ? 3 : flipProfit > 15000 ? 2 : flipProfit > 0 ? 1 : 0;
+    const cashFlowScore = monthlyCashFlow > 300 ? 3 : monthlyCashFlow > 150 ? 2 : monthlyCashFlow > 0 ? 1 : 0;
+    const brrrScore = canPullOut100 ? 3 : cashLeftInDeal < 10000 ? 2 : cashLeftInDeal < 20000 ? 1 : 0;
     
-    document.getElementById('flipROI').textContent = formatPercent(flip_analysis.roi_percent);
-    document.getElementById('flipMAO').textContent = formatCurrency(flip_analysis.mao_70_percent);
-    document.getElementById('flipSuggested').textContent = formatCurrency(flip_analysis.suggested_offer);
+    const totalScore = flipScore + cashFlowScore + brrrScore;
+    
+    if (totalScore >= 7) {
+        rating = "⭐⭐⭐ EXCELLENT ⭐⭐⭐";
+        recommendation = "🎯 STRONG BUY - This is a home run deal!";
+        actionPlan = "• BRRR Strategy: Refinance immediately after rehab to pull out 100% of capital\n" +
+                     "• Keep as rental for long-term cash flow and appreciation\n" +
+                     "• Flip backup: Strong profit margin if you decide to sell\n" +
+                     "• Consider adding to your permanent portfolio";
+    } else if (totalScore >= 5) {
+        rating = "⭐⭐ GOOD ⭐⭐";
+        recommendation = "✅ BUY - Solid deal with multiple exit strategies";
+        actionPlan = "• BRRR Strategy recommended - good cash flow with minimal cash left in\n" +
+                     "• Flip option viable if you need quick capital\n" +
+                     "• Negotiate final $2-5k if possible to improve margins\n" +
+                     "• Get contractor bids to confirm rehab budget";
+    } else if (totalScore >= 3) {
+        rating = "⭐ FAIR ⭐";
+        recommendation = "⚠️ CONDITIONAL BUY - Deal works but has limitations";
+        actionPlan = "• Try to negotiate purchase price down by 5-10%\n" +
+                     "• Get accurate rehab estimates - buffer in your budget\n" +
+                     "• BRRR likely best exit - expect some cash to stay in deal\n" +
+                     "• Consider partnering to reduce risk";
+    } else {
+        rating = "❌ PASS ❌";
+        recommendation = "🚫 WALK AWAY - Numbers don't work";
+        actionPlan = "• Offer $" + Math.round(purchasePrice * 0.85).toLocaleString() + " or less to make it work\n" +
+                     "• Look for properties with better rent-to-price ratios\n" +
+                     "• Consider markets with lower property taxes\n" +
+                     "• Keep this as a comp but move on to next deal";
+    }
+    
+    return {
+        flip: {
+            purchasePrice,
+            repairs,
+            totalInvestment,
+            holdingCosts,
+            closingCosts,
+            totalCosts: totalFlipCosts,
+            arv,
+            profit: flipProfit
+        },
+        rental: {
+            loanAmount,
+            interestRate,
+            loanTerm,
+            monthlyPI,
+            monthlyTaxes,
+            monthlyInsurance,
+            piti,
+            arv,
+            currentLTV,
+            monthlyRent: rentEstimate,
+            effectiveMonthlyRent,
+            monthlyCashFlow,
+            annualCashFlow
+        },
+        brrr: {
+            maxRefinance,
+            cashInvested,
+            cashLeftInDeal,
+            canPullOut100
+        },
+        rating: {
+            score: totalScore,
+            rating,
+            recommendation,
+            actionPlan
+        }
+    };
+}
+
+function displayComprehensiveResults(analysis) {
+    // Show deal analysis section
+    const dealSection = document.getElementById('dealAnalysisSection');
+    if (dealSection) {
+        dealSection.style.display = 'table-row';
+    }
+    
+    // FLIP ANALYSIS
+    setText('flipPurchasePrice', formatCurrency(analysis.flip.purchasePrice));
+    setText('flipRepairCosts', formatCurrency(analysis.flip.repairs));
+    setText('flipTotalInvestment', formatCurrency(analysis.flip.totalInvestment));
+    setText('flipHoldingCosts', formatCurrency(analysis.flip.holdingCosts));
+    setText('flipClosingCosts', formatCurrency(analysis.flip.closingCosts));
+    setText('flipTotalCosts', formatCurrency(analysis.flip.totalCosts));
+    setText('flipARV', formatCurrency(analysis.flip.arv));
+    
+    const flipProfitEl = document.getElementById('flipProfit');
+    if (flipProfitEl) {
+        flipProfitEl.textContent = (analysis.flip.profit >= 0 ? '+' : '-') + formatCurrency(Math.abs(analysis.flip.profit));
+        flipProfitEl.style.color = analysis.flip.profit >= 0 ? '#00FF00' : '#FF0000';
+    }
+    
+    // RENTAL ANALYSIS
+    setText('rentalLoanAmount', formatCurrency(analysis.rental.loanAmount));
+    setText('rentalInterestRate', analysis.rental.interestRate.toFixed(1) + '%');
+    setText('rentalLoanTerm', analysis.rental.loanTerm + ' years');
+    setText('rentalPI', formatCurrency(analysis.rental.monthlyPI));
+    setText('rentalTaxes', formatCurrency(analysis.rental.monthlyTaxes));
+    setText('rentalInsurance', formatCurrency(analysis.rental.monthlyInsurance));
+    
+    const pitiEl = document.getElementById('rentalPITI');
+    if (pitiEl) {
+        pitiEl.textContent = formatCurrency(analysis.rental.piti);
+        pitiEl.style.color = '#00FFFF';
+    }
+    
+    setText('rentalAVM', formatCurrency(analysis.rental.arv));
+    setText('rentalCurrentLTV', analysis.rental.currentLTV.toFixed(1) + '%');
+    setText('rentalMonthlyRent', formatCurrency(analysis.rental.monthlyRent));
+    setText('rentalEffectiveRent', formatCurrency(analysis.rental.effectiveMonthlyRent));
+    
+    const cashFlowEl = document.getElementById('rentalCashFlow');
+    if (cashFlowEl) {
+        cashFlowEl.textContent = (analysis.rental.monthlyCashFlow >= 0 ? '+' : '-') + formatCurrency(Math.abs(analysis.rental.monthlyCashFlow));
+        cashFlowEl.style.color = analysis.rental.monthlyCashFlow >= 0 ? '#00FF00' : '#FF0000';
+    }
+    
+    setText('rentalAnnualCashFlow', formatCurrency(analysis.rental.annualCashFlow));
+    
+    // BRRR ANALYSIS
+    setText('brrrMaxRefi', formatCurrency(analysis.brrr.maxRefinance));
+    setText('brrrCashInvested', formatCurrency(analysis.brrr.cashInvested));
+    setText('brrrCashLeft', formatCurrency(analysis.brrr.cashLeftInDeal));
+    
+    const pulloutEl = document.getElementById('brrrPulloutPossible');
+    if (pulloutEl) {
+        pulloutEl.textContent = analysis.brrr.canPullOut100 ? '✅ YES!' : '❌ NO';
+        pulloutEl.style.color = analysis.brrr.canPullOut100 ? '#00FF00' : '#FF0000';
+    }
+    
+    // DEAL RATING
+    const ratingEl = document.getElementById('dealRating');
+    if (ratingEl) {
+        ratingEl.textContent = analysis.rating.rating;
+        ratingEl.style.color = analysis.rating.score >= 7 ? '#FFD700' : analysis.rating.score >= 5 ? '#00FF00' : analysis.rating.score >= 3 ? '#FFA500' : '#FF0000';
+    }
+    
+    const recEl = document.getElementById('dealRecommendation');
+    if (recEl) {
+        recEl.textContent = analysis.rating.recommendation;
+    }
+    
+    const actionEl = document.getElementById('actionPlanText');
+    if (actionEl) {
+        actionEl.innerHTML = analysis.rating.actionPlan.replace(/\n/g, '<br>');
+    }
     
     // Scroll to results
-    document.getElementById('arvSection').scrollIntoView({ behavior: 'smooth' });
+    if (dealSection) {
+        dealSection.scrollIntoView({ behavior: 'smooth' });
+    }
 }
+
+function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+}
+
+// Expose main functions to window for inline onclick handlers
+window.runCalculations = runCalculations;
 
 // ============================================
 // SAVE/LOAD EVALUATIONS (localStorage)
@@ -718,49 +987,80 @@ function showCompMeDaddyButton() {
     }
 }
 
-function openCompMeDaddy() {
+// Expose Comp Me Daddy functions globally
+window.openCompMeDaddy = function() {
     document.getElementById('compMeDaddyPage').style.display = 'block';
     document.body.style.overflow = 'hidden';
-
+    
     // If we already have property data from main search, pre-fill it
     if (currentPropertyData && currentAddress) {
         document.getElementById('compMeDaddyAddress').value = currentAddress;
         // Auto-trigger analysis
-        runCompMeDaddyAnalysis();
-    } else {
-        // Initialize empty map
-        initCompMap();
+        window.runCompMeDaddyAnalysis();
     }
 }
 
-async function runCompMeDaddyAnalysis() {
-    const address = document.getElementById('compMeDaddyAddress').value;
+window.runCompMeDaddyAnalysis = async function() {
+    const addressInput = document.getElementById('compMeDaddyAddress');
+    if (!addressInput) {
+        console.error('compMeDaddyAddress input not found!');
+        alert('Error: Page not fully loaded. Please refresh.');
+        return;
+    }
+    
+    const address = addressInput.value;
+    console.log('runCompMeDaddyAnalysis called with address:', address);
+    
     if (!address || address.length < 5) {
         alert('Please enter a valid address! 🏠');
         return;
     }
-
+    
     currentAddress = address;
-
+    
     // Show loading state
-    document.getElementById('rentcastAVMLoading').style.display = 'block';
-    document.getElementById('rentcastAVMData').style.display = 'none';
-    document.getElementById('detailedCompsBody').innerHTML = '<tr><td colspan="6" align="center"><font color="#00FF00">Loading comps...</font></td></tr>';
-    document.getElementById('finishAnalysis').innerHTML = '<font color="#00FF00" face="Courier New">Analyzing market data...</font>';
-
-    // Load mock property data for this address FIRST - this ensures comps exist
+    if (document.getElementById('rentcastAVMLoading')) {
+        document.getElementById('rentcastAVMLoading').style.display = 'block';
+    }
+    if (document.getElementById('rentcastAVMData')) {
+        document.getElementById('rentcastAVMData').style.display = 'none';
+    }
+    if (document.getElementById('detailedCompsBody')) {
+        document.getElementById('detailedCompsBody').innerHTML = '<tr><td colspan="6" align="center"><font color="#00FF00">Loading comps...</font></td></tr>';
+    }
+    if (document.getElementById('propertyTake')) {
+        document.getElementById('propertyTake').innerHTML = '<font color="#00FF00" face="Courier New">Analyzing market data...</font>';
+    }
+    if (document.getElementById('compsDashboard')) {
+        document.getElementById('compsDashboard').style.display = 'none';
+    }
+    if (document.getElementById('avmJustification')) {
+        document.getElementById('avmJustification').style.display = 'none';
+    }
+    
+    // Load mock property data for this address
     await loadPropertyDataForCompMeDaddy(address);
 
-    // Populate comps immediately so they show even if RentCast fails
+    // Populate comps and take FIRST so they show even if RentCast fails
+    console.log('Starting populateDetailedComps...');
     populateDetailedComps();
-    generateFinishAnalysis();
+    console.log('populateDetailedComps completed');
 
-    // Initialize and populate the map
-    initCompMap();
-    await populateCompMap();
+    console.log('Starting generatePropertyTake...');
+    generatePropertyTake();
+    console.log('generatePropertyTake completed');
 
-    // Load RentCast data (this may fail but comps are already displayed)
-    await loadRentCastAVM();
+    // Load all the analysis
+    try {
+        console.log('Starting loadRentCastAVM...');
+        await loadRentCastAVM();
+        console.log('loadRentCastAVM completed');
+
+        console.log('All analysis complete!');
+    } catch (err) {
+        console.error('Error in analysis:', err);
+        // Comps already populated above, so they'll still show
+    }
 }
 
 async function loadPropertyDataForCompMeDaddy(address) {
@@ -779,7 +1079,7 @@ async function loadPropertyDataForCompMeDaddy(address) {
     window.compMeDaddyData.realtor_estimate = mockData.realtor_estimate || 0;
 }
 
-function closeCompMeDaddy() {
+window.closeCompMeDaddy = function() {
     document.getElementById('compMeDaddyPage').style.display = 'none';
     document.body.style.overflow = 'auto';
 }
@@ -790,15 +1090,21 @@ const RENTCAST_API_KEY = 'c5ad833affcf4a648df2ca97b5a870ff';
 async function loadRentCastAVM() {
     const loadingDiv = document.getElementById('rentcastAVMLoading');
     const dataDiv = document.getElementById('rentcastAVMData');
+    const compsDashboard = document.getElementById('compsDashboard');
     
-    loadingDiv.style.display = 'block';
-    dataDiv.style.display = 'none';
+    if (loadingDiv) loadingDiv.style.display = 'block';
+    if (dataDiv) dataDiv.style.display = 'none';
+    if (compsDashboard) compsDashboard.style.display = 'none';
     
     try {
+        console.log('loadRentCastAVM starting...');
         const address = encodeURIComponent(currentAddress);
-        const url = `https://api.rentcast.io/v1/avm/value?address=${address}`;
+        console.log('Encoded address:', address);
         
-        // Real RentCast API call
+        // Call AVM API with compCount=15 and daysOld=365 to get comparables
+        const url = `https://api.rentcast.io/v1/avm/value?address=${address}&compCount=15&daysOld=365`;
+        console.log('Fetching URL:', url);
+        
         const response = await fetch(url, { 
             headers: { 
                 'X-Api-Key': RENTCAST_API_KEY,
@@ -806,105 +1112,188 @@ async function loadRentCastAVM() {
             } 
         });
         
+        console.log('Response received:', response.status);
+        
         if (!response.ok) {
             throw new Error(`RentCast API error: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('Data received:', data);
         
-        // Extract RentCast data
+        // Store data globally for sharing
+        window.compMeDaddyData = {
+            address: currentAddress,
+            avm: data,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Extract subject property data
+        const subjectProperty = data.subjectProperty || {};
         const rentcastValue = data.price || 0;
         const lowRange = data.priceRangeLow || Math.round(rentcastValue * 0.92);
         const highRange = data.priceRangeHigh || Math.round(rentcastValue * 1.08);
-        const confidenceScore = data.confidenceScore || 0;
         
-        // Determine confidence level
-        let confidence = 'MEDIUM';
-        let confidenceColor = '#FFFF00';
-        if (confidenceScore >= 80) {
-            confidence = 'HIGH';
-            confidenceColor = '#00FF00';
-        } else if (confidenceScore < 50) {
-            confidence = 'LOW';
-            confidenceColor = '#FF0000';
+        // Process comparables
+        let allComps = data.comparables || [];
+        
+        // Sort by correlation score descending
+        allComps.sort((a, b) => (b.correlation || 0) - (a.correlation || 0));
+        
+        // Filter to top 5 with valid lastSaleDate and lastSalePrice
+        const validComps = allComps.filter(comp => 
+            comp.lastSaleDate && 
+            comp.lastSalePrice && 
+            comp.lastSalePrice > 0
+        ).slice(0, 5);
+        
+        // Store selected comps
+        window.compMeDaddyData.selectedComps = validComps;
+        
+        // Calculate median price/sqft for comps
+        const compPricesPerSqft = validComps
+            .filter(c => c.squareFootage && c.squareFootage > 0)
+            .map(c => c.lastSalePrice / c.squareFootage)
+            .sort((a, b) => a - b);
+        
+        const medianCompPricePerSqft = compPricesPerSqft.length > 0 
+            ? compPricesPerSqft[Math.floor(compPricesPerSqft.length / 2)] 
+            : 0;
+        
+        // Calculate subject property price/sqft
+        const subjectSqft = subjectProperty.squareFootage || data.squareFootage || 0;
+        const subjectPricePerSqft = subjectSqft > 0 ? rentcastValue / subjectSqft : 0;
+        
+        // Generate AVM justification
+        console.log('Generating AVM justification...');
+        generateAVMJustification(rentcastValue, subjectPricePerSqft, medianCompPricePerSqft, validComps);
+        
+        // Display comps dashboard
+        console.log('Displaying comps dashboard...');
+        displayCompsDashboard(validComps, subjectProperty, data);
+        
+        // Display map
+        console.log('Displaying map...');
+        displayCompMap(subjectProperty, validComps);
+        
+        // Show avm justification
+        const avmJust = document.getElementById('avmJustification');
+        if (avmJust) avmJust.style.display = 'block';
+        
+        // Update basic AVM display
+        if (document.getElementById('rentcastEstimate')) {
+            document.getElementById('rentcastEstimate').textContent = formatCurrency(rentcastValue);
+            document.getElementById('rentcastEstimate').style.color = '#00FFFF';
+        }
+        if (document.getElementById('rentcastRange')) {
+            document.getElementById('rentcastRange').textContent = `${formatCurrency(lowRange)} - ${formatCurrency(highRange)}`;
+        }
+        if (document.getElementById('rentcastConfidence')) {
+            const confScore = data.confidenceScore || 0;
+            let confText = 'MEDIUM';
+            let confColor = '#FFFF00';
+            if (confScore >= 80) {
+                confText = 'HIGH';
+                confColor = '#00FF00';
+            } else if (confScore < 50) {
+                confText = 'LOW';
+                confColor = '#FF0000';
+            }
+            const confEl = document.getElementById('rentcastConfidence');
+            confEl.textContent = confText + (confScore > 0 ? ` (${confScore}%)` : '');
+            confEl.style.color = confColor;
         }
         
-        document.getElementById('rentcastEstimate').textContent = formatCurrency(rentcastValue);
-        document.getElementById('rentcastEstimate').style.color = '#00FFFF';
+        // Generate share link
+        generateShareLink();
         
-        const confEl = document.getElementById('rentcastConfidence');
-        confEl.textContent = confidence + (confidenceScore > 0 ? ` (${confidenceScore}%)` : '');
-        confEl.style.color = confidenceColor;
-        
-        document.getElementById('rentcastRange').textContent = `${formatCurrency(lowRange)} - ${formatCurrency(highRange)}`;
-        
-        loadingDiv.style.display = 'none';
-        dataDiv.style.display = 'block';
+        // Show the dashboard
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (dataDiv) dataDiv.style.display = 'block';
+        if (compsDashboard) compsDashboard.style.display = 'block';
         
     } catch (error) {
-        console.error('RentCast error:', error);
+        console.error('Error loading RentCast AVM:', error);
+        if (loadingDiv) loadingDiv.style.display = 'none';
         
-        // Fallback to local estimates if RentCast fails
-        loadingDiv.innerHTML = '<font color="#FF9900">RentCast API error. Falling back to local estimates...</font>';
+        // Show error in dashboard
+        const dashboard = document.getElementById('compsDashboard');
+        if (dashboard) {
+            dashboard.innerHTML = `
+                <div style="padding: 20px; text-align: center;">
+                    <font color="#FF0000" size="4"><b>⚠️ Error Loading Data</b></font><br><br>
+                    <font color="#FFFF00">${error.message}</font><br><br>
+                    <font color="#00FF00">Please check the address and try again.</font>
+                </div>
+            `;
+            dashboard.style.display = 'block';
+        }
+    }
+}
+
+// Fetch RentCast property data including taxes
+async function loadRentCastPropertyData(address) {
+    try {
+        const encodedAddress = encodeURIComponent(address);
+        const url = `https://api.rentcast.io/v1/properties?address=${encodedAddress}`;
         
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const response = await fetch(url, {
+            headers: {
+                'X-Api-Key': RENTCAST_API_KEY,
+                'Accept': 'application/json'
+            }
+        });
         
-        // Check for Comp Me Daddy data context first, then fall back to main page inputs
-        const cmdData = window.compMeDaddyData || {};
-        const zestimate = cmdData.zestimate || parseFloat(document.getElementById('zestimate')?.value) || 0;
-        const realtorEst = cmdData.realtor_estimate || parseFloat(document.getElementById('realtorEstimate')?.value) || 0;
-        const comps = currentPropertyData?.comps || [];
-        
-        let rentcastValue = 0;
-        if (zestimate && realtorEst) {
-            rentcastValue = (zestimate * 0.4) + (realtorEst * 0.6);
-        } else if (zestimate) {
-            rentcastValue = zestimate * 0.95;
-        } else if (realtorEst) {
-            rentcastValue = realtorEst;
-        } else if (comps.length > 0) {
-            rentcastValue = comps.reduce((a, b) => a + b.sale_price, 0) / comps.length;
+        if (!response.ok) {
+            console.warn('RentCast property API error:', response.status);
+            return null;
         }
         
-        rentcastValue = Math.round(rentcastValue);
-        const lowRange = Math.round(rentcastValue * 0.92);
-        const highRange = Math.round(rentcastValue * 1.08);
+        const data = await response.json();
         
-        document.getElementById('rentcastEstimate').textContent = formatCurrency(rentcastValue);
-        document.getElementById('rentcastEstimate').style.color = '#00FFFF';
-        document.getElementById('rentcastConfidence').textContent = 'FALLBACK';
-        document.getElementById('rentcastConfidence').style.color = '#FF9900';
-        document.getElementById('rentcastRange').textContent = `${formatCurrency(lowRange)} - ${formatCurrency(highRange)}`;
+        if (data && data.length > 0) {
+            const property = data[0];
+            return {
+                sqft: property.squareFootage || property.livingArea || 0,
+                annualTaxes: property.propertyTaxes?.annualAmount || 0,
+                monthlyTaxes: property.propertyTaxes?.annualAmount ? Math.round(property.propertyTaxes.annualAmount / 12) : 0,
+                yearBuilt: property.yearBuilt || 0,
+                bedrooms: property.bedrooms || 0,
+                bathrooms: property.bathrooms || 0
+            };
+        }
         
-        loadingDiv.style.display = 'none';
-        dataDiv.style.display = 'block';
+        return null;
+    } catch (error) {
+        console.error('RentCast property data error:', error);
+        return null;
     }
 }
 
 function populateDetailedComps() {
     const tbody = document.getElementById('detailedCompsBody');
-    const comps = currentPropertyData?.comps || [];
+    // Use actual RentCast comps instead of mock data
+    const comps = window.compMeDaddyData?.selectedComps || [];
     
     if (!comps.length) {
-        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available!</font></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available! Run the analysis first.</font></td></tr>';
         return;
     }
     
-    // Get subject property sqft for calculations
-    const subjectSqft = parseInt(document.getElementById('sqft')?.value) || 1500;
-    
     tbody.innerHTML = comps.map((comp, index) => {
-        const pricePerSqft = comp.sqft > 0 ? Math.round(comp.sale_price / comp.sqft) : 0;
-        const distance = ((index * 0.3) + 0.2).toFixed(1); // Simulated distance
+        const pricePerSqft = comp.squareFootage > 0 ? Math.round(comp.lastSalePrice / comp.squareFootage) : 0;
+        const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
         const finishLevel = determineFinishLevel(comp, pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
+        const saleDate = comp.lastSaleDate ? new Date(comp.lastSaleDate).toLocaleDateString() : 'N/A';
+        const address = comp.formattedAddress || comp.addressLine1 || 'N/A';
         
         return `
             <tr bgcolor="${index % 2 === 0 ? '#000033' : '#000066'}">
-                <td><font color="#00FFFF">${comp.address}</font></td>
-                <td><font color="#00FF00">${formatCurrency(comp.sale_price)}</font></td>
+                <td><font color="#00FFFF">${address}</font></td>
+                <td><font color="#00FF00">${formatCurrency(comp.lastSalePrice)}</font></td>
                 <td><font color="#FF9900">$${pricePerSqft}</font></td>
-                <td><font color="#FFFF00">${comp.sale_date}</font></td>
+                <td><font color="#FFFF00">${saleDate}</font></td>
                 <td><font color="#00FFFF">${distance} mi</font></td>
                 <td><font color="${finishColor}"><b>${finishLevel}</b></font></td>
             </tr>
@@ -936,241 +1325,152 @@ function getFinishColor(level) {
     return colors[level] || '#FFFFFF';
 }
 
-function generateFinishAnalysis() {
-    const comps = currentPropertyData?.comps || [];
-    const container = document.getElementById('finishAnalysis');
+function generatePropertyTake() {
+    // Generate property valuation opinion based on comps
+    const comps = window.compMeDaddyData?.selectedComps || [];
+    const avmData = window.compMeDaddyData?.avm || {};
+    const container = document.getElementById('propertyTake');
+    
+    if (!container) return;
     
     if (!comps.length) {
-        container.innerHTML = '<font color="#FF0000">No data available for analysis.</font>';
+        container.innerHTML = '<font color="#FF0000" size="4"><b>No comps available.</b></font><br><font color="#FFFF00">Unable to generate valuation opinion without comparable sales data.</font>';
         return;
     }
     
-    // Calculate metrics
-    const prices = comps.map(c => c.sale_price);
-    const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
-    const sqfts = comps.map(c => c.sqft);
-    const avgSqft = sqfts.reduce((a, b) => a + b, 0) / sqfts.length;
-    const avgPricePerSqft = Math.round(avgPrice / avgSqft);
+    // Get AVM and subject property data
+    const avmValue = avmData.price || 0;
+    const avmLow = avmData.priceRangeLow || 0;
+    const avmHigh = avmData.priceRangeHigh || 0;
+    const subjectProperty = avmData.subjectProperty || {};
+    const subjectSqft = subjectProperty.squareFootage || avmData.squareFootage || 0;
+    const subjectPricePerSqft = subjectSqft > 0 ? avmValue / subjectSqft : 0;
     
-    // Count finish levels
-    const finishCounts = {};
-    comps.forEach(comp => {
-        const ppsf = comp.sqft > 0 ? Math.round(comp.sale_price / comp.sqft) : 0;
-        const level = determineFinishLevel(comp, ppsf);
-        finishCounts[level] = (finishCounts[level] || 0) + 1;
-    });
+    // Calculate comp metrics
+    const prices = comps.map(c => c.lastSalePrice);
+    const avgCompPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+    const minCompPrice = Math.min(...prices);
+    const maxCompPrice = Math.max(...prices);
     
-    // Find dominant finish level
-    let dominantLevel = 'AVERAGE';
-    let maxCount = 0;
-    for (const [level, count] of Object.entries(finishCounts)) {
-        if (count > maxCount) {
-            maxCount = count;
-            dominantLevel = level;
-        }
-    }
+    const sqfts = comps.map(c => c.squareFootage).filter(s => s > 0);
+    const avgCompSqft = sqfts.length > 0 ? sqfts.reduce((a, b) => a + b, 0) / sqfts.length : 0;
+    const avgCompPricePerSqft = avgCompSqft > 0 ? Math.round(avgCompPrice / avgCompSqft) : 0;
     
-    // Generate color commentary
-    let commentary = '';
+    // Calculate price spreads
+    const spreadLow = avmValue - minCompPrice;
+    const spreadHigh = maxCompPrice - avmValue;
+    const spreadPercentLow = avmValue > 0 ? (spreadLow / avmValue * 100) : 0;
+    const spreadPercentHigh = avmValue > 0 ? (spreadHigh / avmValue * 100) : 0;
     
-    if (dominantLevel === 'LUXURY' || dominantLevel === 'HIGH-END') {
-        commentary = `
-            <font color="#FF00FF" size="5"><b>💎 LUXURY MARKET DETECTED! 💎</b></font><br><br>
-            <font color="#00FFFF">Your comps are averaging <b>$${avgPricePerSqft}/sqft</b> - this is a HIGH-END area!</font><br><br>
-            <font color="#FFFF00">💡 <b>THE COLOR:</b> These buyers expect granite, hardwood, and stainless steel. 
-            Don't cheap out on finishes or you'll get slaughtered on price. Budget $40-60/sqft for reno if you want to compete.</font><br><br>
-            <font color="#00FF00">🏆 <b>OPPORTUNITY:</b> Look for the "NEEDS WORK" comps - there's a ${Math.round(avgPricePerSqft * 0.3)}/sqft spread between fixers and luxury.</font>
-        `;
-    } else if (dominantLevel === 'UPDATED') {
-        commentary = `
-            <font color="#00FF00" size="5"><b>✨ SOLID MIDDLE MARKET ✨</b></font><br><br>
-            <font color="#00FFFF">Your comps are averaging <b>$${avgPricePerSqft}/sqft</b> - this is a nice updated area.</font><br><br>
-            <font color="#FFFF00">💡 <b>THE COLOR:</b> Buyers here want move-in ready but aren't expecting luxury. 
-            LVP flooring, quartz counters, and decent appliances will get you there. Budget $25-35/sqft for reno.</font><br><br>
-            <font color="#00FF00">🏆 <b>OPPORTUNITY:</b> Anything dated is your friend. Look for "AVERAGE" or "NEEDS WORK" comps.</font>
-        `;
-    } else if (dominantLevel === 'AVERAGE') {
-        commentary = `
-            <font color="#FFFF00" size="5"><b>🏠 BREAD-AND-BUTTER MARKET 🏠</b></font><br><br>
-            <font color="#00FFFF">Your comps are averaging <b>$${avgPricePerSqft}/sqft</b> - this is an average working-class area.</font><br><br>
-            <font color="#FFFF00">💡 <b>THE COLOR:</b> These buyers are practical. They want clean, functional, and affordable. 
-            Don't over-improve! Laminate counters, LVP floors, and white appliances are fine. Budget $15-25/sqft for reno.</font><br><br>
-            <font color="#FF9900">⚠️ <b>WARNING:</b> Don't put $50k into a kitchen here. You'll never get it back.</font>
-        `;
+    // Determine finish level of subject based on price/sqft vs comps
+    let finishAssessment = '';
+    let finishColor = '';
+    let valuationVerdict = '';
+    let confidence = '';
+    
+    if (subjectPricePerSqft > avgCompPricePerSqft * 1.1) {
+        finishAssessment = 'PREMIUM / HIGH-END';
+        finishColor = '#FF00FF';
+        valuationVerdict = 'The AVM appears aggressive. Subject is priced above comparable sales.';
+        confidence = 'If the subject has superior finishes, larger lot, or better location, this could be justified. Otherwise, expect appraisal closer to $' + formatCurrency(Math.round(avgCompPrice)) + ' range.';
+    } else if (subjectPricePerSqft > avgCompPricePerSqft * 0.95) {
+        finishAssessment = 'UPDATED / MARKET';
+        finishColor = '#00FF00';
+        valuationVerdict = 'The AVM is well-supported by comparable sales.';
+        confidence = 'Strong valuation confidence. Subject is priced in line with similar properties in the area.';
+    } else if (subjectPricePerSqft > avgCompPricePerSqft * 0.8) {
+        finishAssessment = 'AVERAGE / STANDARD';
+        finishColor = '#FFFF00';
+        valuationVerdict = 'The AVM is reasonable but leaves room for upside.';
+        confidence = 'Conservative valuation. With light updates (paint, flooring), subject could justify higher end of range.';
     } else {
-        commentary = `
-            <font color="#FF9900" size="5"><b>🔨 VALUE-ADD OPPORTUNITY! 🔨</font></b><br><br>
-            <font color="#00FFFF">Your comps are averaging <b>$${avgPricePerSqft}/sqft</b> - this area needs some love.</font><br><br>
-            <font color="#FFFF00">💡 <b>THE COLOR:</b> Most comps are dated or rough. Even basic updates will make you stand out. 
-            Paint, flooring, and kitchen/bath refreshes are your friends. Budget $10-20/sqft for reno.</font><br><br>
-            <font color="#00FF00">🏆 <b>OPPORTUNITY:</b> Big spreads between fixers and average. Perfect for BRRRR or flip strategy.</font>
-        `;
+        finishAssessment = 'NEEDS WORK / VALUE-ADD';
+        finishColor = '#FF9900';
+        valuationVerdict = 'The AVM is conservative, indicating opportunity.';
+        confidence = 'Excellent value-add potential. Even basic improvements could push value toward $' + formatCurrency(Math.round(avgCompPrice)) + ' range.';
     }
     
-    // Add market summary
-    const newestComp = comps.reduce((a, b) => a.sale_date > b.sale_date ? a : b);
-    const oldestComp = comps.reduce((a, b) => a.sale_date < b.sale_date ? a : b);
-    
-    commentary += `<br><br><hr><br>
-        <font color="#FF00FF" size="4"><b>📊 MARKET SUMMARY:</b></font><br><br>
-        <table border="1" cellpadding="5" cellspacing="0" width="100%">
-            <tr bgcolor="#000066">
-                <td><font color="#FFFF00">Average Price:</font></td>
-                <td><font color="#00FF00">${formatCurrency(Math.round(avgPrice))}</font></td>
-            </tr>
-            <tr bgcolor="#000033">
-                <td><font color="#FFFF00">Average $/sqft:</font></td>
-                <td><font color="#00FF00">$${avgPricePerSqft}</font></td>
-            </tr>
-            <tr bgcolor="#000066">
-                <td><font color="#FFFF00">Price Range:</font></td>
-                <td><font color="#00FF00">${formatCurrency(Math.min(...prices))} - ${formatCurrency(Math.max(...prices))}</font></td>
-            </tr>
-            <tr bgcolor="#000033">
-                <td><font color="#FFFF00">Comp Date Range:</font></td>
-                <td><font color="#00FF00">${oldestComp.sale_date} to ${newestComp.sale_date}</font></td>
-            </tr>
-            <tr bgcolor="#000066">
-                <td><font color="#FFFF00">Dominant Finish:</font></td>
-                <td><font color="${getFinishColor(dominantLevel)}">${dominantLevel}</font></td>
-            </tr>
-        </table>
+    // Generate the take HTML
+    const html = `
+        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid ${finishColor}; border-radius: 10px; padding: 20px;">
+            <font face="Papyrus" color="${finishColor}" size="5"><b>🏠 ${finishAssessment} FINISH</b></font>
+            <br><br>
+            
+            <table border="1" cellpadding="10" cellspacing="0" width="100%" style="margin-bottom: 20px;">
+                <tr bgcolor="#000066">
+                    <td width="50%"><font color="#FFFF00"><b>Subject AVM:</b></font></td>
+                    <td><font color="#00FFFF" size="4"><b>${formatCurrency(avmValue)}</b></font></td>
+                </tr>
+                <tr bgcolor="#000033">
+                    <td><font color="#FFFF00"><b>AVM Range:</b></font></td>
+                    <td><font color="#FFFF00">${formatCurrency(avmLow)} - ${formatCurrency(avmHigh)}</font></td>
+                </tr>
+                <tr bgcolor="#000066">
+                    <td><font color="#FFFF00"><b>Subject $/sqft:</b></font></td>
+                    <td><font color="#00FF00">$${subjectPricePerSqft.toFixed(0)}</font></td>
+                </tr>
+                <tr bgcolor="#000033">
+                    <td><font color="#FFFF00"><b>Comp Average:</b></font></td>
+                    <td><font color="#00FF00">${formatCurrency(Math.round(avgCompPrice))} ($${avgCompPricePerSqft}/sqft)</font></td>
+                </tr>
+                <tr bgcolor="#000066">
+                    <td><font color="#FFFF00"><b>Comp Range:</b></font></td>
+                    <td><font color="#FFFF00">${formatCurrency(minCompPrice)} - ${formatCurrency(maxCompPrice)}</font></td>
+                </tr>
+            </table>
+            
+            <font face="Comic Sans MS" color="#00FFFF" size="4"><b>📊 THE VERDICT:</b></font>
+            <br><br>
+            <font face="Courier New" color="#ffffff" size="2">
+                ${valuationVerdict}
+                <br><br>
+                <font color="#ffd700"><b>💡 ASSESSMENT:</b></font> ${confidence}
+            </font>
+            
+            <br><br>
+            <hr style="border-color: #333;">
+            <br>
+            
+            <font face="Comic Sans MS" color="#FF00FF" size="3"><b>🎯 INVESTMENT STRATEGY:</b></font>
+            <br><br>
+            <font face="Courier New" color="#ffffff" size="2">
+                ${generateStrategyText(finishAssessment, avmValue, avgCompPrice, subjectPricePerSqft, avgCompPricePerSqft)}
+            </font>
+        </div>
     `;
     
-    container.innerHTML = commentary;
+    container.innerHTML = html;
 }
 
-// ============================================
-// LOCATION MAP - PROXIMITY VIEW
-// ============================================
-
-let compMap = null;
-
-function initCompMap() {
-    // Initialize the map centered on a default location (will be updated)
-    if (compMap) {
-        compMap.remove();
+function generateStrategyText(finishLevel, avmValue, avgCompPrice, subjectPpsf, compPpsf) {
+    const diff = avmValue - avgCompPrice;
+    const diffPercent = avgCompPrice > 0 ? (diff / avgCompPrice * 100) : 0;
+    
+    if (finishLevel.includes('PREMIUM') || finishLevel.includes('HIGH-END')) {
+        return `
+            • <b>Flip Strategy:</b> Challenging. Already at top of market. Need to ensure finishes justify premium.<br>
+            • <b>BRRRR Strategy:</b> Risky. Conservative ARV estimate recommended.<br>
+            • <b>Recommendation:</b> Only pursue if you can acquire significantly below AVM or property has unique advantages.
+        `;
+    } else if (finishLevel.includes('UPDATED') || finishLevel.includes('MARKET')) {
+        return `
+            • <b>Flip Strategy:</b> Moderate. Focus on cosmetic updates only. Avoid major structural work.<br>
+            • <b>BRRRR Strategy:</b> Solid. Rental income should support refinance at AVM.<br>
+            • <b>Recommendation:</b> Good rental candidate. Cash flow should be positive with standard financing.
+        `;
+    } else if (finishLevel.includes('AVERAGE')) {
+        return `
+            • <b>Flip Strategy:</b> Good opportunity. Light reno ($15-25/sqft) can push value to comp average.<br>
+            • <b>BRRRR Strategy:</b> Excellent. Forced appreciation potential through updates.<br>
+            • <b>Recommendation:</b> Ideal value-add play. Budget for kitchen/bath refresh, flooring, paint.
+        `;
+    } else {
+        return `
+            • <b>Flip Strategy:</b> Excellent opportunity. Full reno can capture ${diffPercent.toFixed(0)}% upside to comp average.<br>
+            • <b>BRRRR Strategy:</b> Very strong. Significant forced appreciation potential.<br>
+            • <b>Recommendation:</b> Best case for value-add. Plan comprehensive renovation for maximum ARV.
+        `;
     }
-    
-    compMap = L.map('compMap').setView([39.8283, -98.5795], 4); // Center of US
-    
-    // Add OpenStreetMap tile layer (free, no API key)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-    }).addTo(compMap);
-}
-
-async function geocodeAddress(address) {
-    try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`, {
-            headers: { 'User-Agent': 'Slopulator/1.0 (bradley@brashproperties.com)' }
-        });
-        
-        if (!response.ok) return null;
-        
-        const data = await response.json();
-        if (data && data.length > 0) {
-            return {
-                lat: parseFloat(data[0].lat),
-                lon: parseFloat(data[0].lon),
-                display_name: data[0].display_name
-            };
-        }
-        return null;
-    } catch (error) {
-        console.error('Geocoding error:', error);
-        return null;
-    }
-}
-
-function generateMockCompCoordinates(targetLat, targetLon, count) {
-    // Generate mock coordinates for comps within ~0.5 mile radius
-    const coords = [];
-    for (let i = 0; i < count; i++) {
-        // Random offset within ~0.5 miles (roughly 0.007 degrees)
-        const latOffset = (Math.random() - 0.5) * 0.014;
-        const lonOffset = (Math.random() - 0.5) * 0.014;
-        coords.push({
-            lat: targetLat + latOffset,
-            lon: targetLon + lonOffset
-        });
-    }
-    return coords;
-}
-
-async function populateCompMap() {
-    if (!compMap) {
-        initCompMap();
-    }
-    
-    // Clear existing markers
-    compMap.eachLayer((layer) => {
-        if (layer instanceof L.Marker || layer instanceof L.Circle) {
-            compMap.removeLayer(layer);
-        }
-    });
-    
-    // Geocode the target address
-    const targetLocation = await geocodeAddress(currentAddress);
-    
-    if (!targetLocation) {
-        // Show error on map
-        document.getElementById('compMap').innerHTML = '<font color="#FF0000">Unable to locate address on map</font>';
-        return;
-    }
-    
-    // Center map on target property
-    compMap.setView([targetLocation.lat, targetLocation.lon], 15);
-    
-    // Add red marker for target property
-    const targetIcon = L.divIcon({
-        className: 'custom-target-marker',
-        html: '<div style="background-color:#FF0000;width:20px;height:20px;border-radius:50%;border:3px solid #FFFF00;box-shadow:0 0 10px #FF0000;"></div>',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-    });
-    
-    L.marker([targetLocation.lat, targetLocation.lon], { icon: targetIcon })
-        .addTo(compMap)
-        .bindPopup('<b>🏠 TARGET PROPERTY</b><br>' + currentAddress)
-        .openPopup();
-    
-    // Add 0.25 and 0.5 mile radius circles
-    L.circle([targetLocation.lat, targetLocation.lon], {
-        color: '#00FF00',
-        fillColor: '#00FF00',
-        fillOpacity: 0.1,
-        radius: 402 // 0.25 miles in meters
-    }).addTo(compMap).bindPopup('0.25 mile radius');
-    
-    L.circle([targetLocation.lat, targetLocation.lon], {
-        color: '#FFFF00',
-        fillColor: '#FFFF00',
-        fillOpacity: 0.05,
-        radius: 804 // 0.5 miles in meters
-    }).addTo(compMap).bindPopup('0.5 mile radius');
-    
-    // Add blue markers for comps
-    const comps = currentPropertyData?.comps || [];
-    const mockCoords = generateMockCompCoordinates(targetLocation.lat, targetLocation.lon, comps.length);
-    
-    const compIcon = L.divIcon({
-        className: 'custom-comp-marker',
-        html: '<div style="background-color:#00FFFF;width:15px;height:15px;border-radius:50%;border:2px solid #0000FF;box-shadow:0 0 8px #00FFFF;"></div>',
-        iconSize: [15, 15],
-        iconAnchor: [7, 7]
-    });
-    
-    comps.forEach((comp, index) => {
-        const coord = mockCoords[index] || mockCoords[0];
-        const price = formatCurrency(comp.sale_price);
-        const address = comp.address || 'Unknown Address';
-        
-        L.marker([coord.lat, coord.lon], { icon: compIcon })
-            .addTo(compMap)
-            .bindPopup(`<b>🏘️ COMP #${index + 1}</b><br>${address}<br><b>${price}</b>`);
-    });
 }
 
 // ============================================
@@ -1192,20 +1492,28 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Address input
     const addressInput = document.getElementById('addressInput');
-    addressInput.addEventListener('input', (e) => {
-        fetchAddressSuggestions(e.target.value);
-    });
-    
-    addressInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+    if (!addressInput) {
+        console.error('Address input element not found!');
+    } else {
+        console.log('Address input found, attaching listeners');
+        addressInput.addEventListener('input', (e) => {
+            console.log('Input event fired:', e.target.value);
             fetchAddressSuggestions(e.target.value);
-        }
-    });
+        });
+        
+        addressInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchAddressSuggestions(e.target.value);
+            }
+        });
+    }
     
     // Hide suggestions when clicking outside
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-container')) {
-            document.getElementById('addressSuggestions').style.display = 'none';
+        const suggestionsEl = document.getElementById('addressSuggestions');
+        const searchContainer = document.querySelector('.search-container');
+        if (suggestionsEl && searchContainer && !searchContainer.contains(e.target)) {
+            suggestionsEl.style.display = 'none';
         }
     });
     
@@ -1225,13 +1533,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Comp Me Daddy button (with null check)
     const compMeDaddyBtn = document.getElementById('compMeDaddyBtn');
     if (compMeDaddyBtn) {
-        compMeDaddyBtn.addEventListener('click', openCompMeDaddy);
+        compMeDaddyBtn.addEventListener('click', window.openCompMeDaddy);
     }
     
     // Comp Me Daddy search button (with null check)
     const compMeDaddySearchBtn = document.getElementById('compMeDaddySearchBtn');
     if (compMeDaddySearchBtn) {
-        compMeDaddySearchBtn.addEventListener('click', runCompMeDaddyAnalysis);
+        compMeDaddySearchBtn.addEventListener('click', window.runCompMeDaddyAnalysis);
+    }
+    
+    // Check if address was already selected before page loaded
+    if (window.selectedAddress) {
+        window.loadPropertyData(window.selectedAddress, window.selectedLat, window.selectedLon);
     }
     
     // Comp Me Daddy address input (Enter key) (with null check)
@@ -1278,6 +1591,242 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================
+// COMP ME DADDY - ANALYSIS FUNCTIONS
+// ============================================
+
+function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPricePerSqft, comps) {
+    const justificationEl = document.getElementById('avmJustification');
+    if (!justificationEl || comps.length === 0) return;
+    
+    const highestComp = comps.reduce((max, comp) => 
+        (comp.lastSalePrice / (comp.squareFootage || 1)) > (max.lastSalePrice / (max.squareFootage || 1)) ? comp : max
+    , comps[0]);
+    
+    const highestCompAddress = highestComp.formattedAddress || highestComp.addressLine1 || 'the highest comp';
+    const highestCompPricePerSqft = highestComp.squareFootage > 0 
+        ? (highestComp.lastSalePrice / highestComp.squareFootage).toFixed(0) 
+        : 'N/A';
+    
+    let justification = '';
+    const diff = subjectPricePerSqft - medianCompPricePerSqft;
+    const diffPercent = medianCompPricePerSqft > 0 ? (diff / medianCompPricePerSqft * 100) : 0;
+    
+    if (diffPercent > 5) {
+        justification = `
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #ff6b6b; border-radius: 10px; padding: 20px; margin: 15px 0;">
+                <font face="Papyrus" color="#ff6b6b" size="4"><b>📊 AVM ASSESSMENT: AGGRESSIVE</b></font><br><br>
+                <font face="Courier New" color="#ffffff" size="2">
+                The RentCast AVM of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                <b>${diffPercent.toFixed(1)}% higher</b> than the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
+                
+                This aggressive valuation is likely supported by <b>${highestCompAddress}</b>, which sold at 
+                $${highestCompPricePerSqft}/sqft and is only ${highestComp.distance?.toFixed(2) || 'unknown'} miles away.<br><br>
+                
+                <font color="#ffd700"><b>💡 Appraisal Insight:</b></font> Expect the appraiser to anchor toward the 
+                median range unless your subject property has significant advantages (larger lot, better condition, 
+                recent updates) over the comparable sales.
+                </font>
+            </div>
+        `;
+    } else if (diffPercent < -5) {
+        justification = `
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #4ecdc4; border-radius: 10px; padding: 20px; margin: 15px 0;">
+                <font face="Papyrus" color="#4ecdc4" size="4"><b>📊 AVM ASSESSMENT: CONSERVATIVE</b></font><br><br>
+                <font face="Courier New" color="#ffffff" size="2">
+                The RentCast AVM of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                <b>${Math.abs(diffPercent).toFixed(1)}% lower</b> than the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
+                
+                This conservative valuation may reflect historical data patterns or the subject's last sale price. 
+                The comparable sales suggest stronger market support at higher values.<br><br>
+                
+                <font color="#ffd700"><b>💡 Appraisal Insight:</b></font> This presents an opportunity! The appraisal 
+                should come in at or above the AVM. If renovating, you have room to create equity above the projected value.
+                </font>
+            </div>
+        `;
+    } else {
+        justification = `
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #00ff00; border-radius: 10px; padding: 20px; margin: 15px 0;">
+                <font face="Papyrus" color="#00ff00" size="4"><b>📊 AVM ASSESSMENT: STRONGLY SUPPORTED</b></font><br><br>
+                <font face="Courier New" color="#ffffff" size="2">
+                The RentCast AVM of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                <b>within ${Math.abs(diffPercent).toFixed(1)}%</b> of the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
+                
+                This AVM is strongly supported by the local market data. The selected comparables show consistent 
+                pricing within a tight range around your subject property.<br><br>
+                
+                <font color="#ffd700"><b>💡 Appraisal Insight:</b></font> High confidence in this valuation. 
+                Expect the appraisal to align closely with the AVM, assuming typical property condition and no 
+                unusual market factors.
+                </font>
+            </div>
+        `;
+    }
+    
+    justificationEl.innerHTML = justification;
+}
+
+function displayCompsDashboard(comps, subjectProperty, avmData) {
+    const dashboard = document.getElementById('compsDashboard');
+    if (!dashboard) return;
+    
+    const avmValue = avmData.price || 0;
+    const subjectSqft = subjectProperty.squareFootage || avmData.squareFootage || 0;
+    
+    let html = `
+        <div style="background: #0a0a0a; border: 3px groove #ffd700; padding: 20px; margin: 20px 0;">
+            <font face="Comic Sans MS" color="#ffd700" size="5">
+                <b>🏘️ TOP 5 COMPARABLE SALES</b>
+            </font>
+            <br><br>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+    `;
+    
+    comps.forEach((comp, index) => {
+        const pricePerSqft = comp.squareFootage > 0 
+            ? (comp.lastSalePrice / comp.squareFootage).toFixed(0) 
+            : 'N/A';
+        const saleDate = comp.lastSaleDate 
+            ? new Date(comp.lastSaleDate).toLocaleDateString() 
+            : 'N/A';
+        const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
+        
+        html += `
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 2px solid #00ff00; border-radius: 10px; padding: 15px;">
+                <font face="Papyrus" color="#ff00ff" size="3"><b>Comp #${index + 1}</b></font>
+                <hr style="border-color: #333; margin: 10px 0;">
+                <font face="Courier New" color="#ffffff" size="2">
+                    <b>📍 Address:</b><br>
+                    <span style="color: #00ffff;">${comp.formattedAddress || comp.addressLine1 || 'N/A'}</span><br><br>
+                    
+                    <b>💰 Sale Price:</b> <span style="color: #00ff00; font-size: 16px;">${formatCurrency(comp.lastSalePrice)}</span><br>
+                    <b>📅 Sold:</b> ${saleDate}<br>
+                    <b>📏 Distance:</b> ${distance} miles<br>
+                    <b>📐 Sqft:</b> ${comp.squareFootage || 'N/A'}<br>
+                    <b>💵 Price/Sqft:</b> <span style="color: #ffd700;">$${pricePerSqft}</span><br>
+                    <b>🎯 Correlation:</b> ${(comp.correlation * 100).toFixed(1)}%
+                </font>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #330000 0%, #220000 100%); border: 3px solid #ff6b6b; border-radius: 10px; padding: 20px; margin-top: 20px;">
+                <font face="Comic Sans MS" color="#ff6b6b" size="4"><b>🎯 SUBJECT PROPERTY</b></font>
+                <hr style="border-color: #ff6b6b;">
+                <font face="Courier New" color="#ffffff" size="3">
+                    <b>Address:</b> <span style="color: #00ffff;">${subjectProperty.formattedAddress || currentAddress}</span><br>
+                    <b>AVM Value:</b> <span style="color: #00ff00; font-size: 20px;">${formatCurrency(avmValue)}</span><br>
+                    <b>Sqft:</b> ${subjectSqft || 'N/A'} | 
+                    <b>Price/Sqft:</b> <span style="color: #ffd700;">$${subjectSqft > 0 ? (avmValue / subjectSqft).toFixed(0) : 'N/A'}</span>
+                </font>
+            </div>
+        </div>
+    `;
+    
+    dashboard.innerHTML = html;
+}
+
+function displayCompMap(subjectProperty, comps) {
+    const mapContainer = document.getElementById('compMapContainer');
+    if (!mapContainer) return;
+    
+    const subjectLat = subjectProperty?.latitude || window.selectedLat;
+    const subjectLon = subjectProperty?.longitude || window.selectedLon;
+    
+    if (!subjectLat || !subjectLon) {
+        mapContainer.innerHTML = '<font color="#FF0000">Map coordinates not available</font>';
+        return;
+    }
+    
+    // Build list of all coordinates
+    const allLats = [parseFloat(subjectLat), ...comps.filter(c => c.latitude).map(c => parseFloat(c.latitude))];
+    const allLons = [parseFloat(subjectLon), ...comps.filter(c => c.longitude).map(c => parseFloat(c.longitude))];
+    
+    if (allLats.length < 2) {
+        mapContainer.innerHTML = '<font color="#FF9900">Not enough coordinate data for map</font>';
+        return;
+    }
+    
+    const minLat = Math.min(...allLats);
+    const maxLat = Math.max(...allLats);
+    const minLon = Math.min(...allLons);
+    const maxLon = Math.max(...allLons);
+    
+    const latPad = (maxLat - minLat) * 0.3 || 0.005;
+    const lonPad = (maxLon - minLon) * 0.3 || 0.005;
+    
+    const bbox = `${(minLon - lonPad).toFixed(6)}%2C${(minLat - latPad).toFixed(6)}%2C${(maxLon + lonPad).toFixed(6)}%2C${(maxLat + latPad).toFixed(6)}`;
+    
+    // Build markers list with numbered pins for comps
+    // Subject property = red, Comps = numbered (1-5)
+    let markers = `${subjectLat},${subjectLon},red-pushpin`; 
+    comps.forEach((comp, index) => {
+        if (comp.latitude && comp.longitude) {
+            const label = (index + 1).toString(); // 1, 2, 3, 4, 5
+            markers += `|${comp.latitude},${comp.longitude},blue-${label}`;
+        }
+    });
+    
+    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${subjectLat}%2C${subjectLon}`;
+    
+    mapContainer.innerHTML = `
+        <div style="border: 3px groove #ff00ff; border-radius: 10px; overflow: hidden; margin: 15px 0;">
+            <iframe src="${mapUrl}" width="100%" height="400" frameborder="0" scrolling="no" 
+                    style="display: block;"></iframe>
+        </div>
+        <table width="100%" style="margin-top: 10px;">
+            <tr>
+                <td align="center" width="50%">
+                    <font face="Courier New" color="#FF0000" size="2">
+                        <b>🔴 SUBJECT PROPERTY</b>
+                    </font>
+                </td>
+                <td align="center" width="50%">
+                    <font face="Courier New" color="#00FF00" size="2">
+                        <b>🔵 COMPS 1-5 (by correlation)</b>
+                    </font>
+                </td>
+            </tr>
+        </table>
+    `;
+}
+
+function generateShareLink() {
+    const shareContainer = document.getElementById('shareLinkContainer');
+    if (!shareContainer || !window.compMeDaddyData) return;
+    
+    const shareText = `Here is a comp analysis for ${window.compMeDaddyData.address}`;
+    const encodedText = encodeURIComponent(shareText);
+    const currentUrl = window.location.href.split('?')[0];
+    const shareUrl = `${currentUrl}?share=${encodedText}`;
+    
+    shareContainer.innerHTML = `
+        <div style="background: #001a33; border: 2px solid #00ff00; padding: 15px; margin: 15px 0; border-radius: 8px;">
+            <font face="Comic Sans MS" color="#00ff00" size="3"><b>🔗 SHARE THIS ANALYSIS</b></font><br><br>
+            <textarea id="shareText" readonly style="width: 100%; height: 60px; background: #000; color: #0f0; border: 1px solid #00ff00; padding: 10px; font-family: monospace; resize: none;">${shareText}
+
+${shareUrl}</textarea>
+            <br><br>
+            <button onclick="copyShareText()" style="background: linear-gradient(45deg, #00ff00, #00aa00); color: #000; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                📋 COPY TO CLIPBOARD
+            </button>
+        </div>
+    `;
+}
+
+window.copyShareText = function() {
+    const textarea = document.getElementById('shareText');
+    if (textarea) {
+        textarea.select();
+        document.execCommand('copy');
+        alert('Copied to clipboard! 📋');
+    }
+};
+
+// ============================================
 // KEYBOARD SHORTCUTS
 // ============================================
 
@@ -1293,3 +1842,9 @@ document.addEventListener('keydown', (e) => {
         closeCompMeDaddy();
     }
 });
+
+// ============================================
+// EXPOSE FUNCTIONS TO WINDOW
+// ============================================
+
+window.runComprehensiveAnalysis = runCalculations;
