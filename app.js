@@ -1134,18 +1134,23 @@ async function loadRentCastAVM() {
         // Sort by correlation score descending
         allComps.sort((a, b) => (b.correlation || 0) - (a.correlation || 0));
         
-        // Filter to top 5 with valid price
-        const validComps = allComps.filter(comp => 
-            comp.lastSalePrice > 0 || comp.price > 0
-        ).slice(0, 5);
+        // Filter to top 5 with valid price (check multiple property names)
+        const validComps = allComps.filter(comp => {
+            const price = Number(comp.lastSalePrice || comp.salePrice || comp.price || comp.soldPrice || 0);
+            return price > 0;
+        }).slice(0, 5);
         
         // Store selected comps
         window.compMeDaddyData.selectedComps = validComps;
         
         // Calculate median price/sqft for comps
         const compPricesPerSqft = validComps
-            .filter(c => c.squareFootage && c.squareFootage > 0)
-            .map(c => c.lastSalePrice / c.squareFootage)
+            .filter(c => (c.squareFootage || c.sqft || c.livingArea) > 0)
+            .map(c => {
+                const price = Number(c.lastSalePrice || c.salePrice || c.price || c.soldPrice || 0);
+                const sqft = Number(c.squareFootage || c.sqft || c.livingArea || 1);
+                return price / sqft;
+            })
             .sort((a, b) => a - b);
         
         const medianCompPricePerSqft = compPricesPerSqft.length > 0 
@@ -1281,9 +1286,12 @@ function populateDetailedComps() {
     }
 
     tbody.innerHTML = comps.map((comp, index) => {
-        // Handle different API response formats
-        const salePrice = Number(comp.lastSalePrice || comp.price || 0);
-        const sqft = Number(comp.squareFootage || comp.sqft || comp.livingArea || 0);
+        // Debug: log first comp to see structure
+        if (index === 0) console.log('Comp object:', JSON.stringify(comp, null, 2));
+        
+        // Handle different API response formats - try all possible property names
+        const salePrice = Number(comp.lastSalePrice || comp.salePrice || comp.price || comp.soldPrice || 0);
+        const sqft = Number(comp.squareFootage || comp.sqft || comp.livingArea || comp.square_footage || 0);
         const pricePerSqft = sqft > 0 ? Math.round(salePrice / sqft) : '-';
         const distance = comp.distance ? Number(comp.distance).toFixed(2) : 'N/A';
         const finishLevel = determineFinishLevel(comp, pricePerSqft === '-' ? 0 : pricePerSqft);
@@ -1291,7 +1299,7 @@ function populateDetailedComps() {
         
         // Parse sale date from various formats
         let saleDate = 'N/A';
-        const dateStr = comp.saleDate || comp.lastSaleDate;
+        const dateStr = comp.saleDate || comp.lastSaleDate || comp.sale_date || comp.date;
         if (dateStr) {
             try {
                 const d = new Date(dateStr);
@@ -1301,7 +1309,7 @@ function populateDetailedComps() {
             } catch (e) {}
         }
         
-        const address = comp.formattedAddress || comp.addressLine1 || comp.address || comp.streetAddress || 'N/A';
+        const address = comp.formattedAddress || comp.addressLine1 || comp.address || comp.streetAddress || comp.fullAddress || 'N/A';
 
         return `
             <tr bgcolor="${index % 2 === 0 ? '#000033' : '#000066'}">
@@ -1362,12 +1370,12 @@ function generatePropertyTake() {
     const subjectPricePerSqft = subjectSqft > 0 ? avmValue / subjectSqft : 0;
     
     // Calculate comp metrics
-    const prices = comps.map(c => c.lastSalePrice || c.price || 0);
+    const prices = comps.map(c => Number(c.lastSalePrice || c.salePrice || c.price || c.soldPrice || 0));
     const avgCompPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
     const minCompPrice = Math.min(...prices);
     const maxCompPrice = Math.max(...prices);
     
-    const sqfts = comps.map(c => c.squareFootage || c.sqft || 0).filter(s => s > 0);
+    const sqfts = comps.map(c => Number(c.squareFootage || c.sqft || c.livingArea || 0)).filter(s => s > 0);
     const avgCompSqft = sqfts.length > 0 ? sqfts.reduce((a, b) => a + b, 0) / sqfts.length : 0;
     const avgCompPricePerSqft = avgCompSqft > 0 ? Math.round(avgCompPrice / avgCompSqft) : 0;
     
