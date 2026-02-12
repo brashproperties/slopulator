@@ -1130,14 +1130,24 @@ async function loadRentCastAVM() {
         
         // Process comparables
         let allComps = data.comparables || [];
-        
+
         // Sort by correlation score descending
         allComps.sort((a, b) => (b.correlation || 0) - (a.correlation || 0));
-        
-        // Filter to top 5 with valid price (check multiple property names)
+
+        // Filter: valid price AND decent finish level (exclude fixer-uppers for reno deals)
         const validComps = allComps.filter(comp => {
             const price = Number(comp.lastSalePrice || comp.salePrice || comp.price || comp.soldPrice || 0);
-            return price > 0;
+            const sqft = Number(comp.squareFootage || comp.sqft || comp.livingArea || 1);
+            const pricePerSqft = sqft > 0 ? price / sqft : 0;
+
+            // Skip if price is invalid
+            if (price <= 0) return false;
+
+            // Skip "needs work" and "fixer-upper" comps (below $85/sqft)
+            // We're renovating to average/updated standards, so fixer comps skew ARV down
+            if (pricePerSqft < 85) return false;
+
+            return true;
         }).slice(0, 5);
         
         // Store selected comps
