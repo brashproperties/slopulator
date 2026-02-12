@@ -1636,7 +1636,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Comp Me Daddy button (with null check)
     const compMeDaddyBtn = document.getElementById('compMeDaddyBtn');
     if (compMeDaddyBtn) {
-        compMeDaddyBtn.addEventListener('click', window.openCompMeDaddy);
+        console.log('Comp Me Daddy button found, attaching listener');
+        const handleClick = function(e) {
+            console.log('Comp Me Daddy button clicked!');
+            e.preventDefault();
+            e.stopPropagation();
+            window.openCompMeDaddy();
+        };
+        compMeDaddyBtn.addEventListener('click', handleClick);
+        compMeDaddyBtn.addEventListener('touchstart', handleClick, {passive: false});
+    } else {
+        console.log('Comp Me Daddy button NOT found!');
     }
     
     // Comp Me Daddy search button (with null check)
