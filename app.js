@@ -1281,23 +1281,36 @@ function populateDetailedComps() {
     }
 
     tbody.innerHTML = comps.map((comp, index) => {
-        const salePrice = comp.lastSalePrice || comp.price || 0;
-        const sqft = comp.squareFootage || comp.sqft || 0;
-        const pricePerSqft = sqft > 0 ? Math.round(salePrice / sqft) : 0;
-        const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
-        const finishLevel = determineFinishLevel(comp, pricePerSqft);
+        // Handle different API response formats
+        const salePrice = Number(comp.lastSalePrice || comp.price || 0);
+        const sqft = Number(comp.squareFootage || comp.sqft || comp.livingArea || 0);
+        const pricePerSqft = sqft > 0 ? Math.round(salePrice / sqft) : '-';
+        const distance = comp.distance ? Number(comp.distance).toFixed(2) : 'N/A';
+        const finishLevel = determineFinishLevel(comp, pricePerSqft === '-' ? 0 : pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
-        const saleDate = comp.saleDate ? new Date(comp.saleDate).toLocaleDateString() : (comp.lastSaleDate ? new Date(comp.lastSaleDate).toLocaleDateString() : 'N/A');
-        const address = comp.formattedAddress || comp.addressLine1 || comp.address || 'N/A';
+        
+        // Parse sale date from various formats
+        let saleDate = 'N/A';
+        const dateStr = comp.saleDate || comp.lastSaleDate;
+        if (dateStr) {
+            try {
+                const d = new Date(dateStr);
+                if (!isNaN(d.getTime())) {
+                    saleDate = d.toLocaleDateString();
+                }
+            } catch (e) {}
+        }
+        
+        const address = comp.formattedAddress || comp.addressLine1 || comp.address || comp.streetAddress || 'N/A';
 
         return `
             <tr bgcolor="${index % 2 === 0 ? '#000033' : '#000066'}">
                 <td><font color="#00FFFF">${address}</font></td>
-                <td><font color="#00FF00">${formatCurrency(salePrice)}</font></td>
-                <td><font color="#FF9900">$${pricePerSqft}</font></td>
-                <td><font color="#FFFF00">${saleDate}</font></td>
-                <td><font color="#00FFFF">${distance} mi</font></td>
-                <td><font color="${finishColor}"><b>${finishLevel}</b></font></td>
+                <td align="center"><font color="#00FF00">${formatCurrency(salePrice)}</font></td>
+                <td align="center"><font color="#FF9900">$${pricePerSqft}</font></td>
+                <td align="center"><font color="#FFFF00">${saleDate}</font></td>
+                <td align="center"><font color="#00FFFF">${distance} mi</font></td>
+                <td align="center"><font color="${finishColor}"><b>${finishLevel}</b></font></td>
             </tr>
         `;
     }).join('');
