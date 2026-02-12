@@ -15,6 +15,18 @@
             color: #0f0;
             font-family: 'Comic Sans MS', 'Chalkboard', 'Papyrus', cursive;
         }
+        
+        /* Firework animation */
+        @keyframes firework {
+            0% { transform: scale(0.8); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.3; }
+        }
+        
+        .firework {
+            display: inline-block;
+            text-shadow: 0 0 20px #FF00FF, 0 0 40px #00FFFF;
+        }
     </style>
 </head>
 <body>
@@ -34,22 +46,30 @@
         <tr>
             <td align="center">
                 
-                <!-- SLOPULATOR LOGO -->
+                <!-- SLOPULATOR LOGO WITH FIREWORKS -->
                 <table border="0" cellpadding="20" cellspacing="0" width="95%">
                     <tr>
                         <td align="center">
-                            <div style="display:inline-block; border:8px ridge #FF00FF; padding:30px; background:linear-gradient(180deg, #000033 0%, #330033 50%, #000033 100%); box-shadow:0 0 50px #FF00FF;">
-                                <font face="Comic Sans MS" color="#00FFFF" size="7" style="text-shadow:4px 4px 8px #FF00FF, -4px -4px 8px #00FFFF;">
-                                    <b>★ THE SLOPULATOR ★</b>
-                                </font>
-                                <br><br>
-                                <font face="Papyrus" color="#FFFF00" size="4">
-                                    <blink>🏠 Property Analysis Tool 💰</blink>
-                                </font>
-                                <br><br>
-                                <font face="Courier New" color="#00FF00" size="2">
-                                    [v2.0 - Now with Comp Me Daddy!]
-                                </font>
+                            <div style="display:flex; align-items:center; justify-content:center; gap:30px;">
+                                <!-- Left Firework -->
+                                <div class="firework" style="font-size:60px; animation: firework 1s ease-out infinite;">🎆</div>
+                                
+                                <div style="display:inline-block; border:8px ridge #FF00FF; padding:30px; background:linear-gradient(180deg, #000033 0%, #330033 50%, #000033 100%); box-shadow:0 0 50px #FF00FF;">
+                                    <font face="Comic Sans MS" color="#00FFFF" size="7" style="text-shadow:4px 4px 8px #FF00FF, -4px -4px 8px #00FFFF;">
+                                        <b>★ THE SLOPULATOR ★</b>
+                                    </font>
+                                    <br><br>
+                                    <font face="Papyrus" color="#FFFF00" size="4">
+                                        <blink>🏠 Property Analysis Tool 💰</blink>
+                                    </font>
+                                    <br><br>
+                                    <font face="Courier New" color="#00FF00" size="2">
+                                        [v2.0 - Now with Comp Me Daddy!]
+                                    </font>
+                                </div>
+                                
+                                <!-- Right Firework -->
+                                <div class="firework" style="font-size:60px; animation: firework 1s ease-out infinite; animation-delay: 0.5s;">🎆</div>
                             </div>
                         </td>
                     </tr>
@@ -62,12 +82,12 @@
                     
                     <!-- Property Search Section -->
                     <tr>
-                        <td bgcolor="#330033" style="border: 5px ridge #FF00FF; position: relative;">
+                        <td bgcolor="#330033" style="border: 5px ridge #FF00FF; position: relative;" align="center">
                             <font face="Comic Sans MS" color="#00FFFF" size="5">
                                 <b>🔍 ENTER PROPERTY ADDRESS 🔍</b>
                             </font>
                             <br><br>
-                            <div class="search-container" style="position: relative; display: inline-block; width: 100%;">
+                            <div class="search-container" style="position: relative; display: inline-block; width: 100%; text-align: center;">
                                 <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off" oninput="handleAddressInput(this.value)">
                                 <div id="addressSuggestions" class="suggestions" style="left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px;"></div>
                             </div>
@@ -417,12 +437,12 @@
                                 });
                             </script>
                             <br><br>
-                            <button id="searchBtn" class="retro-button">
+                            <button id="searchBtn" class="retro-button" onclick="fireConfetti(); playWhipSound();">
                                 <b>🔎 SEARCH NOW!!! 🔎</b>
                             </button>
                             <br><br>
                             <br><br>
-                            <button id="compMeDaddyBtn" class="retro-button-comp" style="background: linear-gradient(45deg, #FF00FF, #00FFFF);" onclick="const addr = document.getElementById('addressInput').value; console.log('Comp Me Daddy clicked with address:', addr); window.currentAddress = addr; document.getElementById('compMeDaddyPage').style.display='block'; document.body.style.overflow='hidden'; document.getElementById('compMeDaddyAddress').value = addr; if(addr && addr.length > 5) { setTimeout(function() { window.runCompMeDaddyAnalysis(); }, 500); }">
+                            <button id="compMeDaddyBtn" class="retro-button-comp" style="background: linear-gradient(45deg, #FF00FF, #00FFFF);" onclick="fireConfetti(); playWhipSound(); const addr = document.getElementById('addressInput').value; console.log('Comp Me Daddy clicked with address:', addr); window.currentAddress = addr; document.getElementById('compMeDaddyPage').style.display='block'; document.body.style.overflow='hidden'; document.getElementById('compMeDaddyAddress').value = addr; if(addr && addr.length > 5) { setTimeout(function() { window.runCompMeDaddyAnalysis(); }, 500); }">
                                 <marquee behavior="alternate" scrollamount="5" width="200">
                                     <b>💎 COMP ME DADDY 💎</b>
                                 </marquee>
@@ -549,7 +569,7 @@
 
                     <!-- Property Details Section -->
                     <tr>
-                        <td bgcolor="#003300" style="border: 5px groove #00FF00;">
+                        <td bgcolor="#003300" style="border: 5px groove #00FF00;" align="center">
                             <font face="Papyrus" color="#FF00FF" size="5">
                                 <b>💵 PROPERTY DETAILS 💵</b>
                             </font>
@@ -606,26 +626,6 @@
 
                             <br><br>
 
-                            <!-- Saved Evaluations Buttons -->
-                            <table border="0" cellpadding="5" cellspacing="5" align="center">
-                                <tr>
-                                    <td>
-                                        <button id="loadEvalBtn" class="retro-button-small">
-                                            <b>📂 LOAD EVAL</b>
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button id="saveEvalBtn" class="retro-button-small">
-                                            <b>💾 SAVE EVAL</b>
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button id="printBtn" class="retro-button-small">
-                                            <b>🖨️ PRINT</b>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </table>
                         </td>
                     </tr>
 
@@ -854,6 +854,10 @@
                                                 --
                                             </font>
                                         </div>
+                                        <br><br>
+                                        <button onclick="shareDealAnalysis()" class="retro-button" style="background: linear-gradient(45deg, #00ff00, #00aa00);">
+                                            <b>📤 SHARE DEAL ANALYSIS</b>
+                                        </button>
                                     </td>
                                 </tr>
                             </table>
@@ -864,7 +868,7 @@
 
                     <!-- Comps Section -->
                     <tr id="compsSection" style="display: none;">
-                        <td bgcolor="#330000" style="border: 5px ridge #FF0000;">
+                        <td bgcolor="#330000" style="border: 5px ridge #FF0000;" align="center">
                             <font face="Comic Sans MS" color="#FF6666" size="5">
                                 <b>🏘️ RECENT COMPS (SAME BLOCK) 🏘️</b>
                             </font>
@@ -906,7 +910,7 @@
 
                     <!-- Analysis Results Section -->
                     <tr id="resultsSection" style="display: none;">
-                        <td>
+                        <td align="center">
                             <table border="0" cellpadding="0" cellspacing="10" width="100%">
                                 <tr>
                                     <!-- Rental Analysis -->
@@ -1036,32 +1040,6 @@
                         </td>
                     </tr>
 
-                </table>
-
-                <br><br>
-
-                <!-- FOOTER -->
-                <table border="3" cellpadding="10" cellspacing="0" width="90%" class="footer-table">
-                    <tr>
-                        <td align="center" bgcolor="#000000">
-                            <font face="Courier New" color="#00FF00" size="2">
-                                <marquee scrollamount="3">
-                                    ★ The SLOPULATOR ★ © 2024 ★ Best viewed in Netscape Navigator 4.0 at 800x600 ★ 
-                                    <a href="mailto:bradley@brashproperties.com" style="color: #FF00FF;">SIGN MY GUESTBOOK!</a> ★
-                                </marquee>
-                            </font>
-                            <br><br>
-                            <img src="https://web.archive.org/web/20090821124716/http://geocities.com/EnchantedForest/Dell/2347/underconstruction.gif" alt="Still Under Construction">
-                            <br><br>
-                            <font face="Comic Sans MS" color="#FF00FF" size="2">
-                                <blink>★ Made with love for Bradley ★</blink>
-                            </font>
-                            <br>
-                            <div id="hit-counter-footer" class="hit-counter">
-                                Hits: <span id="footer-hit-count">0000000</span>
-                            </div>
-                        </td>
-                    </tr>
                 </table>
 
                 <br><br>
@@ -1288,6 +1266,12 @@
                     
                     <br><br>
                     
+                    <!-- Share Button -->
+                    <button onclick="shareCompMeDaddy()" class="retro-button" style="background: linear-gradient(45deg, #00ff00, #00aa00); margin-bottom: 10px;">
+                        <b>📤 SHARE COMP ANALYSIS</b>
+                    </button>
+                    <br><br>
+                    
                     <!-- Bottom CTA -->
                     <button onclick="window.closeCompMeDaddy()" class="retro-button">
                         <b>👈 BACK TO SLOPULATOR</b>
@@ -1298,6 +1282,6 @@
         </table>
     </div>
 
-    <script src="app.js?v=1018"></script>
+    <script src="app.js?v=1019"></script>
 </body>
 </html>

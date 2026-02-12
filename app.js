@@ -200,6 +200,42 @@ function playRetroSound(type) {
     }
 }
 
+function playWhipSound() {
+    // Whip crack sound using Web Audio API
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create whip crack noise
+        const bufferSize = audioCtx.sampleRate * 0.5; // 0.5 seconds
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        
+        // Fill with filtered noise
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+        }
+        
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1000;
+        
+        const gainNode = audioCtx.createGain();
+        gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        noise.start();
+    } catch (e) {
+        console.log('Whip sound not supported');
+    }
+}
+
 // ============================================
 // UTILITY FUNCTIONS
 // ============================================
@@ -1894,7 +1930,58 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================
+// SHARE FUNCTIONS
+// ============================================
+
+function shareCompMeDaddy() {
+    if (!window.compMeDaddyData) {
+        alert('Run an analysis first! 📊');
+        return;
+    }
+    
+    const data = window.compMeDaddyData;
+    const avm = data.avm || {};
+    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 RentCast AVM: ${formatCurrency(avm.price || 0)}\n📊 Confidence: ${avm.confidenceScore || 'N/A'}%\n📍 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\nPowered by The Slopulator! 🔥`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Property Comp Analysis - The Slopulator',
+            text: shareText
+        }).catch(err => console.log('Share cancelled'));
+    } else {
+        // Fallback - copy to clipboard
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('Analysis copied to clipboard! 📋');
+        });
+    }
+}
+
+function shareDealAnalysis() {
+    const address = document.getElementById('addressInput')?.value || 'Property';
+    const purchasePrice = document.getElementById('purchasePrice')?.value || '0';
+    const repairs = document.getElementById('repairCost')?.value || '0';
+    const arv = document.getElementById('zestimate')?.value || '0';
+    const rating = document.getElementById('dealRating')?.textContent || '--';
+    
+    const shareText = `🏠 Deal Analysis for ${address}\n\n💵 Purchase: $${purchasePrice}\n🔨 Repairs: $${repairs}\n💎 ARV: $${arv}\n🏆 Rating: ${rating}\n\nPowered by The Slopulator! 🔥`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Deal Analysis - The Slopulator',
+            text: shareText
+        }).catch(err => console.log('Share cancelled'));
+    } else {
+        // Fallback - copy to clipboard
+        navigator.clipboard.writeText(shareText).then(() => {
+            alert('Analysis copied to clipboard! 📋');
+        });
+    }
+}
+
+// ============================================
 // EXPOSE FUNCTIONS TO WINDOW
 // ============================================
 
 window.runComprehensiveAnalysis = runCalculations;
+window.shareCompMeDaddy = shareCompMeDaddy;
+window.shareDealAnalysis = shareDealAnalysis;
