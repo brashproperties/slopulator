@@ -1174,22 +1174,9 @@ async function loadRentCastAVM() {
         console.log('Generating property take...');
         generatePropertyTake();
 
-        // Display map - generate mock coordinates for comps if needed
+        // Display map using RentCast API data only
         console.log('Displaying map...');
-        const subjLat = subjectProperty?.latitude || window.selectedLat;
-        const subjLon = subjectProperty?.longitude || window.selectedLon;
-        const compsWithCoords = validComps.map((comp, index) => {
-            if (comp.latitude && comp.longitude) return comp;
-            // Generate mock coordinates around subject property
-            const angle = (index / Math.max(validComps.length, 1)) * 2 * Math.PI;
-            const distance = 0.003 + (Math.random() * 0.003); // ~0.2-0.4 miles
-            return {
-                ...comp,
-                latitude: subjLat + (Math.cos(angle) * distance),
-                longitude: subjLon + (Math.sin(angle) * distance)
-            };
-        });
-        displayCompMap(subjectProperty, compsWithCoords);
+        displayCompMap(subjectProperty, validComps);
         
         // Show avm justification
         const avmJust = document.getElementById('avmJustification');
@@ -1287,26 +1274,26 @@ async function loadRentCastPropertyData(address) {
 
 function populateDetailedComps() {
     const tbody = document.getElementById('detailedCompsBody');
-    // Use mock comps from currentPropertyData (this is what was working before)
-    const comps = currentPropertyData?.comps || [];
+    // Use actual RentCast comps from API response
+    const comps = window.compMeDaddyData?.selectedComps || [];
 
     if (!comps.length) {
-        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available! Run the analysis first.</font></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available from RentCast API</font></td></tr>';
         return;
     }
 
     tbody.innerHTML = comps.map((comp, index) => {
-        const pricePerSqft = comp.sqft > 0 ? Math.round(comp.sale_price / comp.sqft) : 0;
-        const distance = comp.distance ? comp.distance.toFixed(2) : ((index * 0.3) + 0.2).toFixed(1);
+        const pricePerSqft = comp.squareFootage > 0 ? Math.round(comp.lastSalePrice / comp.squareFootage) : 0;
+        const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
         const finishLevel = determineFinishLevel(comp, pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
-        const saleDate = comp.sale_date || 'Recent';
-        const address = comp.address || 'N/A';
+        const saleDate = comp.lastSaleDate ? new Date(comp.lastSaleDate).toLocaleDateString() : 'N/A';
+        const address = comp.formattedAddress || comp.addressLine1 || 'N/A';
 
         return `
             <tr bgcolor="${index % 2 === 0 ? '#000033' : '#000066'}">
                 <td><font color="#00FFFF">${address}</font></td>
-                <td><font color="#00FF00">${formatCurrency(comp.sale_price)}</font></td>
+                <td><font color="#00FF00">${formatCurrency(comp.lastSalePrice)}</font></td>
                 <td><font color="#FF9900">$${pricePerSqft}</font></td>
                 <td><font color="#FFFF00">${saleDate}</font></td>
                 <td><font color="#00FFFF">${distance} mi</font></td>
@@ -1342,7 +1329,7 @@ function getFinishColor(level) {
 
 function generatePropertyTake() {
     // Generate property valuation opinion based on comps
-    const comps = currentPropertyData?.comps || [];
+    const comps = window.compMeDaddyData?.selectedComps || [];
     const avmData = window.compMeDaddyData?.avm || {};
     const container = document.getElementById('propertyTake');
     
@@ -1757,11 +1744,13 @@ function displayCompMap(subjectProperty, comps) {
     }
     
     // Build list of all coordinates
-    const allLats = [parseFloat(subjectLat), ...comps.filter(c => c.latitude).map(c => parseFloat(c.latitude))];
-    const allLons = [parseFloat(subjectLon), ...comps.filter(c => c.longitude).map(c => parseFloat(c.longitude))];
+    const compLats = comps.filter(c => c.latitude).map(c => parseFloat(c.latitude));
+    const compLons = comps.filter(c => c.longitude).map(c => parseFloat(c.longitude));
+    const allLats = [parseFloat(subjectLat), ...compLats];
+    const allLons = [parseFloat(subjectLon), ...compLons];
     
-    if (allLats.length < 2) {
-        mapContainer.innerHTML = '<font color="#FF9900">Not enough coordinate data for map</font>';
+    if (allLats.length < 1) {
+        mapContainer.innerHTML = '<font color="#FF9900">No coordinate data available from RentCast API</font>';
         return;
     }
     
