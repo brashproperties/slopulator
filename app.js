@@ -1128,25 +1128,19 @@ async function loadRentCastAVM() {
         const lowRange = data.priceRangeLow || Math.round(rentcastValue * 0.92);
         const highRange = data.priceRangeHigh || Math.round(rentcastValue * 1.08);
         
-        // Process comparables - try multiple possible property names
-        let allComps = data.comparables || data.comps || data.comparableProperties || [];
-        
-        console.log('Raw comps from API:', allComps.length);
-        console.log('Available data keys:', Object.keys(data));
+        // Process comparables
+        let allComps = data.comparables || [];
         
         // Sort by correlation score descending
         allComps.sort((a, b) => (b.correlation || 0) - (a.correlation || 0));
         
-        // Filter to top 5 with valid lastSaleDate and lastSalePrice
-        // Relaxed filter - just need a price
+        // Filter to top 5 with valid price
         const validComps = allComps.filter(comp => 
             comp.lastSalePrice > 0 || comp.price > 0
         ).slice(0, 5);
         
         // Store selected comps
         window.compMeDaddyData.selectedComps = validComps;
-        console.log('Stored validComps:', validComps.length, 'comps');
-        console.log('First comp sample:', validComps[0]);
         
         // Calculate median price/sqft for comps
         const compPricesPerSqft = validComps
@@ -1280,11 +1274,9 @@ function populateDetailedComps() {
     const tbody = document.getElementById('detailedCompsBody');
     // Use actual RentCast comps from API response
     const comps = window.compMeDaddyData?.selectedComps || [];
-    console.log('populateDetailedComps called, comps count:', comps.length);
-    console.log('window.compMeDaddyData:', window.compMeDaddyData);
 
     if (!comps.length) {
-        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available from RentCast API (debug: comp count=' + comps.length + ')</font></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available from RentCast API</font></td></tr>';
         return;
     }
 
@@ -1295,7 +1287,7 @@ function populateDetailedComps() {
         const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
         const finishLevel = determineFinishLevel(comp, pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
-        const saleDate = comp.lastSaleDate ? new Date(comp.lastSaleDate).toLocaleDateString() : 'N/A';
+        const saleDate = comp.saleDate ? new Date(comp.saleDate).toLocaleDateString() : (comp.lastSaleDate ? new Date(comp.lastSaleDate).toLocaleDateString() : 'N/A');
         const address = comp.formattedAddress || comp.addressLine1 || comp.address || 'N/A';
 
         return `
