@@ -1164,12 +1164,8 @@ async function loadRentCastAVM() {
         // Generate AVM justification
         console.log('Generating AVM justification...');
         generateAVMJustification(rentcastValue, subjectPricePerSqft, medianCompPricePerSqft, validComps);
-        
-        // Display comps dashboard
-        console.log('Displaying comps dashboard...');
-        displayCompsDashboard(validComps, subjectProperty, data);
 
-        // Populate detailed comps table (uses currentPropertyData.comps)
+        // Populate detailed comps table
         console.log('Populating detailed comps...');
         populateDetailedComps();
 
@@ -1281,7 +1277,7 @@ function populateDetailedComps() {
     const comps = window.compMeDaddyData?.selectedComps || [];
 
     if (!comps.length) {
-        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available from RentCast API</font></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" align="center"><font color="#FF0000">No comps available from RentCast API</font></td></tr>';
         return;
     }
 
@@ -1294,17 +1290,20 @@ function populateDetailedComps() {
         const finishLevel = determineFinishLevel(comp, pricePerSqft === '-' ? 0 : pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
         
-        // Parse date from various formats (listedDate for active listings)
+        // Parse date from ISO format (listedDate for active listings)
         let saleDate = 'N/A';
         const dateStr = comp.listedDate || comp.saleDate || comp.lastSaleDate || comp.removedDate;
         if (dateStr) {
             try {
                 const d = new Date(dateStr);
                 if (!isNaN(d.getTime())) {
-                    saleDate = d.toLocaleDateString();
+                    saleDate = (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getFullYear();
                 }
             } catch (e) {}
         }
+        
+        // Correlation score
+        const correlation = comp.correlation ? (comp.correlation * 100).toFixed(1) + '%' : 'N/A';
         
         const address = comp.formattedAddress || comp.addressLine1 || comp.address || comp.streetAddress || comp.fullAddress || 'N/A';
 
@@ -1315,6 +1314,7 @@ function populateDetailedComps() {
                 <td align="center"><font color="#FF9900">$${pricePerSqft}</font></td>
                 <td align="center"><font color="#FFFF00">${saleDate}</font></td>
                 <td align="center"><font color="#00FFFF">${distance} mi</font></td>
+                <td align="center"><font color="#00FF00">${correlation}</font></td>
                 <td align="center"><font color="${finishColor}"><b>${finishLevel}</b></font></td>
             </tr>
         `;
