@@ -1025,14 +1025,30 @@ function showCompMeDaddyButton() {
 
 // Expose Comp Me Daddy functions globally
 window.openCompMeDaddy = function() {
+    // Effects
+    fireConfetti();
+    playWhipSound();
+    
+    // Get address from input
+    const addr = document.getElementById('addressInput')?.value || '';
+    console.log('Comp Me Daddy clicked with address:', addr);
+    window.currentAddress = addr;
+    
+    // Show page
     document.getElementById('compMeDaddyPage').style.display = 'block';
     document.body.style.overflow = 'hidden';
     
-    // If we already have property data from main search, pre-fill it
-    if (currentPropertyData && currentAddress) {
-        document.getElementById('compMeDaddyAddress').value = currentAddress;
-        // Auto-trigger analysis
-        window.runCompMeDaddyAnalysis();
+    // Pre-fill address
+    const cmdAddress = document.getElementById('compMeDaddyAddress');
+    if (cmdAddress) {
+        cmdAddress.value = addr;
+    }
+    
+    // Auto-trigger analysis if address is valid
+    if (addr && addr.length > 5) {
+        setTimeout(function() {
+            window.runCompMeDaddyAnalysis();
+        }, 500);
     }
 }
 
