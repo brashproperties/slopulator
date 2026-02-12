@@ -1235,8 +1235,7 @@ async function loadRentCastAVM() {
             ? compPricesPerSqft[Math.floor(compPricesPerSqft.length / 2)] 
             : 0;
         
-        // Calculate subject property price/sqft
-        const subjectSqft = subjectProperty.squareFootage || data.squareFootage || 0;
+        // Calculate subject property price/sqft (subjectSqft already declared above)
         const subjectPricePerSqft = subjectSqft > 0 ? rentcastValue / subjectSqft : 0;
         
         // Generate AVM justification
