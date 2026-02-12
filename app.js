@@ -1128,17 +1128,19 @@ async function loadRentCastAVM() {
         const lowRange = data.priceRangeLow || Math.round(rentcastValue * 0.92);
         const highRange = data.priceRangeHigh || Math.round(rentcastValue * 1.08);
         
-        // Process comparables
-        let allComps = data.comparables || [];
+        // Process comparables - try multiple possible property names
+        let allComps = data.comparables || data.comps || data.comparableProperties || [];
+        
+        console.log('Raw comps from API:', allComps.length);
+        console.log('Available data keys:', Object.keys(data));
         
         // Sort by correlation score descending
         allComps.sort((a, b) => (b.correlation || 0) - (a.correlation || 0));
         
         // Filter to top 5 with valid lastSaleDate and lastSalePrice
+        // Relaxed filter - just need a price
         const validComps = allComps.filter(comp => 
-            comp.lastSaleDate && 
-            comp.lastSalePrice && 
-            comp.lastSalePrice > 0
+            comp.lastSalePrice > 0 || comp.price > 0
         ).slice(0, 5);
         
         // Store selected comps
@@ -1287,17 +1289,19 @@ function populateDetailedComps() {
     }
 
     tbody.innerHTML = comps.map((comp, index) => {
-        const pricePerSqft = comp.squareFootage > 0 ? Math.round(comp.lastSalePrice / comp.squareFootage) : 0;
+        const salePrice = comp.lastSalePrice || comp.price || 0;
+        const sqft = comp.squareFootage || comp.sqft || 0;
+        const pricePerSqft = sqft > 0 ? Math.round(salePrice / sqft) : 0;
         const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
         const finishLevel = determineFinishLevel(comp, pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
         const saleDate = comp.lastSaleDate ? new Date(comp.lastSaleDate).toLocaleDateString() : 'N/A';
-        const address = comp.formattedAddress || comp.addressLine1 || 'N/A';
+        const address = comp.formattedAddress || comp.addressLine1 || comp.address || 'N/A';
 
         return `
             <tr bgcolor="${index % 2 === 0 ? '#000033' : '#000066'}">
                 <td><font color="#00FFFF">${address}</font></td>
-                <td><font color="#00FF00">${formatCurrency(comp.lastSalePrice)}</font></td>
+                <td><font color="#00FF00">${formatCurrency(salePrice)}</font></td>
                 <td><font color="#FF9900">$${pricePerSqft}</font></td>
                 <td><font color="#FFFF00">${saleDate}</font></td>
                 <td><font color="#00FFFF">${distance} mi</font></td>
@@ -1353,12 +1357,12 @@ function generatePropertyTake() {
     const subjectPricePerSqft = subjectSqft > 0 ? avmValue / subjectSqft : 0;
     
     // Calculate comp metrics
-    const prices = comps.map(c => c.lastSalePrice);
+    const prices = comps.map(c => c.lastSalePrice || c.price || 0);
     const avgCompPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
     const minCompPrice = Math.min(...prices);
     const maxCompPrice = Math.max(...prices);
     
-    const sqfts = comps.map(c => c.squareFootage).filter(s => s > 0);
+    const sqfts = comps.map(c => c.squareFootage || c.sqft || 0).filter(s => s > 0);
     const avgCompSqft = sqfts.length > 0 ? sqfts.reduce((a, b) => a + b, 0) / sqfts.length : 0;
     const avgCompPricePerSqft = avgCompSqft > 0 ? Math.round(avgCompPrice / avgCompSqft) : 0;
     
