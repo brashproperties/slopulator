@@ -1143,6 +1143,8 @@ async function loadRentCastAVM() {
         
         // Store selected comps
         window.compMeDaddyData.selectedComps = validComps;
+        console.log('Stored validComps:', validComps.length, 'comps');
+        console.log('First comp sample:', validComps[0]);
         
         // Calculate median price/sqft for comps
         const compPricesPerSqft = validComps
@@ -1276,9 +1278,11 @@ function populateDetailedComps() {
     const tbody = document.getElementById('detailedCompsBody');
     // Use actual RentCast comps from API response
     const comps = window.compMeDaddyData?.selectedComps || [];
+    console.log('populateDetailedComps called, comps count:', comps.length);
+    console.log('window.compMeDaddyData:', window.compMeDaddyData);
 
     if (!comps.length) {
-        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available from RentCast API</font></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available from RentCast API (debug: comp count=' + comps.length + ')</font></td></tr>';
         return;
     }
 
