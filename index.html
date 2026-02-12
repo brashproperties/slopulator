@@ -201,42 +201,46 @@
                                         return;
                                     }
                                     
+                                    // Make container visible FIRST so map can calculate size
+                                    imgContainer.style.display = 'block';
+                                    
                                     // Clear previous map
                                     if (mainPropertyMap) {
                                         mainPropertyMap.remove();
                                     }
                                     
-                                    // Create modern dark map
-                                    mainPropertyMap = L.map('mainPropertyMap', {
-                                        center: [lat, lon],
-                                        zoom: 16,
-                                        zoomControl: false,
-                                        attributionControl: false
-                                    });
-                                    
-                                    // Add CartoDB Dark Matter tiles
-                                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                                        attribution: '&copy; OpenStreetMap &copy; CARTO',
-                                        subdomains: 'abcd',
-                                        maxZoom: 19
-                                    }).addTo(mainPropertyMap);
-                                    
-                                    // Add zoom control
-                                    L.control.zoom({ position: 'bottomright' }).addTo(mainPropertyMap);
-                                    
-                                    // Red star marker for subject property
-                                    const subjectIcon = L.divIcon({
-                                        className: 'custom-marker',
-                                        html: '<div style="background-color:#FF0000;width:24px;height:24px;border-radius:50%;border:3px solid #FFFFFF;box-shadow:0 0 15px #FF0000, 0 0 30px #FF0000;display:flex;align-items:center;justify-content:center;"><span style="color:#FFF;font-size:12px;font-weight:bold;">★</span></div>',
-                                        iconSize: [24, 24],
-                                        iconAnchor: [12, 12]
-                                    });
-                                    
-                                    L.marker([lat, lon], { icon: subjectIcon })
-                                        .addTo(mainPropertyMap)
-                                        .bindPopup('<b style="color:#FF0000;">🏠 TARGET PROPERTY</b>');
-                                    
-                                    imgContainer.style.display = 'block';
+                                    // Small delay to let container render
+                                    setTimeout(() => {
+                                        // Create modern dark map
+                                        mainPropertyMap = L.map('mainPropertyMap', {
+                                            center: [lat, lon],
+                                            zoom: 16,
+                                            zoomControl: false,
+                                            attributionControl: false
+                                        });
+                                        
+                                        // Add CartoDB Dark Matter tiles
+                                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                                            attribution: '&copy; OpenStreetMap &copy; CARTO',
+                                            subdomains: 'abcd',
+                                            maxZoom: 19
+                                        }).addTo(mainPropertyMap);
+                                        
+                                        // Add zoom control
+                                        L.control.zoom({ position: 'bottomright' }).addTo(mainPropertyMap);
+                                        
+                                        // Red star marker for subject property
+                                        const subjectIcon = L.divIcon({
+                                            className: 'custom-marker',
+                                            html: '<div style="background-color:#FF0000;width:24px;height:24px;border-radius:50%;border:3px solid #FFFFFF;box-shadow:0 0 15px #FF0000, 0 0 30px #FF0000;display:flex;align-items:center;justify-content:center;"><span style="color:#FFF;font-size:12px;font-weight:bold;">★</span></div>',
+                                            iconSize: [24, 24],
+                                            iconAnchor: [12, 12]
+                                        });
+                                        
+                                        L.marker([lat, lon], { icon: subjectIcon })
+                                            .addTo(mainPropertyMap)
+                                            .bindPopup('<b style="color:#FF0000;">🏠 TARGET PROPERTY</b>');
+                                    }, 100);
                                 }
                                 
                                 function clearAllFields() {
@@ -1294,6 +1298,6 @@
         </table>
     </div>
 
-    <script src="app.js?v=1017"></script>
+    <script src="app.js?v=1018"></script>
 </body>
 </html>
