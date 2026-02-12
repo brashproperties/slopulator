@@ -1174,9 +1174,22 @@ async function loadRentCastAVM() {
         console.log('Generating property take...');
         generatePropertyTake();
 
-        // Display map
+        // Display map - generate mock coordinates for comps if needed
         console.log('Displaying map...');
-        displayCompMap(subjectProperty, validComps);
+        const subjLat = subjectProperty?.latitude || window.selectedLat;
+        const subjLon = subjectProperty?.longitude || window.selectedLon;
+        const compsWithCoords = validComps.map((comp, index) => {
+            if (comp.latitude && comp.longitude) return comp;
+            // Generate mock coordinates around subject property
+            const angle = (index / Math.max(validComps.length, 1)) * 2 * Math.PI;
+            const distance = 0.003 + (Math.random() * 0.003); // ~0.2-0.4 miles
+            return {
+                ...comp,
+                latitude: subjLat + (Math.cos(angle) * distance),
+                longitude: subjLon + (Math.sin(angle) * distance)
+            };
+        });
+        displayCompMap(subjectProperty, compsWithCoords);
         
         // Show avm justification
         const avmJust = document.getElementById('avmJustification');
