@@ -1751,71 +1751,87 @@ function displayCompsDashboard(comps, subjectProperty, avmData) {
     dashboard.innerHTML = html;
 }
 
+let compMap = null;
+
 function displayCompMap(subjectProperty, comps) {
-    const mapContainer = document.getElementById('compMapContainer');
+    const mapContainer = document.getElementById('compMap');
     if (!mapContainer) return;
-    
-    const subjectLat = subjectProperty?.latitude || window.selectedLat;
-    const subjectLon = subjectProperty?.longitude || window.selectedLon;
-    
+
+    const subjectLat = parseFloat(subjectProperty?.latitude || window.selectedLat);
+    const subjectLon = parseFloat(subjectProperty?.longitude || window.selectedLon);
+
     if (!subjectLat || !subjectLon) {
         mapContainer.innerHTML = '<font color="#FF0000">Map coordinates not available</font>';
         return;
     }
-    
-    // Build list of all coordinates
-    const compLats = comps.filter(c => c.latitude).map(c => parseFloat(c.latitude));
-    const compLons = comps.filter(c => c.longitude).map(c => parseFloat(c.longitude));
-    const allLats = [parseFloat(subjectLat), ...compLats];
-    const allLons = [parseFloat(subjectLon), ...compLons];
-    
-    if (allLats.length < 1) {
-        mapContainer.innerHTML = '<font color="#FF9900">No coordinate data available from RentCast API</font>';
-        return;
+
+    // Clear previous map instance
+    if (compMap) {
+        compMap.remove();
     }
-    
-    const minLat = Math.min(...allLats);
-    const maxLat = Math.max(...allLats);
-    const minLon = Math.min(...allLons);
-    const maxLon = Math.max(...allLons);
-    
-    const latPad = (maxLat - minLat) * 0.3 || 0.005;
-    const lonPad = (maxLon - minLon) * 0.3 || 0.005;
-    
-    const bbox = `${(minLon - lonPad).toFixed(6)}%2C${(minLat - latPad).toFixed(6)}%2C${(maxLon + lonPad).toFixed(6)}%2C${(maxLat + latPad).toFixed(6)}`;
-    
-    // Build markers list with numbered pins for comps
-    // Subject property = red, Comps = numbered (1-5)
-    let markers = `${subjectLat},${subjectLon},red-pushpin`; 
-    comps.forEach((comp, index) => {
-        if (comp.latitude && comp.longitude) {
-            const label = (index + 1).toString(); // 1, 2, 3, 4, 5
-            markers += `|${comp.latitude},${comp.longitude},blue-${label}`;
-        }
+
+    // Create new map with dark theme
+    compMap = L.map('compMap', {
+        center: [subjectLat, subjectLon],
+        zoom: 14,
+        zoomControl: false,
+        attributionControl: false
     });
-    
-    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${subjectLat}%2C${subjectLon}`;
-    
-    mapContainer.innerHTML = `
-        <div style="border: 3px groove #ff00ff; border-radius: 10px; overflow: hidden; margin: 15px 0;">
-            <iframe src="${mapUrl}" width="100%" height="400" frameborder="0" scrolling="no" 
-                    style="display: block;"></iframe>
-        </div>
-        <table width="100%" style="margin-top: 10px;">
-            <tr>
-                <td align="center" width="50%">
-                    <font face="Courier New" color="#FF0000" size="2">
-                        <b>🔴 SUBJECT PROPERTY</b>
-                    </font>
-                </td>
-                <td align="center" width="50%">
-                    <font face="Courier New" color="#00FF00" size="2">
-                        <b>🔵 COMPS 1-5 (by correlation)</b>
-                    </font>
-                </td>
-            </tr>
-        </table>
-    `;
+
+    // Add CartoDB Dark Matter tiles (modern dark theme)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(compMap);
+
+    // Add zoom control to bottom right
+    L.control.zoom({ position: 'bottomright' }).addTo(compMap);
+
+    // Custom marker styles
+    const subjectIcon = L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background-color:#FF0000;width:24px;height:24px;border-radius:50%;border:3px solid #FFFFFF;box-shadow:0 0 15px #FF0000, 0 0 30px #FF0000;display:flex;align-items:center;justify-content:center;"><span style="color:#FFF;font-size:12px;font-weight:bold;">★</span></div>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+
+    // Add subject property marker
+    L.marker([subjectLat, subjectLon], { icon: subjectIcon })
+        .addTo(compMap)
+        .bindPopup('<b style="color:#FF0000;">🏠 SUBJECT PROPERTY</b><br>' + (currentAddress || 'Target Property'));
+
+    // Add comp markers with numbers
+    const compColors = ['#00FFFF', '#00FF00', '#FFFF00', '#FF9900', '#FF00FF'];
+    const bounds = [[subjectLat, subjectLon]];
+
+    comps.forEach((comp, index) => {
+        if (!comp.latitude || !comp.longitude) return;
+
+        const lat = parseFloat(comp.latitude);
+        const lon = parseFloat(comp.longitude);
+        bounds.push([lat, lon]);
+
+        const color = compColors[index % compColors.length];
+        const compIcon = L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background-color:${color};width:28px;height:28px;border-radius:50%;border:3px solid #000;box-shadow:0 0 10px ${color};display:flex;align-items:center;justify-content:center;"><span style="color:#000;font-size:14px;font-weight:bold;">${index + 1}</span></div>`,
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        const price = formatCurrency(Number(comp.price || comp.lastSalePrice || 0));
+        const address = comp.formattedAddress || comp.addressLine1 || 'Comp ' + (index + 1);
+
+        L.marker([lat, lon], { icon: compIcon })
+            .addTo(compMap)
+            .bindPopup(`<b style="color:${color};">🏘️ COMP #${index + 1}</b><br>${address}<br><b>${price}</b>`);
+    });
+
+    // Fit bounds to show all markers
+    if (bounds.length > 1) {
+        compMap.fitBounds(bounds, { padding: [50, 50] });
+    }
 }
 
 function generateShareLink() {
