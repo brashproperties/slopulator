@@ -1165,7 +1165,15 @@ async function loadRentCastAVM() {
         // Display comps dashboard
         console.log('Displaying comps dashboard...');
         displayCompsDashboard(validComps, subjectProperty, data);
-        
+
+        // Populate detailed comps table (uses currentPropertyData.comps)
+        console.log('Populating detailed comps...');
+        populateDetailedComps();
+
+        // Generate property take (uses currentPropertyData.comps)
+        console.log('Generating property take...');
+        generatePropertyTake();
+
         // Display map
         console.log('Displaying map...');
         displayCompMap(subjectProperty, validComps);
@@ -1209,73 +1217,18 @@ async function loadRentCastAVM() {
     } catch (error) {
         console.error('Error loading RentCast AVM:', error);
         if (loadingDiv) loadingDiv.style.display = 'none';
-        
-        // FALLBACK: Use mock data when RentCast fails
-        console.log('RentCast failed, using mock data fallback...');
-        
-        // Generate mock comps from currentPropertyData
-        const mockComps = currentPropertyData?.comps || [];
-        
-        // Convert mock format to RentCast format
-        const fallbackComps = mockComps.map((comp, index) => ({
-            formattedAddress: comp.address || `Comp ${index + 1}`,
-            lastSalePrice: comp.sale_price || 0,
-            squareFootage: comp.sqft || 1500,
-            lastSaleDate: comp.sale_date || 'Recent',
-            distance: parseFloat(((index * 0.3) + 0.2).toFixed(1)),
-            bedrooms: comp.beds || 3,
-            bathrooms: comp.baths || 2,
-            latitude: window.selectedLat ? window.selectedLat + (Math.random() - 0.5) * 0.01 : null,
-            longitude: window.selectedLon ? window.selectedLon + (Math.random() - 0.5) * 0.01 : null
-        }));
-        
-        // Store fallback comps
-        window.compMeDaddyData = window.compMeDaddyData || {};
-        window.compMeDaddyData.selectedComps = fallbackComps;
-        
-        // Mock subject property
-        const mockSubject = {
-            formattedAddress: currentAddress,
-            squareFootage: currentPropertyData?.property_details?.sqft || 1500,
-            bedrooms: currentPropertyData?.property_details?.bedrooms || 3,
-            bathrooms: currentPropertyData?.property_details?.bathrooms || 2,
-            yearBuilt: currentPropertyData?.property_details?.year_built || 1990,
-            latitude: window.selectedLat,
-            longitude: window.selectedLon
-        };
-        
-        // Populate with fallback data
-        populateDetailedComps();
-        generatePropertyTake();
-        displayCompMap(mockSubject, fallbackComps);
-        
-        // Show warning that we're using mock data
+
+        // Show error in dashboard
         const dashboard = document.getElementById('compsDashboard');
         if (dashboard) {
             dashboard.innerHTML = `
                 <div style="padding: 20px; text-align: center;">
-                    <font color="#FF9900" size="4"><b>⚠️ Using Estimated Data</b></font><br><br>
-                    <font color="#FFFF00">RentCast API temporarily unavailable</font><br><br>
-                    <font color="#00FF00">Showing estimated comps based on market averages.</font>
+                    <font color="#FF0000" size="4"><b>⚠️ Error Loading Data</b></font><br><br>
+                    <font color="#FFFF00">${error.message}</font><br><br>
+                    <font color="#00FF00">Please check the address and try again.</font>
                 </div>
             `;
             dashboard.style.display = 'block';
-        }
-        
-        // Still update basic display
-        if (document.getElementById('rentcastEstimate')) {
-            document.getElementById('rentcastEstimate').textContent = formatCurrency(currentPropertyData?.zestimate || 0);
-        }
-        if (document.getElementById('rentcastRange')) {
-            const z = currentPropertyData?.zestimate || 0;
-            document.getElementById('rentcastRange').textContent = `${formatCurrency(z * 0.9)} - ${formatCurrency(z * 1.1)}`;
-        }
-        if (document.getElementById('rentcastConfidence')) {
-            document.getElementById('rentcastConfidence').textContent = 'ESTIMATED';
-            document.getElementById('rentcastConfidence').style.color = '#FF9900';
-        }
-        if (document.getElementById('rentcastAVMData')) {
-            document.getElementById('rentcastAVMData').style.display = 'block';
         }
     }
 }
@@ -1321,26 +1274,26 @@ async function loadRentCastPropertyData(address) {
 
 function populateDetailedComps() {
     const tbody = document.getElementById('detailedCompsBody');
-    // Use actual RentCast comps instead of mock data
-    const comps = window.compMeDaddyData?.selectedComps || [];
-    
+    // Use mock comps from currentPropertyData (this is what was working before)
+    const comps = currentPropertyData?.comps || [];
+
     if (!comps.length) {
         tbody.innerHTML = '<tr><td colspan="6" align="center"><font color="#FF0000">No comps available! Run the analysis first.</font></td></tr>';
         return;
     }
-    
+
     tbody.innerHTML = comps.map((comp, index) => {
-        const pricePerSqft = comp.squareFootage > 0 ? Math.round(comp.lastSalePrice / comp.squareFootage) : 0;
-        const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
+        const pricePerSqft = comp.sqft > 0 ? Math.round(comp.sale_price / comp.sqft) : 0;
+        const distance = comp.distance ? comp.distance.toFixed(2) : ((index * 0.3) + 0.2).toFixed(1);
         const finishLevel = determineFinishLevel(comp, pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
-        const saleDate = comp.lastSaleDate ? new Date(comp.lastSaleDate).toLocaleDateString() : 'N/A';
-        const address = comp.formattedAddress || comp.addressLine1 || 'N/A';
-        
+        const saleDate = comp.sale_date || 'Recent';
+        const address = comp.address || 'N/A';
+
         return `
             <tr bgcolor="${index % 2 === 0 ? '#000033' : '#000066'}">
                 <td><font color="#00FFFF">${address}</font></td>
-                <td><font color="#00FF00">${formatCurrency(comp.lastSalePrice)}</font></td>
+                <td><font color="#00FF00">${formatCurrency(comp.sale_price)}</font></td>
                 <td><font color="#FF9900">$${pricePerSqft}</font></td>
                 <td><font color="#FFFF00">${saleDate}</font></td>
                 <td><font color="#00FFFF">${distance} mi</font></td>
@@ -1376,7 +1329,7 @@ function getFinishColor(level) {
 
 function generatePropertyTake() {
     // Generate property valuation opinion based on comps
-    const comps = window.compMeDaddyData?.selectedComps || [];
+    const comps = currentPropertyData?.comps || [];
     const avmData = window.compMeDaddyData?.avm || {};
     const container = document.getElementById('propertyTake');
     
