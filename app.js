@@ -721,12 +721,15 @@ function showCompMeDaddyButton() {
 function openCompMeDaddy() {
     document.getElementById('compMeDaddyPage').style.display = 'block';
     document.body.style.overflow = 'hidden';
-    
+
     // If we already have property data from main search, pre-fill it
     if (currentPropertyData && currentAddress) {
         document.getElementById('compMeDaddyAddress').value = currentAddress;
         // Auto-trigger analysis
         runCompMeDaddyAnalysis();
+    } else {
+        // Initialize empty map
+        initCompMap();
     }
 }
 
@@ -736,22 +739,28 @@ async function runCompMeDaddyAnalysis() {
         alert('Please enter a valid address! 🏠');
         return;
     }
-    
+
     currentAddress = address;
-    
+
     // Show loading state
     document.getElementById('rentcastAVMLoading').style.display = 'block';
     document.getElementById('rentcastAVMData').style.display = 'none';
     document.getElementById('detailedCompsBody').innerHTML = '<tr><td colspan="6" align="center"><font color="#00FF00">Loading comps...</font></td></tr>';
     document.getElementById('finishAnalysis').innerHTML = '<font color="#00FF00" face="Courier New">Analyzing market data...</font>';
-    
-    // Load mock property data for this address
+
+    // Load mock property data for this address FIRST - this ensures comps exist
     await loadPropertyDataForCompMeDaddy(address);
-    
-    // Load all the analysis
-    await loadRentCastAVM();
+
+    // Populate comps immediately so they show even if RentCast fails
     populateDetailedComps();
     generateFinishAnalysis();
+
+    // Initialize and populate the map
+    initCompMap();
+    await populateCompMap();
+
+    // Load RentCast data (this may fail but comps are already displayed)
+    await loadRentCastAVM();
 }
 
 async function loadPropertyDataForCompMeDaddy(address) {
@@ -1029,6 +1038,139 @@ function generateFinishAnalysis() {
     `;
     
     container.innerHTML = commentary;
+}
+
+// ============================================
+// LOCATION MAP - PROXIMITY VIEW
+// ============================================
+
+let compMap = null;
+
+function initCompMap() {
+    // Initialize the map centered on a default location (will be updated)
+    if (compMap) {
+        compMap.remove();
+    }
+    
+    compMap = L.map('compMap').setView([39.8283, -98.5795], 4); // Center of US
+    
+    // Add OpenStreetMap tile layer (free, no API key)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(compMap);
+}
+
+async function geocodeAddress(address) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`, {
+            headers: { 'User-Agent': 'Slopulator/1.0 (bradley@brashproperties.com)' }
+        });
+        
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        if (data && data.length > 0) {
+            return {
+                lat: parseFloat(data[0].lat),
+                lon: parseFloat(data[0].lon),
+                display_name: data[0].display_name
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error('Geocoding error:', error);
+        return null;
+    }
+}
+
+function generateMockCompCoordinates(targetLat, targetLon, count) {
+    // Generate mock coordinates for comps within ~0.5 mile radius
+    const coords = [];
+    for (let i = 0; i < count; i++) {
+        // Random offset within ~0.5 miles (roughly 0.007 degrees)
+        const latOffset = (Math.random() - 0.5) * 0.014;
+        const lonOffset = (Math.random() - 0.5) * 0.014;
+        coords.push({
+            lat: targetLat + latOffset,
+            lon: targetLon + lonOffset
+        });
+    }
+    return coords;
+}
+
+async function populateCompMap() {
+    if (!compMap) {
+        initCompMap();
+    }
+    
+    // Clear existing markers
+    compMap.eachLayer((layer) => {
+        if (layer instanceof L.Marker || layer instanceof L.Circle) {
+            compMap.removeLayer(layer);
+        }
+    });
+    
+    // Geocode the target address
+    const targetLocation = await geocodeAddress(currentAddress);
+    
+    if (!targetLocation) {
+        // Show error on map
+        document.getElementById('compMap').innerHTML = '<font color="#FF0000">Unable to locate address on map</font>';
+        return;
+    }
+    
+    // Center map on target property
+    compMap.setView([targetLocation.lat, targetLocation.lon], 15);
+    
+    // Add red marker for target property
+    const targetIcon = L.divIcon({
+        className: 'custom-target-marker',
+        html: '<div style="background-color:#FF0000;width:20px;height:20px;border-radius:50%;border:3px solid #FFFF00;box-shadow:0 0 10px #FF0000;"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+    });
+    
+    L.marker([targetLocation.lat, targetLocation.lon], { icon: targetIcon })
+        .addTo(compMap)
+        .bindPopup('<b>🏠 TARGET PROPERTY</b><br>' + currentAddress)
+        .openPopup();
+    
+    // Add 0.25 and 0.5 mile radius circles
+    L.circle([targetLocation.lat, targetLocation.lon], {
+        color: '#00FF00',
+        fillColor: '#00FF00',
+        fillOpacity: 0.1,
+        radius: 402 // 0.25 miles in meters
+    }).addTo(compMap).bindPopup('0.25 mile radius');
+    
+    L.circle([targetLocation.lat, targetLocation.lon], {
+        color: '#FFFF00',
+        fillColor: '#FFFF00',
+        fillOpacity: 0.05,
+        radius: 804 // 0.5 miles in meters
+    }).addTo(compMap).bindPopup('0.5 mile radius');
+    
+    // Add blue markers for comps
+    const comps = currentPropertyData?.comps || [];
+    const mockCoords = generateMockCompCoordinates(targetLocation.lat, targetLocation.lon, comps.length);
+    
+    const compIcon = L.divIcon({
+        className: 'custom-comp-marker',
+        html: '<div style="background-color:#00FFFF;width:15px;height:15px;border-radius:50%;border:2px solid #0000FF;box-shadow:0 0 8px #00FFFF;"></div>',
+        iconSize: [15, 15],
+        iconAnchor: [7, 7]
+    });
+    
+    comps.forEach((comp, index) => {
+        const coord = mockCoords[index] || mockCoords[0];
+        const price = formatCurrency(comp.sale_price);
+        const address = comp.address || 'Unknown Address';
+        
+        L.marker([coord.lat, coord.lon], { icon: compIcon })
+            .addTo(compMap)
+            .bindPopup(`<b>🏘️ COMP #${index + 1}</b><br>${address}<br><b>${price}</b>`);
+    });
 }
 
 // ============================================
