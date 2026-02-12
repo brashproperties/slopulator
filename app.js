@@ -1189,15 +1189,31 @@ async function loadRentCastAVM() {
         // Store selected comps
         window.compMeDaddyData.selectedComps = validComps;
         
-        // Calculate median price/sqft for comps
-        const compPricesPerSqft = validComps
+        // Calculate HIGH-END ARV based on filtered comps (excludes fixers)
+        const subjectSqft = subjectProperty.squareFootage || data.squareFootage || 0;
+        const highEndCompsPPSF = validComps
             .filter(c => (c.squareFootage || c.sqft || c.livingArea) > 0)
             .map(c => {
                 const price = Number(c.lastSalePrice || c.salePrice || c.price || c.soldPrice || 0);
                 const sqft = Number(c.squareFootage || c.sqft || c.livingArea || 1);
                 return price / sqft;
-            })
-            .sort((a, b) => a - b);
+            });
+        
+        // Calculate average $/sqft of quality comps
+        const avgPPSF = highEndCompsPPSF.length > 0 
+            ? highEndCompsPPSF.reduce((a, b) => a + b, 0) / highEndCompsPPSF.length 
+            : 0;
+        
+        // Calculate renovated ARV
+        const renovatedARV = subjectSqft > 0 && avgPPSF > 0 
+            ? Math.round(subjectSqft * avgPPSF)
+            : 0;
+        
+        window.compMeDaddyData.renovatedARV = renovatedARV;
+        window.compMeDaddyData.avgCompPPSF = avgPPSF;
+        
+        // Calculate median price/sqft for comps
+        const compPricesPerSqft = highEndCompsPPSF.sort((a, b) => a - b);
         
         const medianCompPricePerSqft = compPricesPerSqft.length > 0 
             ? compPricesPerSqft[Math.floor(compPricesPerSqft.length / 2)] 
@@ -1234,6 +1250,12 @@ async function loadRentCastAVM() {
         }
         if (document.getElementById('rentcastRange')) {
             document.getElementById('rentcastRange').textContent = `${formatCurrency(lowRange)} - ${formatCurrency(highRange)}`;
+        }
+        if (document.getElementById('renovatedARV')) {
+            document.getElementById('renovatedARV').textContent = formatCurrency(renovatedARV);
+        }
+        if (document.getElementById('compAvgPPSF')) {
+            document.getElementById('compAvgPPSF').textContent = '$' + avgPPSF.toFixed(0) + '/sqft';
         }
         if (document.getElementById('rentcastConfidence')) {
             const confScore = data.confidenceScore || 0;
