@@ -645,6 +645,75 @@ html, body {
 }
 
 /* ============================================
+   MOBILE OPTIMIZATIONS
+   ============================================ */
+
+/* Disable bouncing emojis on mobile - kill battery/performance */
+@media (max-width: 768px) {
+    #bouncing-emojis {
+        display: none !important;
+    }
+    
+    /* Bigger touch targets */
+    .retro-input, .retro-input-small, input[type="text"], input[type="number"] {
+        min-height: 48px !important;
+        padding: 12px 15px !important;
+        font-size: 16px !important; /* Prevent zoom on iOS */
+        touch-action: manipulation;
+    }
+    
+    /* Bigger buttons */
+    .retro-button, .retro-button-calculate, .retro-button-comp, .retro-button-small {
+        min-height: 52px !important;
+        padding: 14px 20px !important;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Larger suggestions dropdown */
+    .suggestions {
+        font-size: 16px !important;
+    }
+    
+    .suggestion-item {
+        padding: 18px 15px !important;
+        min-height: 48px;
+    }
+}
+
+/* Sticky Calculate Button */
+#stickyCalculateBtn {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: linear-gradient(180deg, #FF0000 0%, #990000 50%, #FF0000 100%);
+    color: #FFFF00;
+    border: 4px outset #FF6666;
+    padding: 15px 40px;
+    font-family: 'Comic Sans MS', cursive;
+    font-size: 1.2rem;
+    cursor: pointer;
+    text-shadow: 2px 2px 4px #000;
+    box-shadow: 0 0 20px rgba(255,0,0,0.8);
+    border-radius: 10px;
+    animation: calculate-glow 1s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+    #stickyCalculateBtn {
+        display: block;
+        bottom: 10px;
+        padding: 12px 30px;
+        font-size: 1rem;
+        width: 90%;
+        max-width: 400px;
+    }
+}
+
+/* ============================================
    RESPONSIVE DESIGN (for those "modern" devices)
    ============================================ */
 

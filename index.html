@@ -122,6 +122,11 @@
         <!-- Background MIDI would go here -->
     </div>
 
+    <!-- Sticky Calculate Button -->
+    <button id="stickyCalculateBtn" onclick="console.log('Sticky Calculate clicked'); if(window.runCalculations) { window.runCalculations(); } else { alert('Error: Analysis function not loaded.'); }">
+        <b>🧮 CALCULATE ANALYSIS 🧮</b>
+    </button>
+
     <!-- Bouncing Emojis Container -->
     <div id="bouncing-emojis"></div>
 
@@ -537,6 +542,37 @@
 
                     <tr><td>&nbsp;</td></tr>
 
+                    <!-- PURCHASE & REHAB (PRIORITY INPUTS) -->
+                    <tr>
+                        <td bgcolor="#003300" style="border: 5px groove #FF00FF;" align="center">
+                            <font face="Papyrus" color="#FFFF00" size="5">
+                                <b>💰 PURCHASE & REHAB 💰</b>
+                            </font>
+                            <br><br>
+                            
+                            <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
+                                <tr>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Purchase Price ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="purchasePrice" class="retro-input-small" placeholder="0" oninput="document.getElementById('purchasePrice').value = this.value; document.querySelectorAll('#purchasePrice').forEach(el => { if(el !== this) el.value = this.value; });">
+                                    </td>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Repair Costs ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="repairCost" class="retro-input-small" placeholder="0" oninput="document.getElementById('repairCost').value = this.value; document.querySelectorAll('#repairCost').forEach(el => { if(el !== this) el.value = this.value; });">
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <br><br>
+                        </td>
+                    </tr>
+
+                    <tr><td>&nbsp;</td></tr>
+
                     <!-- API Data Section (MOVED UP) -->
                     <tr>
                         <td bgcolor="#003300" style="border: 5px groove #00FF00;">
@@ -661,20 +697,7 @@
                             <br><br>
                             
                             <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
-                                <tr>
-                                    <td bgcolor="#000066" align="right">
-                                        <font color="#00FFFF"><b>Purchase Price ($):</b></font>
-                                    </td>
-                                    <td bgcolor="#000000">
-                                        <input type="number" id="purchasePrice" class="retro-input-small" placeholder="0">
-                                    </td>
-                                    <td bgcolor="#000066" align="right">
-                                        <font color="#00FFFF"><b>Repair Costs ($):</b></font>
-                                    </td>
-                                    <td bgcolor="#000000">
-                                        <input type="number" id="repairCost" class="retro-input-small" placeholder="0">
-                                    </td>
-                                </tr>
+                                <!-- Purchase & Rehab moved to top - removed duplicate hidden fields -->
                                 <tr>
                                     <td bgcolor="#000066" align="right">
                                         <font color="#00FFFF"><b>Interest Rate (%):</b></font>
