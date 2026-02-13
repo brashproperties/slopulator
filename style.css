@@ -631,60 +631,134 @@ marquee {
 }
 
 /* ============================================
+   MOBILE OVERFLOW PREVENTION
+   ============================================ */
+
+html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+* {
+    max-width: 100vw;
+    box-sizing: border-box;
+}
+
+/* ============================================
    RESPONSIVE DESIGN (for those "modern" devices)
    ============================================ */
 
 @media (max-width: 768px) {
     body {
         background-size: 300px 300px, 200px 200px, 150px 150px;
+        padding: 5px;
+    }
+    
+    .main-table, .content-table, .input-table {
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+    
+    .main-table td, .content-table td, .input-table td {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        text-overflow: ellipsis !important;
     }
     
     .big-blinking-number {
-        font-size: 2.5rem;
+        font-size: 2rem;
     }
     
     .retro-input {
-        width: 90%;
+        width: 100% !important;
         font-size: 1rem;
+        max-width: 100vw !important;
+    }
+    
+    .retro-input-small {
+        width: 100% !important;
     }
     
     .retro-button, .retro-button-calculate {
-        width: 90%;
-        font-size: 1.1rem;
-        padding: 12px 20px;
+        width: 100% !important;
+        font-size: 1rem;
+        padding: 12px 10px;
+    }
+    
+    .retro-button-comp {
+        width: 100% !important;
+        font-size: 1rem;
+        padding: 10px;
     }
     
     .digit {
-        font-size: 1.5rem;
-        padding: 3px 5px;
+        font-size: 1.2rem;
+        padding: 2px 4px;
     }
     
     .bouncing-emoji {
-        font-size: 1.5rem;
+        font-size: 1rem;
     }
     
+    /* Force everything in tables to wrap */
     table {
         width: 100% !important;
+        max-width: 100vw !important;
     }
     
-    td {
-        display: block;
-        width: 100% !important;
+    td, th {
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
     }
+    
+    /* Compact inputs */
+    .input-table td {
+        padding: 5px !important;
+    }
+    
+    /* Smaller fonts */
+    font[size="5"] { font-size: 1.5rem !important; }
+    font[size="6"] { font-size: 1.8rem !important; }
+    font[size="7"] { font-size: 2rem !important; }
 }
 
 @media (max-width: 480px) {
-    .big-blinking-number {
-        font-size: 1.8rem;
+    html, body {
+        max-width: 100vw;
+        overflow-x: hidden;
     }
     
-    marquee font[size="7"] {
+    .big-blinking-number {
         font-size: 1.5rem;
     }
     
+    marquee {
+        font-size: 0.8rem;
+    }
+    
+    marquee font[size="7"] {
+        font-size: 1.2rem;
+    }
+    
     .retro-button-calculate {
-        font-size: 1rem;
-        padding: 15px;
+        font-size: 0.9rem;
+        padding: 12px 8px;
+        width: 100% !important;
+    }
+    
+    .content-table, .main-table {
+        width: 100vw !important;
+        max-width: 100vw !important;
+    }
+    
+    .content-table td, .main-table td {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 3px !important;
+        font-size: 0.85rem !important;
     }
 }
 
