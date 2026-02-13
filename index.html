@@ -207,9 +207,24 @@
                                             const data = await response.json();
                                             
                                             if (data && data.length > 0) {
-                                                el.innerHTML = data.map(place => 
-                                                    `<div style="padding:10px;cursor:pointer;color:#0f0;border-bottom:1px solid #030;text-align:left;" onclick="selectAddress('${place.display_name.replace(/'/g, "\\'")}', ${place.lat}, ${place.lon})">${place.display_name}</div>`
-                                                ).join('');
+                                                // Format addresses smarter: highlight city, state, zip
+                                                el.innerHTML = data.map(place => {
+                                                    const addr = place.display_name;
+                                                    const parts = addr.split(',').map(p => p.trim());
+                                                    
+                                                    // Build cleaner display
+                                                    let shortAddr = parts[0] || ''; // street
+                                                    const city = parts[1] || '';   // city
+                                                    const stateZip = parts[parts.length - 2]?.trim() || ''; // state
+                                                    const zip = parts[parts.length - 1]?.trim() || ''; // country/zip
+                                                    
+                                                    // Show: "123 Main St" on first line, "City, State ZIP" highlighted on second
+                                                    const display = parts.length > 2 
+                                                        ? `<strong>${parts[0]}</strong><br><span style="color:#00FFFF;">${parts.slice(1, 3).join(', ')}</span>`
+                                                        : addr;
+                                                    
+                                                    return `<div class="suggestion-item" style="padding:10px;cursor:pointer;border-bottom:1px solid #030;" onclick="selectAddress('${place.display_name.replace(/'/g, "\\'")}', ${place.lat}, ${place.lon})">${display}</div>`;
+                                                }).join('');
                                                 el.style.display = 'block';
                                             } else {
                                                 el.style.display = 'none';
@@ -568,6 +583,14 @@
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="repairCost" class="retro-input-small" placeholder="0" oninput="document.getElementById('repairCost').value = this.value; document.querySelectorAll('#repairCost').forEach(el => { if(el !== this) el.value = this.value; });">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Monthly Rent ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" colspan="3">
+                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" placeholder="Auto from API" style="width: 100%;">
                                     </td>
                                 </tr>
                             </table>

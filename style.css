@@ -424,27 +424,36 @@ marquee {
     position: absolute;
     background: #000;
     border: 3px outset #00FF00;
-    max-height: 300px;
+    max-height: 250px;
+    max-width: 400px;
     overflow-y: auto;
     z-index: 1000;
     display: none;
     box-shadow: 0 0 20px rgba(0,255,0,0.5);
+    border-radius: 8px;
 }
 
 .suggestion-item {
-    padding: 15px;
+    padding: 12px 15px;
     cursor: pointer;
     border-bottom: 1px solid #003300;
     color: #00FF00;
     font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.4;
     transition: all 0.2s ease;
+    white-space: normal;
+    word-wrap: break-word;
 }
 
 .suggestion-item:hover {
     background: #003300;
     color: #00FFFF;
-    padding-left: 25px;
-    text-shadow: 0 0 10px #00FFFF;
+}
+
+.suggestion-item strong {
+    color: #FFFF00;
+    font-weight: bold;
 }
 
 /* ============================================
