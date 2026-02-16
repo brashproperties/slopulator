@@ -2286,6 +2286,11 @@ async function loadPropertyReachData(address) {
         document.getElementById('rentEstimate').value = prop.estimatedRentAmount || '';
         document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
         document.getElementById('yearBuilt').value = prop.yearBuilt || '';
+        // Try to find bedrooms/bathrooms fields
+        const bedsEl = document.getElementById('bedrooms');
+        if (bedsEl) bedsEl.value = prop.bedrooms || '';
+        const bathsEl = document.getElementById('bathrooms');
+        if (bathsEl) bathsEl.value = prop.bathrooms || '';
         document.getElementById('monthlyTaxes').value = prop.taxAmount ? Math.round(prop.taxAmount/12) : '';
         document.getElementById('annualInsurance').value = Math.round((prop.squareFeet || 1500) * 0.50);
         document.getElementById('lastSalePrice').value = prop.lastSaleAmount || '';
