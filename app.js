@@ -302,7 +302,7 @@ async function fetchAddressSuggestions(query) {
     autocompleteTimeout = setTimeout(async () => {
         try {
             // Try PropertyReach search API
-            const searchUrl = 'https://api.propertyreach.com/v1/search';
+            const searchUrl = 'https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search';
             const response = await fetch(searchUrl, {
                 method: 'POST',
                 headers: { 
