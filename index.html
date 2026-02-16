@@ -186,13 +186,13 @@
                             </font>
                             <br><br>
                             <div class="search-container" style="position: relative; display: inline-block; width: 100%; text-align: center;">
-                                <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off">
+                                <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off" oninput="handleAddressInput(this.value)">
                                 <div id="addressSuggestions" class="suggestions" style="left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px;"></div>
                             </div>
                             <script>
-                                // // Real address autocomplete using OpenStreetMap
+                                // Real address autocomplete using OpenStreetMap
                                 let acTimeout;
-                                window.handleAddressInput = function(value) {
+                                function handleAddressInput(value) {
                                     clearTimeout(acTimeout);
                                     const el = document.getElementById('addressSuggestions');
                                     if (value.length < 3) { el.style.display = 'none'; return; }
@@ -434,7 +434,7 @@
                                         
                                         // Use RentCast directly (supports CORS)
                                         const addressForAPI = streetAddress + ', ' + city + ', ' + state;
-                                        const proxyUrl = "https://srv1336418.hstgr.cloud/?url=" + encodeURIComponent(targetUrl);
+                                        const rentcastUrl = 'https://api.rentcast.io/v1/avm/value?address=' + encodeURIComponent(addressForAPI) + '&compCount=0';
                                         
                                         console.log('Fetching RentCast:', rentcastUrl);
                                         
@@ -455,12 +455,12 @@
                                             const data = await response.json();
                                             console.log('RentCast response:', data);
                                             
-                                            const p = data.property; if (p && p.estimatedValue) {
+                                            if (data.price) {
                                                 // estimatedValue (ARV)
-                                                document.getElementById.*zestimate.*value = p.estimatedValue || '';
+                                                document.getElementById('zestimate').value = data.price || '';
                                                 // Range estimate
-                                                document.getElementById('priceRangeLow').value = p.estimatedValue * 0.92 || Math.round(p.estimatedValue * 0.92);
-                                                document.getElementById('priceRangeHigh').value = p.estimatedValue * 1.08 || Math.round(p.estimatedValue * 1.08);
+                                                document.getElementById('priceRangeLow').value = data.priceRangeLow || Math.round(data.price * 0.92);
+                                                document.getElementById('priceRangeHigh').value = data.priceRangeHigh || Math.round(data.price * 1.08);
                                                 
                                                 // Rent (not available in AVM response, leave blank)
                                                 document.getElementById('rentEstimate').value = '';
@@ -1387,16 +1387,6 @@
         </table>
     </div>
 
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var input = document.getElementById('addressInput');
-    if (input) {
-        input.addEventListener('input', function(e) {
-            handleAddressInput(e.target.value);
-        });
-    }
-});
-    </script>
-    <script src="app.js?v=1029"></script>
+    <script src="app.js?v=1028"></script>
 </body>
 </html>
