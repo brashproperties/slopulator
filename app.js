@@ -1,3 +1,4 @@
+const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
 /***********************************************
  * THE SLOPULATOR - Retro JavaScript
  * Maximum Weirdness Achieved
@@ -12,10 +13,9 @@ let currentAddress = '';
 let calculationResults = null;
 let visitorCount = 0;
 
-// API Keys
-const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
 
-// API Keys
+
+
 
 // ============================================
 // VISITOR COUNTER (Retro Digital Style)
@@ -517,7 +517,7 @@ window.loadPropertyData = async function(address, lat, lon) {
         
         // Fallback to mock data if API fails
         if (!data) {
-            data = mockPropertyData(address, lat, lon);
+            console.error('PropertyReach API failed, showing error instead of mock data');
         }
         
         currentPropertyData = data;
@@ -1130,8 +1130,31 @@ window.runCompMeDaddyAnalysis = async function() {
 async function loadPropertyDataForCompMeDaddy(address) {
     // Generate mock data for the entered address
     // In production, this would call your actual property data API
-    const mockData = mockPropertyData(address, 0, 0);
-    currentPropertyData = mockData;
+    // Use PropertyReach API
+    try {
+        const { streetAddress, city, state } = parseAddressParts(address);
+        const searchUrl = 'https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search';
+        const response = await fetch(searchUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': PROPERTYREACH_API_KEY },
+            body: JSON.stringify({ target: { streetAddress, city, state }, limit: 1 })
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.properties?.[0]) {
+                const prop = data.properties[0];
+                currentPropertyData = {
+                    zestimate: prop.estimatedValue || 0,
+                    realtor_estimate: prop.estimatedValue || 0,
+                    rent_estimate: prop.estimatedRentAmount || 0
+                };
+                window.compMeDaddyData = currentPropertyData;
+                return;
+            }
+        }
+    } catch(e) { console.error(e); }
+    // If API fails, show error
+    alert('Could not load property data. Please try again.');
     
     // Pre-populate the fields if they exist
     const zestimateEl = document.getElementById('zestimate');
