@@ -2120,43 +2120,53 @@ function formatShortAddress(fullAddress) {
     const parts = fullAddress.split(',').map(p => p.trim());
     
     const stateMap = {
-        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
-        'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
-        'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
-        'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
-        'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
-        'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
-        'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
-        'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
-        'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
-        'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
+        'ALABAMA':'AL','ALASKA':'AK','ARIZONA':'AZ','ARKANSAS':'AR','CALIFORNIA':'CA',
+        'COLORADO':'CO','CONNECTICUT':'CT','DELAWARE':'DE','FLORIDA':'FL','GEORGIA':'GA',
+        'HAWAII':'HI','IDAHO':'ID','ILLINOIS':'IL','INDIANA':'IN','IOWA':'IA',
+        'KANSAS':'KS','KENTUCKY':'KY','LOUISIANA':'LA','MAINE':'ME','MARYLAND':'MD',
+        'MASSACHUSETTS':'MA','MICHIGAN':'MI','MINNESOTA':'MN','MISSISSIPPI':'MS','MISSOURI':'MO',
+        'MONTANA':'MT','NEBRASKA':'NE','NEVADA':'NV','NEW HAMPSHIRE':'NH','NEW JERSEY':'NJ',
+        'NEW MEXICO':'NM','NEW YORK':'NY','NORTH CAROLINA':'NC','NORTH DAKOTA':'ND','OHIO':'OH',
+        'OKLAHOMA':'OK','OREGON':'OR','PENNSYLVANIA':'PA','RHODE ISLAND':'RI','SOUTH CAROLINA':'SC',
+        'SOUTH DAKOTA':'SD','TENNESSEE':'TN','TEXAS':'TX','UTAH':'UT','VERMONT':'VT',
+        'VIRGINIA':'VA','WASHINGTON':'WA','WEST VIRGINIA':'WV','WISCONSIN':'WI','WYOMING':'WY'
     };
     
-    // Find state index - look for state name or abbreviation in parts
+    // Find state
     let stateIdx = -1;
     let state = '';
     for (let i = 1; i < parts.length; i++) {
         const p = parts[i].toUpperCase();
-        if (stateMap[parts[i]] || Object.values(stateMap).includes(p)) {
+        if (stateMap[p]) {
             stateIdx = i;
-            state = stateMap[parts[i]] || p;
+            state = stateMap[p];
+            break;
+        }
+        if (parts[i].length === 2 && Object.values(stateMap).includes(parts[i].toUpperCase())) {
+            stateIdx = i;
+            state = parts[i].toUpperCase();
             break;
         }
     }
     
-    // City is typically part before state
+    // City is part before state, skipping county
     let city = '';
     if (stateIdx > 1) {
-        city = parts[stateIdx - 1];
-    } else if (parts.length > 1) {
-        city = parts[1];
+        for (let i = stateIdx - 1; i >= 1; i--) {
+            if (!parts[i].toLowerCase().includes('county')) {
+                city = parts[i];
+                break;
+            }
+        }
     }
     
-    // Street is everything before city (usually parts[0])
-    let street = parts[0] || '';
-    if (stateIdx > 2) {
-        // Full OSM format: "num, street, city, county, state, zip"
-        street = parts.slice(0, stateIdx - 1).join(', ');
+    // Street is everything before city
+    let street = '';
+    if (city) {
+        const cityIdx = parts.indexOf(city);
+        street = parts.slice(0, cityIdx).join(', ');
+    } else {
+        street = parts[0] || '';
     }
     
     return `${street}, ${city}, ${state}`;
