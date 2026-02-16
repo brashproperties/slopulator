@@ -13,6 +13,9 @@ let calculationResults = null;
 let visitorCount = 0;
 
 // API Keys
+const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
+
+// API Keys
 
 // ============================================
 // VISITOR COUNTER (Retro Digital Style)
