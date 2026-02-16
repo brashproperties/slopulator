@@ -397,20 +397,52 @@
                                         // Clear all fields first
                                         clearAllFields();
                                         
-                                        // Parse address
+                                        // Parse address - format is "street, city, state" or "street, city, state, zip"
                                         const addressParts = address.split(',').map(s => s.trim());
-                                        const streetAddress = addressParts[0] || '';
-                                        const city = addressParts[1] || '';
-                                        const state = addressParts[2]?.split(' ')[0] || '';
+                                        
+                                        // If we have 4+ parts, format is: "street, city, state, zip" 
+                                        // parts[0] = street (may be just number)
+                                        // parts[1] = city
+                                        // parts[2] = state name or state abbrev
+                                        // parts[3] = zip (optional)
+                                        
+                                        let streetAddress, city, state;
+                                        
+                                        if (addressParts.length >= 4) {
+                                            // Format: 925, S 3rd St, Chickasha, OK
+                                            // Need to recombine street from parts[0] + parts[1] minus the street suffix
+                                            // Actually, let's use the original OSM address format
+                                            // The problem is formatShortAddress returns "925, S 3rd St, Chickasha, OK"
+                                            // But we need "925 S 3rd St" for street
+                                            
+                                            // Rebuild: street is parts[0] + parts[1] (number + street name)
+                                            streetAddress = addressParts[0] + ' ' + addressParts[1];
+                                            city = addressParts[2];
+                                            state = addressParts[3];
+                                        } else if (addressParts.length === 3) {
+                                            streetAddress = addressParts[0];
+                                            city = addressParts[1];
+                                            state = addressParts[2];
+                                        } else {
+                                            // Fallback
+                                            streetAddress = address;
+                                            city = '';
+                                            state = '';
+                                        }
                                         
                                         console.log('Parsed - street:', streetAddress, 'city:', city, 'state:', state);
                                         
-                                        // Fetch property data from PropertyReach
-                                        const propUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
-                                        console.log('Fetching:', propUrl);
+                                        // Use CORS proxy to bypass browser restrictions
+                                        const targetUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+                                        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+                                        console.log('Fetching via proxy:', proxyUrl);
                                         
-                                        const response = await fetch(propUrl, {
-                                            headers: { 'x-api-key': PROPERTYREACH_KEY, 'Accept': 'application/json' }
+                                        const response = await fetch(proxyUrl, {
+                                            headers: { 
+                                                'x-api-key': PROPERTYREACH_KEY, 
+                                                'Accept': 'application/json',
+                                                'Target-URL': targetUrl
+                                            }
                                         });
                                         
                                         console.log('Response status:', response.status);
