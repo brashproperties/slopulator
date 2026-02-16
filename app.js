@@ -2162,15 +2162,44 @@ async function loadPropertyReachData(address) {
     const API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
     
     try {
-        // Parse address
-        const parts = address.split(",").map(s => s.trim());
-        let streetAddress = parts[0] || '';
-        let city = parts[1] || '';
-        let state = parts[2]?.split(' ')[0] || '';
+        // Parse address - handle both comma and space separated
+        let streetAddress, city, state;
         
-        if (parts.length > 3) {
-            city = parts[2] || '';
-            state = parts[3] || '';
+        if (address.includes(',')) {
+            // Comma separated format: "street, city, state"
+            const parts = address.split(",").map(s => s.trim());
+            streetAddress = parts[0] || '';
+            city = parts[1] || '';
+            state = parts[2]?.split(' ')[0] || '';
+            if (parts.length > 3) {
+                city = parts[2] || '';
+                state = parts[3] || '';
+            }
+        } else {
+            // Space separated - need to find state abbreviation at end
+            const parts = address.trim().split(' ');
+            // Last 2 parts should be city, state (e.g., "Chickasha OK")
+            // Or last 3 (e.g., "Chickasha Oklahoma")
+            state = parts[parts.length - 1] || '';
+            if (state.length > 2) {
+                // Full state name, get abbreviation
+                const stateMap = {
+                    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+                    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+                    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
+                    'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+                    'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
+                    'Montana':'MT','Nebraska':'NE','Nevada':'NV','NewHampshire':'NH','NewJersey':'NJ',
+                    'NewMexico':'NM','NewYork':'NY','NorthCarolina':'NC','NorthDakota':'ND','Ohio':'OH',
+                    'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','RhodeIsland':'RI','SouthCarolina':'SC',
+                    'SouthDakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+                    'Virginia':'VA','Washington':'WA','WestVirginia':'WV','Wisconsin':'WI','Wyoming':'WY'
+                };
+                state = stateMap[state] || state.substring(0, 2).toUpperCase();
+            }
+            city = parts[parts.length - 2] || '';
+            // Street is everything before city
+            streetAddress = parts.slice(0, parts.length - 2).join(' ');
         }
         
         
