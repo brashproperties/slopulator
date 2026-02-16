@@ -186,7 +186,7 @@
                             </font>
                             <br><br>
                             <div class="search-container" style="position: relative; display: inline-block; width: 100%; text-align: center;">
-                                <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off" oninput="handleAddressInput.call(window, this, this.value)">
+                                <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off">
                                 <div id="addressSuggestions" class="suggestions" style="left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px;"></div>
                             </div>
                             <script>
@@ -1387,6 +1387,16 @@
         </table>
     </div>
 
-    <script src="app.js?v=1028"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('addressInput');
+    if (input) {
+        input.addEventListener('input', function(e) {
+            handleAddressInput(e.target.value);
+        });
+    }
+});
+    </script>
+    <script src="app.js?v=1029"></script>
 </body>
 </html>
