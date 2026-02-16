@@ -279,7 +279,7 @@ function debounce(func, wait) {
 // ADDRESS AUTOCOMPLETE (OpenStreetMap)
 // ============================================
 
-// Address autocomplete using RentCast API
+// Address autocomplete using PropertyReach API
 let lastQuery = '';
 let autocompleteTimeout;
 
@@ -302,7 +302,7 @@ async function fetchAddressSuggestions(query) {
     autocompleteTimeout = setTimeout(async () => {
         try {
             // Try PropertyReach search API
-            const searchUrl = 'https://api.propertyreach.com/v1/search';
+            const searchUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
             const response = await fetch(searchUrl, {
                 method: 'POST',
                 headers: { 
@@ -463,7 +463,7 @@ window.loadPropertyData = async function(address, lat, lon) {
             const city = addressParts[1] || '';
             const state = addressParts[2]?.split(' ')[0] || '';
             
-            const propertyUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+            const propertyUrl = PROXY_URL + encodeURIComponent(`https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`);
             const response = await fetch(propertyUrl, {
                 headers: {
                     'x-api-key': PROPERTYREACH_API_KEY,
@@ -1095,7 +1095,7 @@ window.runCompMeDaddyAnalysis = async function() {
     // Load all the analysis
     try {
         console.log('Starting PropertyReach data load...');
-        await loadRentCastAVM();
+        await loadPropertyReachAVM();
         console.log('PropertyReach load completed');
 
         console.log('All analysis complete!');
@@ -1195,7 +1195,7 @@ window.closeCompMeDaddy = function() {
 // PropertyReach API Integration
 const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
 
-async function loadRentCastAVM() {
+async function loadPropertyReachAVM() {
     const loadingDiv = document.getElementById('rentcastAVMLoading');
     const dataDiv = document.getElementById('rentcastAVMData');
     const compsDashboard = document.getElementById('compsDashboard');
@@ -1205,7 +1205,7 @@ async function loadRentCastAVM() {
     if (compsDashboard) compsDashboard.style.display = 'none';
     
     try {
-        console.log('loadRentCastAVM starting... (PropertyReach)');
+        console.log('loadPropertyReachAVM starting... (PropertyReach)');
         
         // Parse address into components
         const addressParts = currentAddress.split(',').map(s => s.trim());
@@ -1241,7 +1241,7 @@ async function loadRentCastAVM() {
         const highRange = Math.round(estimatedValue * 1.08);
         
         // Step 2: Get comparables
-        const compsUrl = 'https://api.propertyreach.com/v1/comparables';
+        const compsUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/comparables');
         console.log('Fetching comps:', compsUrl);
         
         const compsResponse = await fetch(compsUrl, { 
@@ -1407,7 +1407,7 @@ async function loadRentCastAVM() {
 }
 
 // Fetch PropertyReach property data including taxes
-async function loadRentCastPropertyData(address) {
+async function loadPropertyReachPropertyData(address) {
     try {
         const addressParts = address.split(',').map(s => s.trim());
         const streetAddress = addressParts[0] || '';
