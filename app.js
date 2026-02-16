@@ -459,11 +459,10 @@ window.loadPropertyData = async function(address, lat, lon) {
         
         try {
             console.log('DEBUG loadPropertyData address:', address);
-            const addressParts = address.split(',').map(s => s.trim());
-            console.log('DEBUG parts:', addressParts);
-            const streetAddress = addressParts[0] || '';
-            const city = addressParts[1] || '';
-            const state = addressParts[2]?.split(' ')[0] || '';
+            const { streetAddress, city, state } = parseAddressParts(address);
+            
+            
+            
             
             // Use search endpoint which is more reliable
             const searchUrl = 'https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search';
@@ -1147,6 +1146,30 @@ window.closeCompMeDaddy = function() {
 // PropertyReach API Integration
 const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
 
+// Better address parsing helper
+function parseAddressParts(address) {
+    const parts = address.split(',').map(s => s.trim());
+    const result = { streetAddress: parts[0] || '', city: '', state: '' };
+    
+    const states = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
+    const stateNames = ['Oklahoma','Texas','Indiana','California','Illinois','Ohio','Alabama','Alaska','Arizona','Arkansas','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
+    
+    for (let i = 1; i < parts.length; i++) {
+        const part = parts[i];
+        if (states.includes(part.toUpperCase()) || stateNames.includes(part)) {
+            result.state = part.length === 2 ? part.toUpperCase() : part.substring(0, 2).toUpperCase();
+            result.city = parts[i-1] || '';
+            break;
+        }
+    }
+    
+    if (!result.city) result.city = parts[1] || '';
+    if (!result.state) result.state = parts[2]?.substring(0, 2).toUpperCase() || '';
+    
+    return result;
+}
+
+
 async function loadRentCastAVM() {
     const loadingDiv = document.getElementById('rentcastAVMLoading');
     const dataDiv = document.getElementById('rentcastAVMData');
@@ -1160,10 +1183,7 @@ async function loadRentCastAVM() {
         console.log('loadRentCastAVM starting... (PropertyReach)');
         
         // Parse address into components
-        const addressParts = currentAddress.split(',').map(s => s.trim());
-        const streetAddress = addressParts[0] || '';
-        const city = addressParts[1] || '';
-        const state = addressParts[2]?.split(' ')[0] || '';
+        const { streetAddress, city, state } = parseAddressParts(currentAddress);
         
         // Step 1: Get property details (ARV, estimated value) via search endpoint
         const searchUrl = 'https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search';
@@ -1375,11 +1395,10 @@ async function loadRentCastAVM() {
 async function loadRentCastPropertyData(address) {
     try {
         console.log('DEBUG loadPropertyData address:', address);
-            const addressParts = address.split(',').map(s => s.trim());
-            console.log('DEBUG parts:', addressParts);
-        const streetAddress = addressParts[0] || '';
-        const city = addressParts[1] || '';
-        const state = addressParts[2]?.split(' ')[0] || '';
+            const { streetAddress, city, state } = parseAddressParts(address);
+        
+        
+        
         
         const url = `https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search`;
         
