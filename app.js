@@ -2194,6 +2194,7 @@ async function loadPropertyReachData(address) {
         if (!resp.ok) throw new Error('API error: ' + resp.status);
         
         const data = await resp.json();
+        console.log('DEBUG: Parsed address:', streetAddress, city, state);
         console.log('PropertyReach response:', data);
         
         if (!data.properties || data.properties.length === 0) {
