@@ -1605,12 +1605,12 @@ function generatePropertyTake() {
     const subjectPricePerSqft = subjectSqft > 0 ? avmValue / subjectSqft : 0;
     
     // Calculate comp metrics
-    const prices = comps.map(c => Number(c.lastSalePrice || c.salePrice || c.price || c.soldPrice || 0));
+    const prices = comps.map(c => Number(c.lastSaleAmount || c.lastSalePrice || c.sale_price || c.price || 0));
     const avgCompPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
     const minCompPrice = Math.min(...prices);
     const maxCompPrice = Math.max(...prices);
     
-    const sqfts = comps.map(c => Number(c.squareFootage || c.sqft || c.livingArea || 0)).filter(s => s > 0);
+    const sqfts = comps.map(c => Number(c.squareFeet || c.squareFootage || c.sqft || c.livingArea || 0)).filter(s => s > 0);
     const avgCompSqft = sqfts.length > 0 ? sqfts.reduce((a, b) => a + b, 0) / sqfts.length : 0;
     const avgCompPricePerSqft = avgCompSqft > 0 ? Math.round(avgCompPrice / avgCompSqft) : 0;
     
@@ -1656,7 +1656,7 @@ function generatePropertyTake() {
             
             <table border="1" cellpadding="10" cellspacing="0" width="100%" style="margin-bottom: 20px;">
                 <tr bgcolor="#000066">
-                    <td width="50%"><font color="#FFFF00"><b>Subject AVM:</b></font></td>
+                    <td width="50%"><font color="#FFFF00"><b>Subject PropertyReach:</b></font></td>
                     <td><font color="#00FFFF" size="4"><b>${formatCurrency(avmValue)}</b></font></td>
                 </tr>
 
@@ -1869,7 +1869,7 @@ function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPrice
     , comps[0]);
     
     const highestCompAddress = highestComp.formattedAddress || highestComp.addressLine1 || 'the highest comp';
-    const highestCompPricePerSqft = highestComp.squareFootage > 0 
+    const highestCompPricePerSqft = highestComp.lastSalePrice && highestComp.squareFootage > 0 
         ? (highestComp.lastSalePrice / highestComp.squareFootage).toFixed(0) 
         : 'N/A';
     
