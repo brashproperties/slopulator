@@ -2065,59 +2065,83 @@ function shareDealAnalysis() {
 window.runComprehensiveAnalysis = runCalculations;
 window.shareCompMeDaddy = shareCompMeDaddy;
 window.shareDealAnalysis = shareDealAnalysis;
-                                // Real address autocomplete using OpenStreetMap
-                                let acTimeout;
-                                function handleAddressInput(value) {
-                                    clearTimeout(acTimeout);
-                                    const el = document.getElementById('addressSuggestions');
-                                    if (value.length < 3) { el.style.display = 'none'; return; }
-                                    
-                                    acTimeout = setTimeout(async () => {
-                                        try {
-                                            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&limit=5&countrycodes=us`, {
-                                                headers: { 'User-Agent': 'Slopulator/1.0' }
-                                            });
-                                            
-                                            if (!response.ok) throw new Error('Search failed');
-                                            
-                                            const data = await response.json();
-                                            
-                                            if (data && data.length > 0) {
-                                                // Format addresses smarter: highlight city, state, zip
-                                                el.innerHTML = data.map(place => {
-                                                    const addr = place.display_name;
-                                                    const parts = addr.split(',').map(p => p.trim());
-                                                    
-                                                    // Build cleaner display
-                                                    let shortAddr = parts[0] || ''; // street
-                                                    const city = parts[1] || '';   // city
-                                                    const stateZip = parts[parts.length - 2]?.trim() || ''; // state
-                                                    const zip = parts[parts.length - 1]?.trim() || ''; // country/zip
-                                                    
-                                                    // Show: "123 Main St" on first line, "City, State ZIP" highlighted on second
-                                                    const display = parts.length > 2 
-                                                        ? `<strong>${parts[0]}</strong><br><span style="color:#00FFFF;">${parts.slice(1, 3).join(', ')}</span>`
-                                                        : addr;
-                                                    
-                                                    return `<div class="suggestion-item" style="padding:10px;cursor:pointer;border-bottom:1px solid #030;" onclick="selectAddress('${place.display_name.replace(/'/g, "\\'")}', ${place.lat}, ${place.lon})">${display}</div>`;
-                                                }).join('');
-                                                el.style.display = 'block';
-                                            } else {
-                                                el.style.display = 'none';
-                                            }
-                                        } catch (err) {
-                                            console.error('Autocomplete error:', err);
-                                            el.style.display = 'none';
-                                        }
-                                    }, 300);
-                                }
-                                
-                                function formatShortAddress(fullAddress) {
-                                    // OpenStreetMap format: "925, South 3rd Street, Chickasha, Grady County, Oklahoma, 73018, United States"
-                                    // We want: "925 S 3rd St, Chickasha, OK"
-                                    const parts = fullAddress.split(',').map(p => p.trim());
-                                    
-                                    // State name to abbreviation mapping
 
-window.handleAddressInput = handleAddressInput;
+// ============================================
+// ADDRESS AUTOCOMPLETE
+// ============================================
 
+let acTimeout;
+
+function handleAddressInput(value) {
+    clearTimeout(acTimeout);
+    const el = document.getElementById('addressSuggestions');
+    if (value.length < 3) { el.style.display = 'none'; return; }
+    
+    acTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&limit=5&countrycodes=us`, {
+                headers: { 'User-Agent': 'Slopulator/1.0' }
+            });
+            
+            if (!response.ok) throw new Error('Search failed');
+            
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                el.innerHTML = data.map(place => {
+                    const addr = place.display_name;
+                    const parts = addr.split(',').map(p => p.trim());
+                    
+                    const display = parts.length > 2 
+                        ? `<strong>${parts[0]}</strong><br><span style="color:#00FFFF;">${parts.slice(1, 3).join(', ')}</span>`
+                        : addr;
+                    
+                    return `<div class="suggestion-item" style="padding:10px;cursor:pointer;border-bottom:1px solid #030;" onclick="selectAddress('${place.display_name.replace(/'/g, "\\'")}', ${place.lat}, ${place.lon})">${display}</div>`;
+                }).join('');
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        } catch (err) {
+            console.error('Autocomplete error:', err);
+            el.style.display = 'none';
+        }
+    }, 300);
+}
+
+function selectAddress(addr, lat, lon) {
+    const shortAddr = formatShortAddress(addr);
+    document.getElementById('addressInput').value = shortAddr;
+    document.getElementById('addressSuggestions').style.display = 'none';
+    loadPropertyReachData(shortAddr);
+}
+
+function formatShortAddress(fullAddress) {
+    const parts = fullAddress.split(',').map(p => p.trim());
+    
+    // State name to abbreviation mapping
+    const stateMap = {
+        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+        'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+        'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+        'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+        'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+        'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+        'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+        'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+        'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+        'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
+    };
+    
+    // Rebuild address: "123 Main St, City, ST"
+    let street = parts[0] || '';
+    let city = parts[1] || '';
+    let state = parts[2] || '';
+    
+    // Convert state name to abbreviation if needed
+    if (state.length > 2 && stateMap[state]) {
+        state = stateMap[state];
+    }
+    
+    return `${street}, ${city}, ${state}`;
+}
