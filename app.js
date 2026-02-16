@@ -1196,6 +1196,7 @@ window.closeCompMeDaddy = function() {
 const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
 
 async function loadPropertyReachAVM() {
+    const PROXY_URL = 'https://srv1336418.hstgr.cloud/?url=';
     const loadingDiv = document.getElementById('rentcastAVMLoading');
     const dataDiv = document.getElementById('rentcastAVMData');
     const compsDashboard = document.getElementById('compsDashboard');
