@@ -387,7 +387,7 @@ function displaySuggestions(suggestions) {
 // MOCK PROPERTY DATA (since we don't have API keys)
 // ============================================
 
-function mockPropertyData(address, lat, lon) {
+// DISABLED: function mockPropertyData(address, lat, lon) {
     // Generate deterministic values based on address hash
     let hash = 0;
     for (let i = 0; i < address.length; i++) {
@@ -1110,7 +1110,7 @@ window.runCompMeDaddyAnalysis = async function() {
         document.getElementById('avmJustification').style.display = 'none';
     }
     
-    // Load mock property data for this address
+    // DISABLED: Load mock property data for this address
     await loadPropertyDataForCompMeDaddy(address);
 
     // Load all the analysis
@@ -1130,7 +1130,7 @@ window.runCompMeDaddyAnalysis = async function() {
 }
 
 async function loadPropertyDataForCompMeDaddy(address) {
-    // Generate mock data for the entered address
+    // DISABLED: Generate mock data for the entered address
     // In production, this would call your actual property data API
     // Use PropertyReach API
     try {
