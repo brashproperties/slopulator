@@ -434,7 +434,7 @@
                                         
                                         // Use VPS proxy server
                                         const targetUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
-                                        const proxyUrl = `https://srv1336418.hstgr.cloud/?url=${encodeURIComponent(targetUrl)}`;
+                                        const proxyUrl = `https://srv1336418.hstgr.cloud/?url=${encodeURIComponent(encodeURIComponent(targetUrl))}`;
                                         
                                         console.log('Fetching via proxy:', proxyUrl);
                                         
