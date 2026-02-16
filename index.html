@@ -432,16 +432,19 @@
                                         
                                         console.log('Parsed - street:', streetAddress, 'city:', city, 'state:', state);
                                         
-                                        // Use CORS proxy to bypass browser restrictions
+                                        // Use serverless function proxy to bypass CORS
+                                        // For local dev, use localhost. For production, use Netlify function URL
+                                        const isLocal = window.location.hostname.includes('localhost');
                                         const targetUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
-                                        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+                                        const proxyUrl = isLocal 
+                                            ? `http://localhost:8888/.netlify/functions/property?url=${encodeURIComponent(targetUrl)}&key=${PROPERTYREACH_KEY}`
+                                            : `/.netlify/functions/property?url=${encodeURIComponent(targetUrl)}`;
+                                        
                                         console.log('Fetching via proxy:', proxyUrl);
                                         
                                         const response = await fetch(proxyUrl, {
                                             headers: { 
-                                                'x-api-key': PROPERTYREACH_KEY, 
-                                                'Accept': 'application/json',
-                                                'Target-URL': targetUrl
+                                                'x-api-key': PROPERTYREACH_KEY
                                             }
                                         });
                                         
