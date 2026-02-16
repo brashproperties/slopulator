@@ -524,7 +524,8 @@ window.loadPropertyData = async function(address, lat, lon) {
         currentPropertyData = data;
         
         // Populate fields
-        const zestimateEl = document.getElementById('zestimate'); if (zestimateEl) zestimateEl.value = data.zestimate || '';
+        const zestimateEl = document.getElementById('zestimate'); console.log('DEBUG: Setting zestimate to', data.zestimate);
+                if (zestimateEl) zestimateEl.value = data.zestimate || '';
         const realtorEl = document.getElementById('realtorEstimate'); if (realtorEl) realtorEl.value = data.realtor_estimate || '';
         const rentEl = document.getElementById('rentEstimate'); if (rentEl) rentEl.value = data.rent_estimate || '';
         const taxEl = document.getElementById('monthlyTaxes'); if (taxEl) taxEl.value = data.monthly_taxes || '';
