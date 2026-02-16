@@ -12,6 +12,8 @@ let currentAddress = '';
 let calculationResults = null;
 let visitorCount = 0;
 
+// API Keys
+
 // ============================================
 // VISITOR COUNTER (Retro Digital Style)
 // ============================================
@@ -1144,7 +1146,6 @@ window.closeCompMeDaddy = function() {
 }
 
 // PropertyReach API Integration
-const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
 
 // Better address parsing helper
 function parseAddressParts(address) {
