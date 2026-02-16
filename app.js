@@ -2173,7 +2173,7 @@ async function loadPropertyReachData(address) {
             state = parts[3] || '';
         }
         
-        console.log('DEBUG: Loading address:', streetAddress, city, state); console.log('Loading:', streetAddress, city, state);
+        console.log('DEBUG: Loading address:', streetAddress, city, state); console.log('API REQUEST:', JSON.stringify(body)); console.log('Loading:', streetAddress, city, state);
         
         // Call PropertyReach via proxy
         const url = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
