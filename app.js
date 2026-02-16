@@ -2156,7 +2156,7 @@ async function loadPropertyReachData(address) {
     
     try {
         // Parse address
-        const parts = address.split(',').map(s => s.trim());
+        const parts = address.split(",").map(s => s.trim());
         let streetAddress = parts[0] || '';
         let city = parts[1] || '';
         let state = parts[2]?.split(' ')[0] || '';
