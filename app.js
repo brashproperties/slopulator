@@ -1109,19 +1109,82 @@ window.runCompMeDaddyAnalysis = async function() {
 }
 
 async function loadPropertyDataForCompMeDaddy(address) {
-    // Generate mock data for the entered address
-    // In production, this would call your actual property data API
-    const mockData = mockPropertyData(address, 0, 0);
-    currentPropertyData = mockData;
+    const PROXY_URL = 'https://srv1336418.hstgr.cloud/?url=';
+    const API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
     
-    // Pre-populate the fields if they exist
-    const zestimateEl = document.getElementById('zestimate');
-    const realtorEl = document.getElementById('realtorEstimate');
+    // Parse address
+    let streetAddress, city, state;
+    if (address.includes(',')) {
+        const parts = address.split(',').map(s => s.trim());
+        streetAddress = parts[0] || '';
+        city = parts[1] || '';
+        state = parts[2]?.split(' ')[0] || '';
+    } else {
+        const parts = address.trim().split(' ');
+        state = parts[parts.length - 1] || '';
+        city = parts[parts.length - 2] || '';
+        streetAddress = parts.slice(0, parts.length - 2).join(' ');
+    }
     
-    // Store values in the Comp Me Daddy page context
-    if (!window.compMeDaddyData) window.compMeDaddyData = {};
-    window.compMeDaddyData.zestimate = mockData.zestimate || 0;
-    window.compMeDaddyData.realtor_estimate = mockData.realtor_estimate || 0;
+    try {
+        // Search for property
+        const searchUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
+        const body = {
+            target: { city, state },
+            filter: { streetAddress: streetAddress.split(' ')[0] },
+            limit: 50
+        };
+        
+        const resp = await fetch(searchUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+            body: JSON.stringify(body)
+        });
+        
+        if (!resp.ok) throw new Error('Search failed');
+        
+        const data = await resp.json();
+        
+        // Find matching property
+        let prop = null;
+        const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
+        
+        if (data.properties && data.properties.length > 0) {
+            for (let p of data.properties) {
+                const pStreet = (p.streetAddress || '').toLowerCase();
+                if (pStreet.startsWith(streetNum)) {
+                    prop = p;
+                    break;
+                }
+            }
+            if (!prop) prop = data.properties[0];
+        }
+        
+        if (prop) {
+            // Fetch full property details
+            const propUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/property?streetAddress=' + encodeURIComponent(prop.streetAddress) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state));
+            const propResp = await fetch(propUrl);
+            if (propResp.ok) {
+                const propData = await propResp.json();
+                if (propData.property) {
+                    prop = propData.property;
+                }
+            }
+            
+            currentPropertyData = {
+                zestimate: prop.estimatedValue || 0,
+                realtor_estimate: prop.estimatedValue || 0,
+                rent_estimate: prop.estimatedRentAmount || 0
+            };
+            
+            // Store values
+            if (!window.compMeDaddyData) window.compMeDaddyData = {};
+            window.compMeDaddyData.zestimate = prop.estimatedValue || 0;
+            window.compMeDaddyData.realtor_estimate = prop.estimatedValue || 0;
+        }
+    } catch(e) {
+        console.error('Comp Me Daddy error:', e);
+    }
 }
 
 window.closeCompMeDaddy = function() {
