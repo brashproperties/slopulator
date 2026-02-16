@@ -379,8 +379,7 @@
                                     document.getElementById('zestimate').value = '';
                                     document.getElementById('priceRangeLow').value = '';
                                     document.getElementById('priceRangeHigh').value = '';
-                                    document.getElementById('rentRangeLow').value = '';
-                                    document.getElementById('rentRangeHigh').value = '';
+                                    document.getElementById('rentEstimate').value = '';
                                     document.getElementById('sqft').value = '';
                                     document.getElementById('monthlyTaxes').value = '';
                                     document.getElementById('annualInsurance').value = '';
@@ -467,8 +466,6 @@
                                                 
                                                 // Rent estimate
                                                 document.getElementById('rentEstimate').value = p.estimatedRentAmount || '';
-                                                document.getElementById('rentRangeLow').placeholder = 'N/A';
-                                                document.getElementById('rentRangeHigh').placeholder = 'N/A';
                                                 
                                                 // Square feet
                                                 document.getElementById('sqft').value = p.squareFeet || p.livingSquareFeet || '';
@@ -615,19 +612,13 @@
                                         <input type="number" id="priceRangeHigh" class="retro-input-small api-field" placeholder="Auto-populated">
                                     </td>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Rent Range Low ($):</b></font>
+                                        <font color="#FF9900"><b>Rent Estimate ($):</b></font>
                                     </td>
                                     <td bgcolor="#000000">
-                                        <input type="number" id="rentRangeLow" class="retro-input-small api-field" placeholder="Auto-populated">
+                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" placeholder="Auto-populated">
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Rent Range High ($):</b></font>
-                                    </td>
-                                    <td bgcolor="#000000">
-                                        <input type="number" id="rentRangeHigh" class="retro-input-small api-field" placeholder="Auto-populated">
-                                    </td>
                                     <td bgcolor="#663300" align="right">
                                         <font color="#FF9900"><b>Property Sqft:</b></font>
                                     </td>
