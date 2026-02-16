@@ -463,19 +463,32 @@ window.loadPropertyData = async function(address, lat, lon) {
             const city = addressParts[1] || '';
             const state = addressParts[2]?.split(' ')[0] || '';
             
-            const propertyUrl = `https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
-            const response = await fetch(propertyUrl, {
+            // Use search endpoint which is more reliable
+            const searchUrl = 'https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search';
+            const searchBody = {
+                target: {
+                    streetAddress: streetAddress,
+                    city: city,
+                    state: state
+                },
+                filter: {},
+                limit: 1
+            };
+            const response = await fetch(searchUrl, {
+                method: 'POST',
                 headers: {
                     'x-api-key': PROPERTYREACH_API_KEY,
+                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
-                }
+                },
+                body: JSON.stringify(searchBody)
             });
             
             if (response.ok) {
-                const propertyData = await response.json();
+                const searchData = await response.json();
                 
-                if (propertyData && propertyData.property) {
-                    const prop = propertyData.property;
+                if (searchData && searchData.properties && searchData.properties.length > 0) {
+                    const prop = searchData.properties[0];
                     data = {
                         zestimate: prop.estimatedValue || 0,
                         realtor_estimate: prop.estimatedValue || 0,
