@@ -2268,6 +2268,18 @@ async function loadPropertyReachData(address) {
             // Match street number and street name
             if (pStreetNum === streetNum && pStreetName.includes(streetName)) {
                 console.log('Found match:', p.streetAddress, p.city, p.estimatedValue, 'rent:', p.estimatedRentAmount, 'tax:', p.taxAmount);
+                // Fetch full property details to get rent and tax
+                const propUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/property?streetAddress=' + encodeURIComponent(p.streetAddress) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state));
+                try {
+                    const propResp = await fetch(propUrl);
+                    if (propResp.ok) {
+                        const propData = await propResp.json();
+                        if (propData.property) {
+                            console.log('Full property rent:', propData.property.estimatedRentAmount, 'tax:', propData.property.taxAmount);
+                            p = propData.property;
+                        }
+                    }
+                } catch(e) { console.log('Error:', e); }
                 prop = p;
                 break;
             }
