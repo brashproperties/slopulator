@@ -493,7 +493,7 @@ window.loadPropertyData = async function(address, lat, lon) {
             if (response.ok) {
                 const searchData = await response.json();
                 
-                console.log('DEBUG: Got response', searchData); if (searchData && searchData.properties && searchData.properties.length > 0) {
+                console.log('DEBUG: Got response:', JSON.stringify(searchData).substring(0, 200)), searchData); if (searchData && searchData.properties && searchData.properties.length > 0) {
                     const prop = searchData.properties[0];
                     data = {
                         zestimate: prop.estimatedValue || 0,
