@@ -1208,11 +1208,59 @@ async function loadPropertyReachAVM() {
     try {
         console.log('loadPropertyReachAVM starting... (PropertyReach)');
         
-        // Parse address into components
-        const addressParts = currentAddress.split(',').map(s => s.trim());
-        const streetAddress = addressParts[0] || '';
-        const city = addressParts[1] || '';
-        const state = addressParts[2]?.split(' ')[0] || '';
+        // Parse address - handle both comma and space separated
+        let streetAddress, city, state;
+        
+        if (currentAddress.includes(',')) {
+            const parts = currentAddress.split(',').map(s => s.trim());
+            streetAddress = parts[0] || '';
+            city = parts[1] || '';
+            state = parts[2]?.split(' ')[0] || '';
+            if (parts.length > 3) {
+                city = parts[2] || '';
+                state = parts[3] || '';
+            }
+        } else {
+            // Space separated format
+            const parts = currentAddress.trim().split(' ');
+            state = parts[parts.length - 1] || '';
+            city = parts[parts.length - 2] || '';
+            streetAddress = parts.slice(0, parts.length - 2).join(' ');
+        }
+        
+        // Normalize street address
+        streetAddress = streetAddress
+            .replace(/\bSouth\b/g, 'S')
+            .replace(/\bNorth\b/g, 'N')
+            .replace(/\bEast\b/g, 'E')
+            .replace(/\bWest\b/g, 'W')
+            .replace(/\bStreet\b/g, 'St')
+            .replace(/\bAvenue\b/g, 'Ave')
+            .replace(/\bDrive\b/g, 'Dr')
+            .replace(/\bRoad\b/g, 'Rd')
+            .replace(/\bLane\b/g, 'Ln')
+            .replace(/\bCourt\b/g, 'Ct')
+            .replace(/\bPlace\b/g, 'Pl')
+            .replace(/\bBoulevard\b/g, 'Blvd')
+            .replace(/\bCircle\b/g, 'Cir')
+            .replace(/\bTerrace\b/g, 'Ter');
+        
+        // Convert state name to abbreviation
+        const stateMap = {
+            'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+            'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+            'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
+            'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+            'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
+            'Montana':'MT','Nebraska':'NE','Nevada':'NV','NewHampshire':'NH','NewJersey':'NJ',
+            'NewMexico':'NM','NewYork':'NY','NorthCarolina':'NC','NorthDakota':'ND','Ohio':'OH',
+            'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','RhodeIsland':'RI','SouthCarolina':'SC',
+            'SouthDakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+            'Virginia':'VA','Washington':'WA','WestVirginia':'WV','Wisconsin':'WI','Wyoming':'WY'
+        };
+        if (state.length > 2) {
+            state = stateMap[state] || state.substring(0, 2).toUpperCase();
+        }
         
         // Step 1: Get property details (ARV, estimated value)
         const propertyUrl = PROXY_URL + encodeURIComponent(`https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`);
