@@ -432,8 +432,8 @@
                                         
                                         console.log('Parsed - street:', streetAddress, 'city:', city, 'state:', state);
                                         
-                                        // Use allorigins proxy
-                                        const params = "streetAddress=" + encodeURIComponent(streetAddress) + "&city=" + encodeURIComponent(city) + "&state=" + encodeURIComponent(state);
+                                        // Use allorigins proxy with API key in URL
+                                        const params = "streetAddress=" + encodeURIComponent(streetAddress) + "&city=" + encodeURIComponent(city) + "&state=" + encodeURIComponent(state) + "&x-api-key=" + PROPERTYREACH_KEY;
                                         const targetUrl = "https://api.propertyreach.com/v1/property?" + params;
                                         const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
                                         
