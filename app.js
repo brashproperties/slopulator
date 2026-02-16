@@ -2162,6 +2162,25 @@ async function loadPropertyReachData(address) {
     const API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
     
     try {
+        // Normalize street address (South -> S, Street -> St, etc)
+        function normalizeStreet(addr) {
+            return addr
+                .replace(/\bSouth\b/g, 'S')
+                .replace(/\bNorth\b/g, 'N')
+                .replace(/\bEast\b/g, 'E')
+                .replace(/\bWest\b/g, 'W')
+                .replace(/\bStreet\b/g, 'St')
+                .replace(/\bAvenue\b/g, 'Ave')
+                .replace(/\bRoad\b/g, 'Rd')
+                .replace(/\bDrive\b/g, 'Dr')
+                .replace(/\bLane\b/g, 'Ln')
+                .replace(/\bCourt\b/g, 'Ct')
+                .replace(/\bPlace\b/g, 'Pl')
+                .replace(/\bBoulevard\b/g, 'Blvd')
+                .replace(/\bCircle\b/g, 'Cir')
+                .replace(/\bTerrace\b/g, 'Ter');
+        }
+        
         // Parse address - handle both comma and space separated
         let streetAddress, city, state;
         
@@ -2202,6 +2221,9 @@ async function loadPropertyReachData(address) {
             streetAddress = parts.slice(0, parts.length - 2).join(' ');
         }
         
+        
+        // Normalize street address
+        streetAddress = normalizeStreet(streetAddress);
         
         // Call PropertyReach via proxy
         const url = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
