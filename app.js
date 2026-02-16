@@ -504,12 +504,12 @@ window.loadPropertyData = async function(address, lat, lon) {
         currentPropertyData = data;
         
         // Populate fields
-        document.getElementById('zestimate').value = data.zestimate || '';
-        document.getElementById('realtorEstimate').value = data.realtor_estimate || '';
-        document.getElementById('rentEstimate').value = data.rent_estimate || '';
-        document.getElementById('monthlyTaxes').value = data.monthly_taxes || '';
-        document.getElementById('annualInsurance').value = data.annual_insurance || '';
-        document.getElementById('sqft').value = data.property_details?.sqft || '';
+        const zestimateEl = document.getElementById('zestimate'); if (zestimateEl) zestimateEl.value = data.zestimate || '';
+        const realtorEl = document.getElementById('realtorEstimate'); if (realtorEl) realtorEl.value = data.realtor_estimate || '';
+        const rentEl = document.getElementById('rentEstimate'); if (rentEl) rentEl.value = data.rent_estimate || '';
+        const taxEl = document.getElementById('monthlyTaxes'); if (taxEl) taxEl.value = data.monthly_taxes || '';
+        const insEl = document.getElementById('annualInsurance'); if (insEl) insEl.value = data.annual_insurance || '';
+        const sqftEl = document.getElementById('sqft'); if (sqftEl) sqftEl.value = data.property_details?.sqft || '';
         
         // Ensure loan term is set to default if empty
         const loanTermEl = document.getElementById('loanTerm');
