@@ -186,7 +186,7 @@
                             </font>
                             <br><br>
                             <div class="search-container" style="position: relative; display: inline-block; width: 100%; text-align: center;">
-                                <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off" oninput="handleAddressInput(this.value)">
+                                <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off" oninput="fetchAddressSuggestions(this.value)">
                                 <div id="addressSuggestions" class="suggestions" style="left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px;"></div>
                             </div>
                             <script>
