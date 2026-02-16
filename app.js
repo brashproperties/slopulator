@@ -512,7 +512,7 @@ window.loadPropertyData = async function(address, lat, lon) {
                 }
             }
         } catch (err) {
-            console.log('DEBUG: Trying PropertyReach'); console.log('Address:', address); console.log('PropertyReach URL:', propertyUrl); console.error("PropertyReach API error:", err);
+            console.log("DEBUG: Trying PropertyReach");
         }
         
         // No fallback - show error if API fails
