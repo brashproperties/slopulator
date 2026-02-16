@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>★★★ THE SLOPULATOR ★★★ - COMP ME DADDY LIVE</title>
     <link rel="manifest" href="manifest.json">
@@ -433,7 +434,7 @@
                                         
                                         // Use VPS proxy server
                                         const targetUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
-                                        const proxyUrl = `https://147.93.45.33:3456/?url=${encodeURIComponent(targetUrl)}`;
+                                        const proxyUrl = `http://147.93.45.33:3456/?url=${encodeURIComponent(targetUrl)}`;
                                         
                                         console.log('Fetching via proxy:', proxyUrl);
                                         
