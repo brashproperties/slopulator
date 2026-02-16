@@ -2231,7 +2231,18 @@ async function loadPropertyReachData(address) {
             throw new Error('No property found');
         }
         
-        const prop = data.properties[0];
+        // Find the property that matches our street address
+        let prop = data.properties[0];
+        const streetNum = streetAddress.split(' ')[0];
+        const streetName = streetAddress.split(' ').slice(1).join(' ').toLowerCase();
+        
+        for (let p of data.properties) {
+            const pStreet = (p.streetAddress || '').toLowerCase();
+            if (pStreet.includes(streetName) || pStreet.includes(streetAddress.toLowerCase())) {
+                prop = p;
+                break;
+            }
+        }
         
         // Populate fields
         document.getElementById('zestimate').value = prop.estimatedValue || '';
