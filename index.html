@@ -432,16 +432,15 @@
                                         
                                         console.log('Parsed - street:', streetAddress, 'city:', city, 'state:', state);
                                         
-                                        // Use allorigins proxy with API key in URL
-                                        const params = "streetAddress=" + encodeURIComponent(streetAddress) + "&city=" + encodeURIComponent(city) + "&state=" + encodeURIComponent(state) + "&x-api-key=" + PROPERTYREACH_KEY;
-                                        const targetUrl = "https://api.propertyreach.com/v1/property?" + params;
-                                        const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
+                                        // Use RentCast directly (supports CORS)
+                                        const addressForAPI = streetAddress + ', ' + city + ', ' + state;
+                                        const rentcastUrl = 'https://api.rentcast.io/v1/avm/value?address=' + encodeURIComponent(addressForAPI) + '&compCount=0';
                                         
-                                        console.log('Fetching via proxy:', proxyUrl);
+                                        console.log('Fetching RentCast:', rentcastUrl);
                                         
-                                        const response = await fetch(proxyUrl, {
+                                        const response = await fetch(rentcastUrl, {
                                             headers: { 
-                                                'x-api-key': PROPERTYREACH_KEY
+                                                'X-Api-Key': 'c5ad833affcf4a648df2ca97b5a870ff'
                                             }
                                         });
                                         
@@ -454,55 +453,41 @@
                                         
                                         if (response.ok) {
                                             const data = await response.json();
-                                            console.log('PropertyReach response:', data);
+                                            console.log('RentCast response:', data);
                                             
-                                            const p = data.property;
-                                            if (p) {
+                                            if (data.price) {
                                                 // estimatedValue (ARV)
-                                                document.getElementById('zestimate').value = p.estimatedValue || '';
-                                                // Range estimate (±8%)
-                                                const val = p.estimatedValue || 0;
-                                                document.getElementById('priceRangeLow').value = Math.round(val * 0.92);
-                                                document.getElementById('priceRangeHigh').value = Math.round(val * 1.08);
+                                                document.getElementById('zestimate').value = data.price || '';
+                                                // Range estimate
+                                                document.getElementById('priceRangeLow').value = data.priceRangeLow || Math.round(data.price * 0.92);
+                                                document.getElementById('priceRangeHigh').value = data.priceRangeHigh || Math.round(data.price * 1.08);
                                                 
-                                                // Rent estimate
-                                                document.getElementById('rentEstimate').value = p.estimatedRentAmount || '';
+                                                // Rent (not available in AVM response, leave blank)
+                                                document.getElementById('rentEstimate').value = '';
                                                 
-                                                // Square feet
-                                                document.getElementById('sqft').value = p.squareFeet || p.livingSquareFeet || '';
-                                                if (!p.squareFeet) document.getElementById('sqft').placeholder = 'N/A';
+                                                // Square feet (not in AVM response)
+                                                document.getElementById('sqft').placeholder = 'N/A';
                                                 
-                                                // Year built
-                                                document.getElementById('yearBuilt').value = p.yearBuilt || '';
-                                                if (!p.yearBuilt) document.getElementById('yearBuilt').placeholder = 'N/A';
+                                                // Year built (not in AVM response)
+                                                document.getElementById('yearBuilt').placeholder = 'N/A';
                                                 
-                                                // Monthly taxes
-                                                if (p.taxAmount) {
-                                                    document.getElementById('monthlyTaxes').value = Math.round(p.taxAmount / 12);
-                                                } else {
-                                                    document.getElementById('monthlyTaxes').placeholder = 'N/A';
-                                                }
+                                                // Taxes (not in AVM response)
+                                                document.getElementById('monthlyTaxes').placeholder = 'N/A';
                                                 
                                                 // Insurance (estimate $0.50/sqft)
-                                                const sqft = p.squareFeet || 0;
-                                                if (sqft) {
-                                                    document.getElementById('annualInsurance').value = Math.round(sqft * 0.5);
-                                                } else {
-                                                    document.getElementById('annualInsurance').placeholder = 'N/A';
-                                                }
+                                                document.getElementById('annualInsurance').placeholder = 'N/A';
                                                 
-                                                // Last sale
-                                                document.getElementById('lastSalePrice').value = p.lastSaleAmount || '';
-                                                document.getElementById('lastSaleDate').value = p.lastSaleDate || '';
-                                                if (!p.lastSaleAmount) document.getElementById('lastSalePrice').placeholder = 'N/A';
-                                                
-                                                // Show property image
-                                                showPropertyImage(p);
+                                                // Last sale (not in AVM response)
+                                                document.getElementById('lastSalePrice').placeholder = 'N/A';
+                                                document.getElementById('lastSaleDate').placeholder = 'N/A';
+                                            } else {
+                                                alert('No data found for this address');
                                             }
                                         }
+                                        }
                                     } catch (err) {
-                                        console.error('PropertyReach error:', err);
-                                        alert('Error loading property data. Try typing thisisunsafe on this page if HTTP is blocked.');
+                                        console.error('RentCast error:', err);
+                                        alert('Error loading property data from RentCast');
                                     }
                                 }
                                 
