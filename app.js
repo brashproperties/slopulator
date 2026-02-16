@@ -506,7 +506,7 @@ window.loadPropertyData = async function(address, lat, lon) {
                 }
             }
         } catch (err) {
-            console.log('PropertyReach URL:', propertyUrl); console.warn('PropertyReach API failed, using mock data:', err);
+            console.log('DEBUG: Trying PropertyReach'); console.log('Address:', address); console.log('PropertyReach URL:', propertyUrl); console.warn('PropertyReach API failed, using mock data:', err);
         }
         
         // Fallback to mock data if API fails
