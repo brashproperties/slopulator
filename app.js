@@ -2117,57 +2117,40 @@ function selectAddress(addr, lat, lon) {
 }
 
 function formatShortAddress(fullAddress) {
-    // Simple format: "123 Main St, Austin, TX" or full OSM format
+    // Full OSM format: "925, South 3rd Street, Chickasha, Grady County, Oklahoma, 73018, United States"
+    // We want: "925 S 3rd St, Chickasha, OK"
     const parts = fullAddress.split(',').map(p => p.trim());
     
-    // Try simple format first: street, city, state
-    if (parts.length >= 3) {
-        const state = parts[2].length === 2 ? parts[2].toUpperCase() : '';
-        if (state) {
-            return `${parts[0]}, ${parts[1]}, ${state}`;
-        }
-    }
+    // Find state by looking for state names
+    const stateNames = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
     
-    // For full OSM format, extract just street, city, state
-    const stateMap = {
-        'ALABAMA':'AL','ALASKA':'AK','ARIZONA':'AZ','ARKANSAS':'AR','CALIFORNIA':'CA',
-        'COLORADO':'CO','CONNECTICUT':'CT','DELAWARE':'DE','FLORIDA':'FL','GEORGIA':'GA',
-        'HAWAII':'HI','IDAHO':'ID','ILLINOIS':'IL','INDIANA':'IN','IOWA':'IA',
-        'KANSAS':'KS','KENTUCKY':'KY','LOUISIANA':'LA','MAINE':'ME','MARYLAND':'MD',
-        'MASSACHUSETTS':'MA','MICHIGAN':'MI','MINNESOTA':'MN','MISSISSIPPI':'MS','MISSOURI':'MO',
-        'MONTANA':'MT','NEBRASKA':'NE','NEVADA':'NV','NEW HAMPSHIRE':'NH','NEW JERSEY':'NJ',
-        'NEW MEXICO':'NM','NEW YORK':'NY','NORTH CAROLINA':'NC','NORTH DAKOTA':'ND','OHIO':'OH',
-        'OKLAHOMA':'OK','OREGON':'OR','PENNSYLVANIA':'PA','RHODE ISLAND':'RI','SOUTH CAROLINA':'SC',
-        'SOUTH DAKOTA':'SD','TENNESSEE':'TN','TEXAS':'TX','UTAH':'UT','VERMONT':'VT',
-        'VIRGINIA':'VA','WASHINGTON':'WA','WEST VIRGINIA':'WV','WISCONSIN':'WI','WYOMING':'WY'
-    };
-    
-    // Find state
     let state = '';
     let stateIdx = -1;
     for (let i = 1; i < parts.length; i++) {
-        if (stateMap[parts[i].toUpperCase()]) {
-            state = stateMap[parts[i].toUpperCase()];
+        if (stateNames.includes(parts[i])) {
+            state = parts[i];
             stateIdx = i;
             break;
         }
     }
     
-    // Find city (before state, skip county)
+    // City is the part before state (or before county if present)
     let city = '';
     if (stateIdx > 1) {
-        for (let i = stateIdx - 1; i >= 1; i--) {
-            if (!parts[i].toLowerCase().includes('county')) {
-                city = parts[i];
-                break;
-            }
+        city = parts[stateIdx - 1];
+        // If it's "County", go back one more
+        if (city.toLowerCase().includes('county') && stateIdx > 2) {
+            city = parts[stateIdx - 2];
         }
     }
     
-    // Street: first part
-    const street = parts[0] || '';
+    // Street: parts[0] + parts[1] (number + street name)
+    let street = parts[0] || '';
+    if (parts[1] && !parts[1].toLowerCase().includes('county')) {
+        street = parts[0] + ' ' + parts[1];
+    }
     
-    return `${street}, ${city}, ${state}`;
+    return `${street}, ${city}, ${state.substring(0, 2)}`;
 }
 
 // ============================================
