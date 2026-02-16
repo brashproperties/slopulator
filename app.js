@@ -1156,14 +1156,7 @@ async function loadPropertyDataForCompMeDaddy(address) {
     // If API fails, show error
     alert('Could not load property data. Please try again.');
     
-    // Pre-populate the fields if they exist
-    const zestimateEl = document.getElementById('zestimate');
-    const realtorEl = document.getElementById('realtorEstimate');
-    
-    // Store values in the Comp Me Daddy page context
     if (!window.compMeDaddyData) window.compMeDaddyData = {};
-    window.compMeDaddyData.zestimate = mockData.zestimate || 0;
-    window.compMeDaddyData.realtor_estimate = mockData.realtor_estimate || 0;
 }
 
 window.closeCompMeDaddy = function() {
