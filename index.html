@@ -192,7 +192,7 @@
                             <script>
                                 // // Real address autocomplete using OpenStreetMap
                                 let acTimeout;
-                                function handleAddressInput(value) {
+                                window.handleAddressInput = function(value) {
                                     clearTimeout(acTimeout);
                                     const el = document.getElementById('addressSuggestions');
                                     if (value.length < 3) { el.style.display = 'none'; return; }
