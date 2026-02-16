@@ -432,9 +432,10 @@
                                         
                                         console.log('Parsed - street:', streetAddress, 'city:', city, 'state:', state);
                                         
-                                        // Use VPS proxy server
-                                        const targetUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
-                                        const proxyUrl = `https://srv1336418.hstgr.cloud/?url=${encodeURIComponent(targetUrl)}`;
+                                        // Use allorigins proxy
+                                        const params = "streetAddress=" + encodeURIComponent(streetAddress) + "&city=" + encodeURIComponent(city) + "&state=" + encodeURIComponent(state);
+                                        const targetUrl = "https://api.propertyreach.com/v1/property?" + params;
+                                        const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
                                         
                                         console.log('Fetching via proxy:', proxyUrl);
                                         
