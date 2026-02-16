@@ -2145,3 +2145,71 @@ function formatShortAddress(fullAddress) {
     
     return `${street}, ${city}, ${state}`;
 }
+
+// ============================================
+// PROPERTY DATA LOADER
+// ============================================
+
+async function loadPropertyReachData(address) {
+    const PROXY_URL = 'https://srv1336418.hstgr.cloud/?url=';
+    const API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
+    
+    try {
+        // Parse address
+        const parts = address.split(',').map(s => s.trim());
+        let streetAddress = parts[0] || '';
+        let city = parts[1] || '';
+        let state = parts[2]?.split(' ')[0] || '';
+        
+        if (parts.length > 3) {
+            city = parts[2] || '';
+            state = parts[3] || '';
+        }
+        
+        console.log('Loading:', streetAddress, city, state);
+        
+        // Call PropertyReach via proxy
+        const url = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
+        const body = {
+            target: { streetAddress, city, state },
+            filter: {},
+            limit: 1
+        };
+        
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY
+            },
+            body: JSON.stringify(body)
+        });
+        
+        if (!resp.ok) throw new Error('API error: ' + resp.status);
+        
+        const data = await resp.json();
+        console.log('PropertyReach response:', data);
+        
+        if (!data.properties || data.properties.length === 0) {
+            throw new Error('No property found');
+        }
+        
+        const prop = data.properties[0];
+        
+        // Populate fields
+        document.getElementById('zestimate').value = prop.estimatedValue || '';
+        document.getElementById('priceRangeLow').value = Math.round(prop.estimatedValue * 0.92);
+        document.getElementById('priceRangeHigh').value = Math.round(prop.estimatedValue * 1.08);
+        document.getElementById('rentEstimate').value = prop.estimatedRentAmount || '';
+        document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
+        document.getElementById('yearBuilt').value = prop.yearBuilt || '';
+        document.getElementById('monthlyTaxes').value = prop.taxAmount ? Math.round(prop.taxAmount/12) : '';
+        document.getElementById('annualInsurance').value = Math.round((prop.squareFeet || 1500) * 0.50);
+        document.getElementById('lastSalePrice').value = prop.lastSaleAmount || '';
+        document.getElementById('lastSaleDate').value = prop.lastSaleDate || '';
+        
+    } catch(e) {
+        console.error(e);
+        alert('Error loading property data: ' + e.message);
+    }
+}
