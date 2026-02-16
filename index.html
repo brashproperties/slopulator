@@ -434,7 +434,7 @@
                                         
                                         // Use RentCast directly (supports CORS)
                                         const addressForAPI = streetAddress + ', ' + city + ', ' + state;
-                                        const rentcastUrl = 'https://api.rentcast.io/v1/avm/value?address=' + encodeURIComponent(addressForAPI) + '&compCount=0';
+                                        const const proxyUrl = "https://srv1336418.hstgr.cloud/?url=" + encodeURIComponent(targetUrl);
                                         
                                         console.log('Fetching RentCast:', rentcastUrl);
                                         
@@ -455,12 +455,12 @@
                                             const data = await response.json();
                                             console.log('RentCast response:', data);
                                             
-                                            if (data.price) {
+                                            const p = data.property; if (p && p.estimatedValue) {
                                                 // estimatedValue (ARV)
-                                                document.getElementById('zestimate').value = data.price || '';
+                                                document.getElementById.*zestimate.*value = p.estimatedValue || '';
                                                 // Range estimate
-                                                document.getElementById('priceRangeLow').value = data.priceRangeLow || Math.round(data.price * 0.92);
-                                                document.getElementById('priceRangeHigh').value = data.priceRangeHigh || Math.round(data.price * 1.08);
+                                                document.getElementById('priceRangeLow').value = p.estimatedValue * 0.92 || Math.round(p.estimatedValue * 0.92);
+                                                document.getElementById('priceRangeHigh').value = p.estimatedValue * 1.08 || Math.round(p.estimatedValue * 1.08);
                                                 
                                                 // Rent (not available in AVM response, leave blank)
                                                 document.getElementById('rentEstimate').value = '';
