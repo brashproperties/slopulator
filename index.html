@@ -431,10 +431,9 @@
                                         
                                         console.log('Parsed - street:', streetAddress, 'city:', city, 'state:', state);
                                         
-                                        // Use serverless function proxy to bypass CORS
-                                        // Works when deployed to Netlify (automatically creates /.netlify/functions/property)
+                                        // Use VPS proxy server
                                         const targetUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
-                                        const proxyUrl = `/.netlify/functions/property?url=${encodeURIComponent(targetUrl)}`;
+                                        const proxyUrl = `http://147.93.45.33:3456/?url=${encodeURIComponent(targetUrl)}`;
                                         
                                         console.log('Fetching via proxy:', proxyUrl);
                                         
