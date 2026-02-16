@@ -2225,12 +2225,12 @@ async function loadPropertyReachData(address) {
         // Normalize street address
         streetAddress = normalizeStreet(streetAddress);
         
-        // Call PropertyReach via proxy
+        // Call PropertyReach - search by city/state first, then filter for matching street
         const url = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
         const body = {
-            target: { streetAddress, city, state },
-            filter: {},
-            limit: 1
+            target: { city, state },
+            filter: { streetAddress: streetAddress.split(' ')[0] },  // Filter by street number
+            limit: 50
         };
         
         const resp = await fetch(url, {
@@ -2254,24 +2254,29 @@ async function loadPropertyReachData(address) {
         }
         
         // Find the property that matches our street address
-        let prop = data.properties[0];
+        let prop = null;
         const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
-        // Keep spaces for matching
-        const streetName = (streetAddress.split(' ').slice(1).join(' ') || '').toLowerCase();
+        const streetName = (streetAddress.split(' ').slice(1).join(' ') || '').toLowerCase().replace(/\s+/g, '');
         
         console.log('Looking for streetNum:', streetNum, 'streetName:', streetName);
         
         for (let p of data.properties) {
             const pStreet = (p.streetAddress || '').toLowerCase();
             const pStreetNum = pStreet.split(' ')[0] || '';
-            const pStreetName = pStreet.split(' ').slice(1).join(' ');
+            const pStreetName = pStreet.split(' ').slice(1).join(' ').replace(/\s+/g, '');
             
-            // Match: street number exact, and street name contains our search
-            if (pStreetNum === streetNum && pStreetName.includes(streetName.replace(/\b/g, ''))) {
+            // Match street number and street name
+            if (pStreetNum === streetNum && pStreetName.includes(streetName)) {
                 console.log('Found match:', p.streetAddress, p.city, p.estimatedValue);
                 prop = p;
                 break;
             }
+        }
+        
+        // If no match, use first result
+        if (!prop && data.properties.length > 0) {
+            prop = data.properties[0];
+            console.log('No exact match, using:', prop.streetAddress);
         }
         
         // Populate fields
