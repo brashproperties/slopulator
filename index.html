@@ -2,154 +2,1399 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>★★★ THE SLOPULATOR ★★★ - COMP ME DADDY LIVE</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <script src="app.js"></script>
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+    <meta name="theme-color" content="#FF00FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="style.css?v=999">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <style>
-        body { background: #000; color: #0f0; font-family: 'Comic Sans MS', cursive; }
-        .retro-input { background: #111; border: 2px solid #0f0; color: #0f0; padding: 8px; }
-        .suggestions { position: absolute; background: #111; border: 1px solid #0f0; max-height: 200px; overflow-y: auto; display: none; }
-        .suggestion-item { padding: 8px; cursor: pointer; border-bottom: 1px solid #030; }
-        .suggestion-item:hover { background: #222; }
+        /* Inline critical retro styles */
+        body {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Comic Sans MS', 'Chalkboard', 'Papyrus', cursive;
+        }
+        
+        /* Firework animation */
+        @keyframes firework {
+            0% { transform: scale(0.8); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.3; }
+        }
+        
+        .firework {
+            display: inline-block;
+            text-shadow: 0 0 20px #FF00FF, 0 0 40px #00FFFF;
+        }
+        
+        /* Mobile responsive styles */
+        @media screen and (max-width: 768px) {
+            body {
+                font-size: 14px;
+                overflow-x: hidden;
+            }
+            
+            table {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            td {
+                word-wrap: break-word;
+                max-width: 100%;
+            }
+            
+            /* Hide fireworks on mobile */
+            .firework {
+                display: none;
+            }
+            
+            /* Smaller logo text */
+            font[size="7"] {
+                font-size: 24px !important;
+            }
+            
+            font[size="6"] {
+                font-size: 18px !important;
+            }
+            
+            font[size="5"] {
+                font-size: 16px !important;
+            }
+            
+            /* Stack deal analysis sections */
+            #dealAnalysisSection table tr {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            #dealAnalysisSection td {
+                width: 100% !important;
+                display: block;
+            }
+            
+            /* Input fields full width */
+            input[type="text"], input[type="number"] {
+                width: 90% !important;
+                font-size: 16px !important;
+            }
+            
+            /* Property details table */
+            .input-table td {
+                display: block;
+                width: 100% !important;
+                text-align: left !important;
+            }
+            
+            /* Comps table horizontal scroll */
+            #detailedCompsTable {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            /* Map height */
+            #compMap, #mainPropertyMap {
+                height: 300px !important;
+            }
+            
+            /* Buttons */
+            button {
+                width: 90% !important;
+                margin: 5px auto !important;
+                font-size: 14px !important;
+                min-height: 44px;
+                touch-action: manipulation;
+            }
+            
+            #compMeDaddyBtn {
+                width: 90% !important;
+                margin: 10px auto !important;
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
-    <center>
-        <h1>★★★ THE SLOPULATOR ★★★</h1>
-        <h2>COMP ME DADDY - LIVE</h2>
-        
-        <div class="search-container" style="position:relative;display:inline-block;">
-            <input type="text" id="addressInput" class="retro-input" 
-                   placeholder="Enter address..." size="50"
-                   oninput="handleAddressInput(this.value)">
-            <div id="addressSuggestions" class="suggestions"></div>
-        </div>
-        
-        <br><br>
-        
-        <div id="results" style="display:none;">
-            <h3>Property Data (from PropertyReach)</h3>
-            <table border="1" style="border:2px solid #0f0;">
-                <tr><td>Estimated Value:</td><td><input type="text" id="zestimate" class="retro-input" readonly></td></tr>
-                <tr><td>Square Feet:</td><td><input type="text" id="sqft" class="retro-input" readonly></td></tr>
-                <tr><td>Bedrooms:</td><td><input type="text" id="bedrooms" class="retro-input" readonly></td></tr>
-                <tr><td>Bathrooms:</td><td><input type="text" id="bathrooms" class="retro-input" readonly></td></tr>
-                <tr><td>Year Built:</td><td><input type="text" id="yearBuilt" class="retro-input" readonly></td></tr>
-                <tr><td>Monthly Taxes:</td><td><input type="text" id="monthlyTaxes" class="retro-input" readonly></td></tr>
-                <tr><td>Last Sale:</td><td><input type="text" id="lastSalePrice" class="retro-input" readonly></td></tr>
-            </table>
-        </div>
-        
-        <div id="error" style="color:red;display:none;">
-            <p>Error loading property data. Please try again.</p>
-        </div>
-    </center>
+    <!-- MIDI Music Placeholder -->
+    <div id="midi-player" style="display:none;">
+        <!-- Background MIDI would go here -->
+    </div>
 
-    <script>
-        const PROXY_URL = 'https://srv1336418.hstgr.cloud/?url=';
-        const API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
-        
-        let autocompleteTimeout;
-        
-        // Address autocomplete using Nominatim
-        function handleAddressInput(value) {
-            clearTimeout(autocompleteTimeout);
-            const el = document.getElementById('addressSuggestions');
-            if (value.length < 3) { el.style.display = 'none'; return; }
-            
-            autocompleteTimeout = setTimeout(async () => {
-                try {
-                    const resp = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(value) + '&format=json&limit=5', {
-                        headers: {'User-Agent': 'Slopulator/1.0'}
-                    });
-                    const data = await resp.json();
-                    if (data.length > 0) {
-                        el.innerHTML = data.map(p => 
-                            '<div class="suggestion-item" onclick="selectAddress(\'' + p.display_name.replace(/'/g, "\\'") + '\')">' + p.display_name + '</div>'
-                        ).join('');
-                        el.style.display = 'block';
-                    } else {
-                        el.style.display = 'none';
-                    }
-                } catch(e) {
-                    console.error(e);
-                    el.style.display = 'none';
-                }
-            }, 300);
-        }
-        
-        function selectAddress(addr) {
-            document.getElementById('addressInput').value = addr;
-            document.getElementById('addressSuggestions').style.display = 'none';
-            loadPropertyData(addr);
-        }
-        
-        // Load property data from PropertyReach via proxy
-        async function loadPropertyData(address) {
-            const results = document.getElementById('results');
-            const error = document.getElementById('error');
-            results.style.display = 'none';
-            error.style.display = 'none';
-            
-            try {
-                // Parse address
-                const parts = address.split(',').map(s => s.trim());
-                let streetAddress = parts[0] || '';
-                let city = parts[1] || '';
-                let state = parts[2]?.split(' ')[0] || '';
-                if (parts.length > 3) {
-                    city = parts[2] || '';
-                    state = parts[3] || '';
-                }
+    <!-- Sticky Calculate Button -->
+    <button id="stickyCalculateBtn" onclick="console.log('Sticky Calculate clicked'); if(window.runCalculations) { window.runCalculations(); } else { alert('Error: Analysis function not loaded.'); }">
+        <b>🧮 CALCULATE ANALYSIS 🧮</b>
+    </button>
+
+    <!-- Bouncing Emojis Container -->
+    <div id="bouncing-emojis"></div>
+
+    <!-- Sparkle Container -->
+    <div id="sparkles"></div>
+
+    <!-- Main Table Layout (90s Style) -->
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" class="main-table">
+        <tr>
+            <td align="center">
                 
-                console.log('Loading:', streetAddress, city, state);
-                
-                // Call PropertyReach via proxy
-                const url = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
-                const body = {
-                    target: { streetAddress, city, state },
-                    filter: {},
-                    limit: 1
-                };
-                
-                const resp = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': API_KEY
-                    },
-                    body: JSON.stringify(body)
-                });
-                
-                if (!resp.ok) throw new Error('API error: ' + resp.status);
-                
-                const data = await resp.json();
-                console.log('PropertyReach response:', data);
-                
-                if (!data.properties || data.properties.length === 0) {
-                    throw new Error('No property found');
-                }
-                
-                const prop = data.properties[0];
-                
-                // Populate fields
-                document.getElementById('zestimate').value = prop.estimatedValue ? '$' + prop.estimatedValue.toLocaleString() : '';
-                document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
-                document.getElementById('bedrooms').value = prop.bedrooms || '';
-                document.getElementById('bathrooms').value = prop.bathrooms || '';
-                document.getElementById('yearBuilt').value = prop.yearBuilt || '';
-                document.getElementById('monthlyTaxes').value = prop.taxAmount ? '$' + Math.round(prop.taxAmount/12).toLocaleString() : '';
-                document.getElementById('lastSalePrice').value = prop.lastSaleAmount ? '$' + prop.lastSaleAmount.toLocaleString() : '';
-                
-                results.style.display = 'block';
-                
-            } catch(e) {
-                console.error(e);
-                error.style.display = 'block';
-            }
-        }
-    </script>
+                <!-- SLOPULATOR LOGO WITH FIREWORKS -->
+                <table border="0" cellpadding="20" cellspacing="0" width="95%">
+                    <tr>
+                        <td align="center">
+                            <div style="display:flex; align-items:center; justify-content:center; gap:30px;">
+                                <!-- Left Firework -->
+                                <div class="firework" style="font-size:60px; animation: firework 1s ease-out infinite;">🎆</div>
+                                
+                                <div style="display:inline-block; border:8px ridge #FF00FF; padding:30px; background:linear-gradient(180deg, #000033 0%, #330033 50%, #000033 100%); box-shadow:0 0 50px #FF00FF;">
+                                    <font face="Comic Sans MS" color="#00FFFF" size="7" style="text-shadow:4px 4px 8px #FF00FF, -4px -4px 8px #00FFFF;">
+                                        <b>★ THE SLOPULATOR ★</b>
+                                    </font>
+                                    <br><br>
+                                    <font face="Papyrus" color="#FFFF00" size="4">
+                                        <blink>🏠 Property Analysis Tool 💰</blink>
+                                    </font>
+                                    <br><br>
+                                    <font face="Courier New" color="#00FF00" size="2">
+                                        [v2.0 - Now with Comp Me Daddy!]
+                                    </font>
+                                </div>
+                                
+                                <!-- Right Firework -->
+                                <div class="firework" style="font-size:60px; animation: firework 1s ease-out infinite; animation-delay: 0.5s;">🎆</div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <br>
+
+                <!-- MAIN CONTENT AREA -->
+                <table border="10" cellpadding="15" cellspacing="5" width="95%" class="content-table" bgcolor="#000033">
+                    
+                    <!-- Property Search Section -->
+                    <tr>
+                        <td bgcolor="#330033" style="border: 5px ridge #FF00FF; position: relative;" align="center">
+                            <font face="Comic Sans MS" color="#00FFFF" size="5">
+                                <b>🔍 ENTER PROPERTY ADDRESS 🔍</b>
+                            </font>
+                            <br><br>
+                            <div class="search-container" style="position: relative; display: inline-block; width: 100%; text-align: center;">
+                                <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off" oninput="handleAddressInput(this.value)">
+                                <div id="addressSuggestions" class="suggestions" style="left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px;"></div>
+                            </div>
+                            <script>
+                                // Real address autocomplete using OpenStreetMap
+                                let acTimeout;
+                                function handleAddressInput(value) {
+                                    clearTimeout(acTimeout);
+                                    const el = document.getElementById('addressSuggestions');
+                                    if (value.length < 3) { el.style.display = 'none'; return; }
+                                    
+                                    acTimeout = setTimeout(async () => {
+                                        try {
+                                            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&limit=5&countrycodes=us`, {
+                                                headers: { 'User-Agent': 'Slopulator/1.0' }
+                                            });
+                                            
+                                            if (!response.ok) throw new Error('Search failed');
+                                            
+                                            const data = await response.json();
+                                            
+                                            if (data && data.length > 0) {
+                                                // Format addresses smarter: highlight city, state, zip
+                                                el.innerHTML = data.map(place => {
+                                                    const addr = place.display_name;
+                                                    const parts = addr.split(',').map(p => p.trim());
+                                                    
+                                                    // Build cleaner display
+                                                    let shortAddr = parts[0] || ''; // street
+                                                    const city = parts[1] || '';   // city
+                                                    const stateZip = parts[parts.length - 2]?.trim() || ''; // state
+                                                    const zip = parts[parts.length - 1]?.trim() || ''; // country/zip
+                                                    
+                                                    // Show: "123 Main St" on first line, "City, State ZIP" highlighted on second
+                                                    const display = parts.length > 2 
+                                                        ? `<strong>${parts[0]}</strong><br><span style="color:#00FFFF;">${parts.slice(1, 3).join(', ')}</span>`
+                                                        : addr;
+                                                    
+                                                    return `<div class="suggestion-item" style="padding:10px;cursor:pointer;border-bottom:1px solid #030;" onclick="selectAddress('${place.display_name.replace(/'/g, "\\'")}', ${place.lat}, ${place.lon})">${display}</div>`;
+                                                }).join('');
+                                                el.style.display = 'block';
+                                            } else {
+                                                el.style.display = 'none';
+                                            }
+                                        } catch (err) {
+                                            console.error('Autocomplete error:', err);
+                                            el.style.display = 'none';
+                                        }
+                                    }, 300);
+                                }
+                                
+                                function formatShortAddress(fullAddress) {
+                                    // OpenStreetMap format: "925, South 3rd Street, Chickasha, Grady County, Oklahoma, 73018, United States"
+                                    // We want: "925 S 3rd St, Chickasha, OK"
+                                    const parts = fullAddress.split(',').map(p => p.trim());
+                                    
+                                    // State name to abbreviation mapping
+                                    const stateMap = {
+                                        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+                                        'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+                                        'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+                                        'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+                                        'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+                                        'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+                                        'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+                                        'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+                                        'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+                                        'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
+                                    };
+                                    
+                                    // Find state and city by looking backwards from the end
+                                    let state = '';
+                                    let stateIndex = -1;
+                                    let city = '';
+                                    
+                                    for (let i = parts.length - 1; i >= 0; i--) {
+                                        const part = parts[i];
+                                        // Check for 2-letter state code
+                                        if (/^[A-Z]{2}$/.test(part)) {
+                                            state = part;
+                                            stateIndex = i;
+                                            break;
+                                        }
+                                        // Check for full state name
+                                        if (stateMap[part]) {
+                                            state = stateMap[part];
+                                            stateIndex = i;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // City is usually right before state (or 2 positions before if there's a county)
+                                    if (stateIndex > 0) {
+                                        city = parts[stateIndex - 1];
+                                        // Skip county names (they usually contain "County")
+                                        if (city.includes('County') && stateIndex > 1) {
+                                            city = parts[stateIndex - 2];
+                                        }
+                                    }
+                                    
+                                    // Street is everything before city
+                                    let street = '';
+                                    const cityIndex = parts.indexOf(city);
+                                    if (cityIndex > 0) {
+                                        street = parts.slice(0, cityIndex).join(', ');
+                                    } else if (parts.length > 0) {
+                                        street = parts[0];
+                                    }
+                                    
+                                    // Clean up street abbreviations
+                                    street = street
+                                        .replace(/Street/g, 'St')
+                                        .replace(/Avenue/g, 'Ave')
+                                        .replace(/Road/g, 'Rd')
+                                        .replace(/Drive/g, 'Dr')
+                                        .replace(/Boulevard/g, 'Blvd')
+                                        .replace(/Lane/g, 'Ln')
+                                        .replace(/North/g, 'N')
+                                        .replace(/South/g, 'S')
+                                        .replace(/East/g, 'E')
+                                        .replace(/West/g, 'W');
+                                    
+                                    if (street && city && state) {
+                                        return `${street}, ${city}, ${state}`;
+                                    }
+                                    
+                                    return fullAddress;
+                                }
+                                
+                                const PROPERTYREACH_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
+                                
+                                let mainPropertyMap = null;
+                                
+                                function showPropertyImage(propertyData) {
+                                    const imgContainer = document.getElementById('propertyImageContainer');
+                                    const mapDiv = document.getElementById('mainPropertyMap');
+                                    
+                                    if (!imgContainer || !mapDiv) return;
+                                    
+                                    // Use coordinates from PropertyReach data or window globals
+                                    const lat = parseFloat(propertyData?.latitude || window.selectedLat);
+                                    const lon = parseFloat(propertyData?.longitude || window.selectedLon);
+                                    
+                                    if (!lat || !lon) {
+                                        imgContainer.style.display = 'none';
+                                        return;
+                                    }
+                                    
+                                    // Make container visible FIRST so map can calculate size
+                                    imgContainer.style.display = 'block';
+                                    
+                                    // Clear previous map
+                                    if (mainPropertyMap) {
+                                        mainPropertyMap.remove();
+                                    }
+                                    
+                                    // Small delay to let container render
+                                    setTimeout(() => {
+                                        // Create modern dark map
+                                        mainPropertyMap = L.map('mainPropertyMap', {
+                                            center: [lat, lon],
+                                            zoom: 16,
+                                            zoomControl: false,
+                                            attributionControl: false
+                                        });
+                                        
+                                        // Add CartoDB Dark Matter tiles
+                                        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                                            attribution: '&copy; OpenStreetMap &copy; CARTO',
+                                            subdomains: 'abcd',
+                                            maxZoom: 19
+                                        }).addTo(mainPropertyMap);
+                                        
+                                        // Add zoom control
+                                        L.control.zoom({ position: 'bottomright' }).addTo(mainPropertyMap);
+                                        
+                                        // Red star marker for subject property
+                                        const subjectIcon = L.divIcon({
+                                            className: 'custom-marker',
+                                            html: '<div style="background-color:#FF0000;width:24px;height:24px;border-radius:50%;border:3px solid #FFFFFF;box-shadow:0 0 15px #FF0000, 0 0 30px #FF0000;display:flex;align-items:center;justify-content:center;"><span style="color:#FFF;font-size:12px;font-weight:bold;">★</span></div>',
+                                            iconSize: [24, 24],
+                                            iconAnchor: [12, 12]
+                                        });
+                                        
+                                        L.marker([lat, lon], { icon: subjectIcon })
+                                            .addTo(mainPropertyMap)
+                                            .bindPopup('<b style="color:#FF0000;">🏠 TARGET PROPERTY</b>');
+                                    }, 100);
+                                }
+                                
+                                function clearAllFields() {
+                                    document.getElementById('zestimate').value = '';
+                                    document.getElementById('priceRangeLow').value = '';
+                                    document.getElementById('priceRangeHigh').value = '';
+                                    document.getElementById('rentEstimate').value = '';
+                                    document.getElementById('sqft').value = '';
+                                    document.getElementById('monthlyTaxes').value = '';
+                                    document.getElementById('annualInsurance').value = '';
+                                    document.getElementById('yearBuilt').value = '';
+                                    document.getElementById('lastSalePrice').value = '';
+                                    document.getElementById('lastSaleDate').value = '';
+                                    const imgContainer = document.getElementById('propertyImageContainer');
+                                    if (imgContainer) imgContainer.style.display = 'none';
+                                }
+                                
+                                async function loadPropertyReachData(address) {
+                                    console.log('Loading property data for:', address);
+                                    try {
+                                        // Clear all fields first
+                                        clearAllFields();
+                                        
+                                        // Parse address - format is "street, city, state" or "street, city, state, zip"
+                                        const addressParts = address.split(',').map(s => s.trim());
+                                        
+                                        // If we have 4+ parts, format is: "street, city, state, zip" 
+                                        // parts[0] = street (may be just number)
+                                        // parts[1] = city
+                                        // parts[2] = state name or state abbrev
+                                        // parts[3] = zip (optional)
+                                        
+                                        let streetAddress, city, state;
+                                        
+                                        if (addressParts.length >= 4) {
+                                            // Format: 925, S 3rd St, Chickasha, OK
+                                            // Need to recombine street from parts[0] + parts[1] minus the street suffix
+                                            // Actually, let's use the original OSM address format
+                                            // The problem is formatShortAddress returns "925, S 3rd St, Chickasha, OK"
+                                            // But we need "925 S 3rd St" for street
+                                            
+                                            // Rebuild: street is parts[0] + parts[1] (number + street name)
+                                            streetAddress = addressParts[0] + ' ' + addressParts[1];
+                                            city = addressParts[2];
+                                            state = addressParts[3];
+                                        } else if (addressParts.length === 3) {
+                                            streetAddress = addressParts[0];
+                                            city = addressParts[1];
+                                            state = addressParts[2];
+                                        } else {
+                                            // Fallback
+                                            streetAddress = address;
+                                            city = '';
+                                            state = '';
+                                        }
+                                        
+                                        console.log('Parsed - street:', streetAddress, 'city:', city, 'state:', state);
+                                        
+                                        // Use PropertyReach via VPS proxy
+                                        const searchUrl = 'https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search';
+                                        const searchBody = {
+                                            target: { streetAddress, city, state },
+                                            filter: {},
+                                            limit: 1
+                                        };
+                                        
+                                        console.log('Fetching PropertyReach:', searchUrl);
+                                        
+                                        const response = await fetch(searchUrl, {
+                                            method: 'POST',
+                                            headers: { 
+                                                'Content-Type': 'application/json',
+                                                'x-api-key': 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN'
+                                            },
+                                            body: JSON.stringify(searchBody)
+                                        });
+                                        
+                                        console.log('Response status:', response.status);
+                                        
+                                        if (!response.ok) {
+                                            console.error('API error:', response.status, response.statusText);
+                                            alert('API Error: ' + response.status);
+                                        }
+                                        
+                                        if (response.ok) {
+                                            const searchData = await response.json();
+                                            console.log('PropertyReach response:', searchData);
+                                            
+                                            if (searchData.properties && searchData.properties.length > 0) {
+                                                const prop = searchData.properties[0];
+                                                // estimatedValue (ARV)
+                                                document.getElementById('zestimate').value = prop.estimatedValue || '';
+                                                // Range estimate
+                                                document.getElementById('priceRangeLow').value = Math.round(prop.estimatedValue * 0.92);
+                                                document.getElementById('priceRangeHigh').value = Math.round(prop.estimatedValue * 1.08);
+                                                
+                                                // Rent
+                                                document.getElementById('rentEstimate').value = prop.estimatedRentAmount || '';
+                                                
+                                                // Square feet
+                                                document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
+                                                
+                                                // Year built
+                                                document.getElementById('yearBuilt').value = prop.yearBuilt || '';
+                                                
+                                                // Taxes
+                                                document.getElementById('monthlyTaxes').value = prop.taxAmount ? Math.round(prop.taxAmount / 12) : '';
+                                                
+                                                // Insurance
+                                                document.getElementById('annualInsurance').value = Math.round((prop.squareFeet || 1500) * 0.50);
+                                                
+                                                // Last sale
+                                                document.getElementById('lastSalePrice').value = prop.lastSaleAmount || '';
+                                                document.getElementById('lastSaleDate').value = prop.lastSaleDate || '';
+                                            } else {
+                                                alert('No data found for this address');
+                                            }
+                                        }
+                                        }
+                                    } catch (err) {
+                                        console.error('RentCast error:', err);
+                                        alert('Error loading property data from PropertyReach');
+                                    }
+                                }
+                                
+                                function selectAddress(addr, lat, lon) {
+                                    const shortAddr = formatShortAddress(addr);
+                                    console.log('Original address:', addr);
+                                    console.log('Formatted address:', shortAddr);
+                                    document.getElementById('addressInput').value = shortAddr;
+                                    document.getElementById('addressSuggestions').style.display = 'none';
+                                    // Store coordinates for image lookup
+                                    window.selectedLat = lat;
+                                    window.selectedLon = lon;
+                                    // Load data immediately
+                                    loadPropertyReachData(shortAddr);
+                                }
+                                
+                                // Hide on click outside
+                                document.addEventListener('click', function(e) {
+                                    if (!e.target.closest('.search-container')) {
+                                        document.getElementById('addressSuggestions').style.display = 'none';
+                                    }
+                                });
+                            </script>
+                            <br><br>
+                            <button id="searchBtn" class="retro-button" onclick="fireConfetti(); playWhipSound();">
+                                <b>🔎 SEARCH NOW!!! 🔎</b>
+                            </button>
+                            <br><br>
+                            <br><br>
+                            <button id="compMeDaddyBtn" class="retro-button-comp" style="background: linear-gradient(45deg, #FF00FF, #00FFFF); padding: 15px 30px; font-size: 18px; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative; z-index: 100;" onclick="window.openCompMeDaddy(); return false;">
+                                <b>💎 COMP ME DADDY 💎</b>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr><td>&nbsp;</td></tr>
+
+                    <!-- PURCHASE & REHAB (PRIORITY INPUTS) -->
+                    <tr>
+                        <td bgcolor="#003300" style="border: 5px groove #FF00FF;" align="center">
+                            <font face="Papyrus" color="#FFFF00" size="5">
+                                <b>💰 PURCHASE & REHAB 💰</b>
+                            </font>
+                            <br><br>
+                            
+                            <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
+                                <tr>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Purchase Price ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="purchasePrice" class="retro-input-small" placeholder="0" oninput="document.getElementById('purchasePrice').value = this.value; document.querySelectorAll('#purchasePrice').forEach(el => { if(el !== this) el.value = this.value; });">
+                                    </td>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Repair Costs ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="repairCost" class="retro-input-small" placeholder="0" oninput="document.getElementById('repairCost').value = this.value; document.querySelectorAll('#repairCost').forEach(el => { if(el !== this) el.value = this.value; });">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Monthly Rent ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" colspan="3">
+                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" placeholder="Auto from API" style="width: 100%;">
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <br><br>
+                        </td>
+                    </tr>
+
+                    <tr><td>&nbsp;</td></tr>
+
+                    <!-- API Data Section (MOVED UP) -->
+                    <tr>
+                        <td bgcolor="#003300" style="border: 5px groove #00FF00;">
+                            <font face="Comic Sans MS" color="#FFFF00" size="4">
+                                <b>📊 API DATA (AUTO-MAGICAL!) 📊</b>
+                            </font>
+                            <br>
+                            <font face="Courier New" color="#00FF00" size="2">
+                                <blink>★ CLICK TO EDIT IF YOU KNOW BETTER! ★</blink>
+                            </font>
+                            <br><br>
+
+                            <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>PropertyReach Value ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="zestimate" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Price Range Low ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="priceRangeLow" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Price Range High ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="priceRangeHigh" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Rent Estimate ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Property Sqft:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="sqft" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Monthly Taxes ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="monthlyTaxes" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Annual Insurance ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="annualInsurance" class="retro-input-small api-field" placeholder="Auto from sqft">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Year Built:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="yearBuilt" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Last Sale Price ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="lastSalePrice" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#FF9900"><b>Last Sale Date:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="text" id="lastSaleDate" class="retro-input-small api-field" placeholder="Auto-populated">
+                                    </td>
+                                    <td bgcolor="#663300"></td>
+                                    <td bgcolor="#000000"></td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Property Exterior Image -->
+                            <br>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center">
+                                        <div id="propertyImageContainer" style="display:none; max-width:500px; margin:0 auto;">
+                                            <div id="mainPropertyMap" style="width:100%; height:350px; border:5px groove #FF00FF; border-radius:10px;"></div>
+                                            <br>
+                                            <font face="Courier New" color="#00FF00" size="1">
+                                                <i>📸 Property Location</i>
+                                            </font>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr><td>&nbsp;</td></tr>
+
+                    <!-- Property Details Section -->
+                    <tr>
+                        <td bgcolor="#003300" style="border: 5px groove #00FF00;" align="center">
+                            <font face="Papyrus" color="#FF00FF" size="5">
+                                <b>💵 PROPERTY DETAILS 💵</b>
+                            </font>
+                            <br><br>
+                            
+                            <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
+                                <!-- Purchase & Rehab moved to top - removed duplicate hidden fields -->
+                                <tr>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Interest Rate (%):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="interestRate" class="retro-input-small" value="6.8" step="0.1">
+                                    </td>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Loan Term (years):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="loanTerm" class="retro-input-small" value="20" step="1">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00FFFF"><b>Monthly Rent Est ($):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000">
+                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" placeholder="Auto from rent range">
+                                    </td>
+                                    <td bgcolor="#000066"></td>
+                                    <td bgcolor="#000000"></td>
+                                </tr>
+                            </table>
+
+                            <br><br>
+
+                            <button id="calculateBtn" class="retro-button-calculate" onclick="console.log('Calculate clicked'); if(window.runCalculations) { window.runCalculations(); } else { alert('Error: Analysis function not loaded. Please refresh the page.'); }">
+                                <marquee behavior="alternate" scrollamount="3" width="100%" style="background: transparent;">
+                                    <b>🧮 CALCULATE ANALYSIS!!! 🧮</b>
+                                </marquee>
+                            </button>
+
+                            <br><br>
+
+                        </td>
+                    </tr>
+
+                    <tr><td>&nbsp;</td></tr>
+
+                    <!-- Deal Analysis Section -->
+                    <tr id="dealAnalysisSection" style="display: none;">
+                        <td bgcolor="#1a1a2e" style="border: 5px groove #ffd700;">
+                            <font face="Comic Sans MS" color="#ffd700" size="5">
+                                <b>📊 COMPREHENSIVE DEAL ANALYSIS 📊</b>
+                            </font>
+                            <br>
+                            <font face="Courier New" color="#00ff00" size="2">
+                                <blink>★ FLIP vs RENTAL BREAKDOWN ★</blink>
+                            </font>
+                            <br><br>
+
+                            <!-- Flip Analysis -->
+                            <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table" style="margin-bottom: 20px;">
+                                <tr bgcolor="#330000">
+                                    <td colspan="2" align="center">
+                                        <font face="Papyrus" color="#ff6b6b" size="4">
+                                            <b>🔨 FLIP ANALYSIS (6 Month Hold) 🔨</b>
+                                        </font>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right" width="50%">
+                                        <font color="#ff9900"><b>Purchase Price:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="flipPurchasePrice"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Repair Costs:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="flipRepairCosts"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Total Investment:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="flipTotalInvestment"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Holding Costs (8% Interest Only):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="flipHoldingCosts"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Closing/Broker Fees (~6%):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="flipClosingCosts"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Total Costs:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="flipTotalCosts"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>ARV (PropertyReach Value):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="flipARV"></td>
+                                </tr>
+                                <tr bgcolor="#003300">
+                                    <td bgcolor="#003300" align="right">
+                                        <font color="#00ff00" size="4"><b>📈 ESTIMATED PROFIT:</b></font>
+                                    </td>
+                                    <td bgcolor="#003300" id="flipProfit" style="font-size: 18px; font-weight: bold;"></td>
+                                </tr>
+                            </table>
+
+                            <!-- Rental Analysis -->
+                            <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table" style="margin-bottom: 20px;">
+                                <tr bgcolor="#001a33">
+                                    <td colspan="2" align="center">
+                                        <font face="Papyrus" color="#4ecdc4" size="4">
+                                            <b>🏠 RENTAL ANALYSIS (BRRR Strategy) 🏠</b>
+                                        </font>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right" width="50%">
+                                        <font color="#ff9900"><b>Total Loan Amount (Price + Repairs):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalLoanAmount"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Interest Rate:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalInterestRate"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Loan Term:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalLoanTerm"></td>
+                                </tr>
+                                <tr bgcolor="#000066">
+                                    <td bgcolor="#000066" align="right">
+                                        <font color="#00ffff" size="3"><b>📊 PITI BREAKDOWN:</b></font>
+                                    </td>
+                                    <td bgcolor="#000066"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Principal & Interest (P&I):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalPI"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Monthly Taxes:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalTaxes"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Monthly Insurance:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalInsurance"></td>
+                                </tr>
+                                <tr bgcolor="#003300">
+                                    <td bgcolor="#003300" align="right">
+                                        <font color="#00ff00" size="3"><b>💰 TOTAL PITI:</b></font>
+                                    </td>
+                                    <td bgcolor="#003300" id="rentalPITI" style="font-size: 16px; font-weight: bold;"></td>
+                                </tr>
+                                <tr><td colspan="2" bgcolor="#000000" height="5"></td></tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>PropertyReach Value:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalAVM"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Current LTV:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalCurrentLTV"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Monthly Rent Estimate (95% Occ):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalMonthlyRent"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Effective Monthly Rent:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalEffectiveRent"></td>
+                                </tr>
+                                <tr bgcolor="#003300">
+                                    <td bgcolor="#003300" align="right">
+                                        <font color="#00ff00" size="3"><b>💵 MONTHLY CASH FLOW:</b></font>
+                                    </td>
+                                    <td bgcolor="#003300" id="rentalCashFlow" style="font-size: 16px; font-weight: bold;"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Annual Cash Flow:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="rentalAnnualCashFlow"></td>
+                                </tr>
+                            </table>
+
+                            <!-- BRRR Analysis -->
+                            <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table" style="margin-bottom: 20px;">
+                                <tr bgcolor="#1a0033">
+                                    <td colspan="2" align="center">
+                                        <font face="Papyrus" color="#ff00ff" size="4">
+                                            <b>🔄 BRRR ANALYSIS (Refinance @ 80% LTV) 🔄</b>
+                                        </font>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right" width="50%">
+                                        <font color="#ff9900"><b>Max Refinance Amount (80% of AVM):</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="brrrMaxRefi"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Total Cash Invested:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="brrrCashInvested"></td>
+                                </tr>
+                                <tr>
+                                    <td bgcolor="#663300" align="right">
+                                        <font color="#ff9900"><b>Cash Left in Deal:</b></font>
+                                    </td>
+                                    <td bgcolor="#000000" id="brrrCashLeft"></td>
+                                </tr>
+                                <tr bgcolor="#003300">
+                                    <td bgcolor="#003300" align="right">
+                                        <font color="#00ff00" size="3"><b>✅ 100% PULL-OUT POSSIBLE?</b></font>
+                                    </td>
+                                    <td bgcolor="#003300" id="brrrPulloutPossible" style="font-size: 16px; font-weight: bold;"></td>
+                                </tr>
+                            </table>
+
+                            <!-- Deal Rating -->
+                            <table border="3" cellpadding="12" cellspacing="0" width="100%" style="border-color: #ffd700;">
+                                <tr bgcolor="#000000">
+                                    <td align="center">
+                                        <font face="Comic Sans MS" color="#ffd700" size="5">
+                                            <b>🏆 DEAL RATING 🏆</b>
+                                        </font>
+                                        <br><br>
+                                        <font face="Papyrus" size="6" id="dealRating" style="text-shadow: 2px 2px 4px #000;">
+                                            <b>--</b>
+                                        </font>
+                                        <br><br>
+                                        <font face="Courier New" color="#00ff00" size="3" id="dealRecommendation">
+                                            <b>--</b>
+                                        </font>
+                                        <br><br>
+                                        <div id="dealActionPlan" style="background: #001a33; padding: 15px; border: 2px solid #00ff00; margin-top: 10px; text-align: left;">
+                                            <font face="Courier New" color="#ffffff" size="2" id="actionPlanText">
+                                                --
+                                            </font>
+                                        </div>
+                                        <br><br>
+                                        <button onclick="shareDealAnalysis()" class="retro-button" style="background: linear-gradient(45deg, #00ff00, #00aa00);">
+                                            <b>📤 SHARE DEAL ANALYSIS</b>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr><td>&nbsp;</td></tr>
+
+                    <!-- Comps Section -->
+                    <tr id="compsSection" style="display: none;">
+                        <td bgcolor="#330000" style="border: 5px ridge #FF0000;" align="center">
+                            <font face="Comic Sans MS" color="#FF6666" size="5">
+                                <b>🏘️ RECENT COMPS (SAME BLOCK) 🏘️</b>
+                            </font>
+                            <br><br>
+                            <table border="3" cellpadding="8" cellspacing="0" width="100%" class="comps-table" id="compsTable">
+                                <thead>
+                                    <tr bgcolor="#660000">
+                                        <th><font color="#FFFF00">Address</font></th>
+                                        <th><font color="#FFFF00">Sale Price</font></th>
+                                        <th><font color="#FFFF00">Date</font></th>
+                                        <th><font color="#FFFF00">Beds</font></th>
+                                        <th><font color="#FFFF00">Baths</font></th>
+                                        <th><font color="#FFFF00">SqFt</font></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr><td>&nbsp;</td></tr>
+
+                    <!-- ARV Section -->
+                    <tr id="arvSection" style="display: none;">
+                        <td bgcolor="#000033" align="center" style="border: 8px double #00FFFF;">
+                            <font face="Papyrus" color="#FFFF00" size="6">
+                                <b>💎 AFTER REPAIR VALUE (ARV) 💎</b>
+                            </font>
+                            <br><br>
+                            <div id="arvValue" class="big-blinking-number">$0</div>
+                            <br>
+                            <font face="Courier New" color="#00FF00" size="2">
+                                Weighted avg: 30% Zillow + 30% Realtor + 40% Comps
+                            </font>
+                        </td>
+                    </tr>
+
+                    <tr><td>&nbsp;</td></tr>
+
+                    <!-- Analysis Results Section -->
+                    <tr id="resultsSection" style="display: none;">
+                        <td align="center">
+                            <table border="0" cellpadding="0" cellspacing="10" width="100%">
+                                <tr>
+                                    <!-- Rental Analysis -->
+                                    <td width="50%" valign="top">
+                                        <table border="5" cellpadding="10" cellspacing="0" width="100%" bgcolor="#003300" style="border-color: #00FF00;">
+                                            <tr>
+                                                <td align="center" bgcolor="#006600">
+                                                    <font face="Comic Sans MS" color="#FFFF00" size="5">
+                                                        <b>📈 RENTAL ANALYSIS 📈</b>
+                                                    </font>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <table border="0" cellpadding="5" cellspacing="0" width="100%" class="results-table">
+                                                        <tr>
+                                                            <td><font color="#00FFFF">Monthly Rent (100%):</font></td>
+                                                            <td align="right"><font color="#00FF00" id="rentalGross">$0</font></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><font color="#00FFFF">Effective (90% occ.):</font></td>
+                                                            <td align="right"><font color="#00FF00" id="rentalEffective">$0</font></td>
+                                                        </tr>
+                                                        <tr><td colspan="2"><hr color="#00FF00"></td></tr>
+                                                        <tr>
+                                                            <td><font color="#FF6666">Mortgage Payment:</font></td>
+                                                            <td align="right"><font color="#FF0000" id="rentalMortgage">-$0</font></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><font color="#FF6666">Property Taxes:</font></td>
+                                                            <td align="right"><font color="#FF0000" id="rentalTaxes">-$0</font></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><font color="#FF6666">Insurance:</font></td>
+                                                            <td align="right"><font color="#FF0000" id="rentalInsurance">-$0</font></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><font color="#FF6666">Maintenance (5%):</font></td>
+                                                            <td align="right"><font color="#FF0000" id="rentalMaintenance">-$0</font></td>
+                                                        </tr>
+                                                        <tr><td colspan="2"><hr color="#00FF00"></td></tr>
+                                                        <tr>
+                                                            <td><font color="#FFFF00"><b>Total Expenses:</b></font></td>
+                                                            <td align="right"><font color="#FF0000" id="rentalTotalExpenses">-$0</font></td>
+                                                        </tr>
+                                                        <tr bgcolor="#006600">
+                                                            <td><font color="#FFFF00"><b>★ MONTHLY CASHFLOW ★</b></font></td>
+                                                            <td align="right"><font size="5" color="#00FF00"><b id="rentalCashflow">$0</b></font></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><font color="#00FFFF">Annual Cashflow:</font></td>
+                                                            <td align="right"><font color="#00FF00" id="rentalAnnualCashflow">$0</font></td>
+                                                        </tr>
+                                                        <tr bgcolor="#000066">
+                                                            <td><font color="#FFFF00"><b>★ CASH-ON-CASH ★</b></font></td>
+                                                            <td align="right"><font size="4" color="#00FFFF"><b id="rentalCashOnCash">0%</b></font></td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+
+                                    <!-- Flip Analysis -->
+                                    <td width="50%" valign="top">
+                                        <table border="5" cellpadding="10" cellspacing="0" width="100%" bgcolor="#330000" style="border-color: #FF0000;">
+                                            <tr>
+                                                <td align="center" bgcolor="#660000">
+                                                    <font face="Comic Sans MS" color="#FFFF00" size="5">
+                                                        <b>🔨 FLIP ANALYSIS 🔨</b>
+                                                    </font>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <table border="0" cellpadding="5" cellspacing="0" width="100%" class="results-table">
+                                                        <tr>
+                                                            <td><font color="#00FFFF">ARV (Sale Price):</font></td>
+                                                            <td align="right"><font color="#00FF00" id="flipARV">$0</font></td>
+                                                        </tr>
+                                                        <tr><td colspan="2"><hr color="#FF0000"></td></tr>
+                                                        <tr>
+                                                            <td><font color="#FF6666">Purchase Price:</font></td>
+                                                            <td align="right"><font color="#FF0000" id="flipPurchase">-$0</font></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><font color="#FF6666">Repair Costs:</font></td>
+                                                            <td align="right"><font color="#FF0000" id="flipRepairs">-$0</font></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><font color="#FF6666">Holding Costs:</font></td>
+                                                            <td align="right"><font color="#FF0000" id="flipHolding">-$0</font></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><font color="#FF6666">Selling Costs (7%):</font></td>
+                                                            <td align="right"><font color="#FF0000" id="flipSelling">-$0</font></td>
+                                                        </tr>
+                                                        <tr><td colspan="2"><hr color="#FF0000"></td></tr>
+                                                        <tr>
+                                                            <td><font color="#FFFF00"><b>Total Investment:</b></font></td>
+                                                            <td align="right"><font color="#FF0000" id="flipTotalInvestment">-$0</font></td>
+                                                        </tr>
+                                                        <tr bgcolor="#660000">
+                                                            <td><font color="#FFFF00"><b>★ NET PROFIT ★</b></font></td>
+                                                            <td align="right"><font size="5" color="#00FF00"><b id="flipProfit">$0</b></font></td>
+                                                        </tr>
+                                                        <tr bgcolor="#000066">
+                                                            <td><font color="#FFFF00"><b>★ ROI ★</b></font></td>
+                                                            <td align="right"><font size="4" color="#00FFFF"><b id="flipROI">0%</b></font></td>
+                                                        </tr>
+                                                        <tr><td colspan="2"><hr color="#FF0000"></td></tr>
+                                                        <tr>
+                                                            <td><font color="#FF9900">MAO (70% Rule):</font></td>
+                                                            <td align="right"><font color="#FF9900" id="flipMAO">$0</font></td>
+                                                        </tr>
+                                                        <tr bgcolor="#663300">
+                                                            <td><font color="#FFFF00"><b>SUGGESTED OFFER:</b></font></td>
+                                                            <td align="right"><font size="4" color="#FF00FF"><b id="flipSuggested">$0</b></font></td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                </table>
+
+                <br><br>
+
+            </td>
+        </tr>
+    </table>
+
+    <!-- Load Evaluation Modal -->
+    <div id="loadModal" class="retro-modal">
+        <table border="5" cellpadding="20" cellspacing="0" class="modal-table" bgcolor="#000033">
+            <tr>
+                <td align="center">
+                    <font face="Comic Sans MS" color="#00FFFF" size="5">
+                        <b>📂 LOAD SAVED EVALUATION 📂</b>
+                    </font>
+                    <br><br>
+                    <span class="close-modal" onclick="closeModal()">[X] CLOSE</span>
+                    <br><br>
+                    <div id="evaluationsList"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <table border="0" cellpadding="20">
+            <tr>
+                <td align="center">
+                    <img src="https://web.archive.org/web/20091027045555/http://www.geocities.com/EnchantedForest/Dell/2347/construction-worker.gif" alt="Working..." class="loading-gif">
+                    <br><br>
+                    <font face="Comic Sans MS" color="#FFFF00" size="5">
+                        <blink>🚧 LOADING... PLEASE WAIT!!! 🚧</blink>
+                    </font>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Easter Egg Modal -->
+    <div id="easterEggModal" class="retro-modal">
+        <table border="5" cellpadding="20" cellspacing="0" bgcolor="#FF00FF">
+            <tr>
+                <td align="center">
+                    <font face="Comic Sans MS" color="#FFFF00" size="6">
+                        <b>🎉 YOU FOUND THE EASTER EGG!!! 🎉</b>
+                    </font>
+                    <br><br>
+                    <font face="Papyrus" color="#000" size="5">
+                        House Flipping = BIG PROFITS!!!
+                    </font>
+                    <br><br>
+                    <img src="https://web.archive.org/web/20091027082445/http://www.geocities.com/televisioncity/5828/money.gif" alt="Money">
+                    <br><br>
+                    <button onclick="closeEasterEgg()" class="retro-button-small">OK COOL!</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- COMP ME DADDY - Detailed Analysis Page -->
+    <div id="compMeDaddyPage" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; overflow-y:auto;">
+        <table border="0" cellpadding="10" cellspacing="0" width="100%" height="100%">
+            <tr>
+                <td align="center" valign="top">
+                    <br><br>
+                    <table border="5" cellpadding="20" cellspacing="0" width="95%" bgcolor="#000033" style="border:8px ridge #FF00FF;">
+                        <tr>
+                            <td align="center">
+                                <marquee behavior="alternate" scrollamount="10" bgcolor="#FF00FF">
+                                    <font size="6" face="Comic Sans MS" color="#FFFF00">
+                                        <b>💎💎💎 COMP ME DADDY - DETAILED ANALYSIS 💎💎💎</b>
+                                    </font>
+                                </marquee>
+                                <br><br>
+                                <font face="Papyrus" color="#00FFFF" size="4">
+                                    <blink>★ DEEP DIVE INTO YOUR COMPS ★</blink>
+                                </font>
+                                <br><br>
+                                <button onclick="window.closeCompMeDaddy()" class="retro-button-small">
+                                    <b>👈 BACK TO SLOPULATOR</b>
+                                </button>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- ADDRESS INPUT SECTION -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#330033" style="border:5px ridge #FF00FF;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#00FFFF" size="5">
+                                    <b>🔍 ENTER PROPERTY ADDRESS 🔍</b>
+                                </font>
+                                <br><br>
+                                <input type="text" id="compMeDaddyAddress" class="retro-input" placeholder="e.g., 123 Main St, Evansville, IN" size="50">
+                                <br><br>
+                                <button id="compMeDaddySearchBtn" class="retro-button" onclick="console.log('Analyze Comps clicked'); window.runCompMeDaddyAnalysis();">
+                                    <b>🔎 ANALYZE COMPS 🔎</b>
+                                </button>
+                                <div id="compMeDaddySuggestions" class="suggestions"></div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- PropertyReach Value Section -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000066" style="border:5px groove #00FF00;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#FFFF00" size="5">
+                                    <b>🏦 PROPERTYREACH VALUE 🏦</b>
+                                </font>
+                                <br><br>
+                                <div id="rentcastAVMLoading">
+                                    <font color="#00FF00" face="Courier New">Loading PropertyReach data...</font>
+                                    <br>
+                                    <img src="https://web.archive.org/web/20091027082445/http://www.geocities.com/televisioncity/5828/computer.gif" alt="Loading">
+                                </div>
+                                <div id="rentcastAVMData" style="display:none;">
+                                    <table border="2" cellpadding="10" cellspacing="0" width="100%">
+                                        <tr>
+                                            <td bgcolor="#330033" align="center">
+                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>PROPERTYREACH VALUE</b></font>
+                                                <br>
+                                                <font color="#00FFFF" size="6" id="rentcastEstimate">$0</font>
+                                            </td>
+                                            <td bgcolor="#330033" align="center">
+                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>CONFIDENCE</b></font>
+                                                <br>
+                                                <font color="#00FF00" size="6" id="rentcastConfidence">HIGH</font>
+                                            </td>
+                                            <td bgcolor="#330033" align="center">
+                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>PRICE RANGE</b></font>
+                                                <br>
+                                                <font color="#FFFF00" size="5" id="rentcastRange">$0 - $0</font>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <br>
+                                    <table border="2" cellpadding="10" cellspacing="0" width="100%">
+                                        <tr>
+                                            <td bgcolor="#003300" align="center" style="border: 3px solid #00FF00;">
+                                                <font color="#00FF00" face="Comic Sans MS" size="4"><b>🔥 RENOVATED ARV (High-End Finish)</b></font>
+                                                <br>
+                                                <font color="#00FF00" size="6" id="renovatedARV">$0</font>
+                                                <br>
+                                                <font color="#FFFF00" size="3">Based on avg <span id="compAvgPPSF">$0</span> from quality comps only</font>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- AVM Justification -->
+                    <div id="avmJustification" style="display:none;"></div>
+                    
+                    <br><br>
+                    
+                    <!-- Top 5 Comps Dashboard -->
+                    <div id="compsDashboard" style="display:none;"></div>
+                    
+                    <br><br>
+                    
+                    <!-- Share Link -->
+                    <div id="shareLinkContainer" style="display:none;"></div>
+                    
+                    <br><br>
+                    
+                    <!-- Detailed Comps Table -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000033" style="border:5px ridge #00FFFF;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#00FFFF" size="5">
+                                    <b>📊 DETAILED COMP ANALYSIS 📊</b>
+                                </font>
+                                <br><br>
+                                <table border="3" cellpadding="8" cellspacing="0" width="100%" id="detailedCompsTable">
+                                    <thead>
+                                        <tr bgcolor="#330066">
+                                            <th><font color="#FFFF00">ADDRESS</font></th>
+                                            <th><font color="#FFFF00">PRICE</font></th>
+                                            <th><font color="#FFFF00">$/SQFT</font></th>
+                                            <th><font color="#FFFF00">DATE</font></th>
+                                            <th><font color="#FFFF00">MILES</font></th>
+                                            <th><font color="#FFFF00">CORRELATION</font></th>
+                                            <th><font color="#FFFF00">FINISH</font></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailedCompsBody">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- Property Take - Valuation Opinion -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#1a1a2e" style="border:5px groove #ffd700;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#ffd700" size="5">
+                                    <b>🎯 THE TAKE - PROPERTY VALUATION 🎯</b>
+                                </font>
+                                <br><br>
+                                <div id="propertyTake" style="text-align:left;">
+                                    <font color="#00FF00" face="Courier New">Analyzing property value...</font>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- Map View -->
+                    <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000033" style="border:5px ridge #FF00FF;">
+                        <tr>
+                            <td align="center">
+                                <font face="Comic Sans MS" color="#FF00FF" size="5">
+                                    <b>🗺️ LOCATION MAP - PROXIMITY VIEW 🗺️</b>
+                                </font>
+                                <br><br>
+                                <div id="compMap" style="width:100%; height:450px; border:3px solid #FF00FF; border-radius:10px;"></div>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br><br>
+                    
+                    <!-- Share Button -->
+                    <button onclick="shareCompMeDaddy()" class="retro-button" style="background: linear-gradient(45deg, #00ff00, #00aa00); margin-bottom: 10px;">
+                        <b>📤 SHARE COMP ANALYSIS</b>
+                    </button>
+                    <br><br>
+                    
+                    <!-- Bottom CTA -->
+                    <button onclick="window.closeCompMeDaddy()" class="retro-button">
+                        <b>👈 BACK TO SLOPULATOR</b>
+                    </button>
+                    <br><br>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script src="app.js?v=1028"></script>
 </body>
 </html>
