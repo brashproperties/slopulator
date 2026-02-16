@@ -1214,7 +1214,7 @@ async function loadPropertyReachAVM() {
         const state = addressParts[2]?.split(' ')[0] || '';
         
         // Step 1: Get property details (ARV, estimated value)
-        const propertyUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+        const propertyUrl = PROXY_URL + encodeURIComponent(`https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`);
         console.log('Fetching property:', propertyUrl);
         
         const propertyResponse = await fetch(propertyUrl, { 
@@ -1414,7 +1414,7 @@ async function loadPropertyReachPropertyData(address) {
         const city = addressParts[1] || '';
         const state = addressParts[2]?.split(' ')[0] || '';
         
-        const url = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+        const url = PROXY_URL + encodeURIComponent(`https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`);
         
         const response = await fetch(url, {
             headers: {
