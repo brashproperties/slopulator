@@ -518,7 +518,7 @@ window.loadPropertyData = async function(address, lat, lon) {
         
         // No fallback - show error if API fails
         if (!data) {
-            console.error('PropertyReach API failed, showing error instead of mock data');
+            console.log('DEBUG: data set:', data); console.error('PropertyReach API failed, showing error instead of mock data');
         }
         
         currentPropertyData = data;
