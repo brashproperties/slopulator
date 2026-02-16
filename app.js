@@ -2267,7 +2267,7 @@ async function loadPropertyReachData(address) {
             
             // Match street number and street name
             if (pStreetNum === streetNum && pStreetName.includes(streetName)) {
-                console.log('Found match:', p.streetAddress, p.city, p.estimatedValue);
+                console.log('Found match:', p.streetAddress, p.city, p.estimatedValue, 'rent:', p.estimatedRentAmount, 'tax:', p.taxAmount);
                 prop = p;
                 break;
             }
