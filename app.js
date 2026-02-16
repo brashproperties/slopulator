@@ -1860,6 +1860,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================
 
 function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPricePerSqft, comps) {
+    const subjectSqft = subjectPricePerSqft > 0 ? avmValue / subjectPricePerSqft : 0;
     const justificationEl = document.getElementById('avmJustification');
     if (!justificationEl || comps.length === 0) return;
     
