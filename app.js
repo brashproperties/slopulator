@@ -458,7 +458,9 @@ window.loadPropertyData = async function(address, lat, lon) {
         let data = null;
         
         try {
+            console.log('DEBUG loadPropertyData address:', address);
             const addressParts = address.split(',').map(s => s.trim());
+            console.log('DEBUG parts:', addressParts);
             const streetAddress = addressParts[0] || '';
             const city = addressParts[1] || '';
             const state = addressParts[2]?.split(' ')[0] || '';
@@ -1372,7 +1374,9 @@ async function loadRentCastAVM() {
 // Fetch PropertyReach property data including taxes
 async function loadRentCastPropertyData(address) {
     try {
-        const addressParts = address.split(',').map(s => s.trim());
+        console.log('DEBUG loadPropertyData address:', address);
+            const addressParts = address.split(',').map(s => s.trim());
+            console.log('DEBUG parts:', addressParts);
         const streetAddress = addressParts[0] || '';
         const city = addressParts[1] || '';
         const state = addressParts[2]?.split(' ')[0] || '';
