@@ -1163,15 +1163,28 @@ async function loadRentCastAVM() {
         const city = addressParts[1] || '';
         const state = addressParts[2]?.split(' ')[0] || '';
         
-        // Step 1: Get property details (ARV, estimated value)
-        const propertyUrl = `https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
-        console.log('Fetching property:', propertyUrl);
+        // Step 1: Get property details (ARV, estimated value) via search endpoint
+        const searchUrl = 'https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search';
+        console.log('Fetching property:', searchUrl);
         
-        const propertyResponse = await fetch(propertyUrl, { 
+        const searchBody = {
+            target: {
+                streetAddress: streetAddress,
+                city: city,
+                state: state
+            },
+            filter: {},
+            limit: 1
+        };
+        
+        const propertyResponse = await fetch(searchUrl, { 
+            method: 'POST',
             headers: { 
                 'x-api-key': PROPERTYREACH_API_KEY,
+                'Content-Type': 'application/json',
                 'Accept': 'application/json'
-            } 
+            },
+            body: JSON.stringify(searchBody)
         });
         
         if (!propertyResponse.ok) {
@@ -1181,11 +1194,11 @@ async function loadRentCastAVM() {
         const propertyData = await propertyResponse.json();
         console.log('Property data:', propertyData);
         
-        if (!propertyData.property) {
+        if (!propertyData.properties || propertyData.properties.length === 0) {
             throw new Error('Property not found');
         }
         
-        const subjectProperty = propertyData.property;
+        const subjectProperty = propertyData.properties[0];
         const estimatedValue = subjectProperty.estimatedValue || 0;
         const lowRange = Math.round(estimatedValue * 0.92);
         const highRange = Math.round(estimatedValue * 1.08);
@@ -1364,7 +1377,7 @@ async function loadRentCastPropertyData(address) {
         const city = addressParts[1] || '';
         const state = addressParts[2]?.split(' ')[0] || '';
         
-        const url = `https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+        const url = `https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/search`;
         
         const response = await fetch(url, {
             headers: {
