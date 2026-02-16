@@ -301,19 +301,27 @@ async function fetchAddressSuggestions(query) {
     // Debounce for 200ms
     autocompleteTimeout = setTimeout(async () => {
         try {
-            // Try RentCast API first
-            const response = await fetch(`https://api.rentcast.io/v1/properties?address=${encodeURIComponent(query)}&limit=5`, {
+            // Try PropertyReach search API
+            const searchUrl = 'https://api.propertyreach.com/v1/search';
+            const response = await fetch(searchUrl, {
+                method: 'POST',
                 headers: { 
-                    'X-Api-Key': RENTCAST_API_KEY,
+                    'x-api-key': PROPERTYREACH_API_KEY,
+                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    target: { city: query.split(',')[0]?.trim() || query, state: 'IN' },
+                    filter: {},
+                    limit: 5
+                })
             });
             
             if (response.ok) {
                 const data = await response.json();
-                if (data && data.length > 0) {
-                    const suggestions = data.map(p => ({
-                        display_name: p.addressLine1 + (p.addressLine2 ? ', ' + p.addressLine2 : '') + ', ' + p.city + ', ' + p.state + ' ' + p.zipCode,
+                if (data && data.properties && data.properties.length > 0) {
+                    const suggestions = data.properties.map(p => ({
+                        display_name: p.streetAddress + ', ' + p.city + ', ' + p.state + ' ' + p.zip,
                         lat: p.latitude,
                         lon: p.longitude
                     }));
@@ -322,7 +330,7 @@ async function fetchAddressSuggestions(query) {
                 }
             }
             
-            // Fallback to Nominatim if RentCast fails
+            // Fallback to Nominatim if PropertyReach fails
             const osmResponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=us`, {
                 headers: { 'User-Agent': 'Slopulator/1.0' }
             });
@@ -446,55 +454,46 @@ window.loadPropertyData = async function(address, lat, lon) {
     showLoading();
     
     try {
-        // Try RentCast API first
+        // Try PropertyReach API
         let data = null;
         
         try {
-            const rentcastUrl = `https://api.rentcast.io/v1/avm/value?address=${encodeURIComponent(address)}`;
-            const response = await fetch(rentcastUrl, {
+            const addressParts = address.split(',').map(s => s.trim());
+            const streetAddress = addressParts[0] || '';
+            const city = addressParts[1] || '';
+            const state = addressParts[2]?.split(' ')[0] || '';
+            
+            const propertyUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+            const response = await fetch(propertyUrl, {
                 headers: {
-                    'X-Api-Key': RENTCAST_API_KEY,
+                    'x-api-key': PROPERTYREACH_API_KEY,
                     'Accept': 'application/json'
                 }
             });
             
             if (response.ok) {
-                const rentcastData = await response.json();
+                const propertyData = await response.json();
                 
-                // Fetch property details for taxes
-                const propertyUrl = `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(address)}`;
-                const propResponse = await fetch(propertyUrl, {
-                    headers: {
-                        'X-Api-Key': RENTCAST_API_KEY,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                let propertyData = {};
-                if (propResponse.ok) {
-                    const propData = await propResponse.json();
-                    if (propData && propData.length > 0) {
-                        propertyData = propData[0];
-                    }
+                if (propertyData && propertyData.property) {
+                    const prop = propertyData.property;
+                    data = {
+                        zestimate: prop.estimatedValue || 0,
+                        realtor_estimate: prop.estimatedValue || 0,
+                        rent_estimate: prop.estimatedRentAmount || 0,
+                        annual_taxes: prop.taxAmount || 0,
+                        monthly_taxes: prop.taxAmount ? Math.round(prop.taxAmount / 12) : 0,
+                        annual_insurance: Math.round((prop.squareFeet || 1500) * 0.50),
+                        property_details: {
+                            sqft: prop.squareFeet || prop.livingSquareFeet || 1500,
+                            bedrooms: prop.bedrooms || 0,
+                            bathrooms: prop.bathrooms || 0,
+                            year_built: prop.yearBuilt || 0
+                        }
+                    };
                 }
-                
-                data = {
-                    zestimate: rentcastData.price || 0,
-                    realtor_estimate: rentcastData.priceRangeHigh || rentcastData.price || 0,
-                    rent_estimate: rentcastData.rent || 0,
-                    annual_taxes: propertyData.propertyTaxes?.annualAmount || 0,
-                    monthly_taxes: propertyData.propertyTaxes?.annualAmount ? Math.round(propertyData.propertyTaxes.annualAmount / 12) : 0,
-                    annual_insurance: Math.round((propertyData.squareFootage || 1500) * 0.50),
-                    property_details: {
-                        sqft: propertyData.squareFootage || propertyData.livingArea || 1500,
-                        bedrooms: propertyData.bedrooms || 0,
-                        bathrooms: propertyData.bathrooms || 0,
-                        year_built: propertyData.yearBuilt || 0
-                    }
-                };
             }
         } catch (err) {
-            console.warn('RentCast API failed, using mock data:', err);
+            console.warn('PropertyReach API failed, using mock data:', err);
         }
         
         // Fallback to mock data if API fails
@@ -652,7 +651,7 @@ async function runCalculations() {
     
     await new Promise(r => setTimeout(r, 800));
     
-    // Use RentCast AVM as ARV
+    // Use PropertyReach ARV
     const arv = zestimate || priceRangeHigh;
     
     // Comprehensive Analysis
@@ -1095,9 +1094,9 @@ window.runCompMeDaddyAnalysis = async function() {
 
     // Load all the analysis
     try {
-        console.log('Starting loadRentCastAVM...');
+        console.log('Starting PropertyReach data load...');
         await loadRentCastAVM();
-        console.log('loadRentCastAVM completed');
+        console.log('PropertyReach load completed');
 
         console.log('All analysis complete!');
     } catch (err) {
@@ -1130,8 +1129,8 @@ window.closeCompMeDaddy = function() {
     document.body.style.overflow = 'auto';
 }
 
-// RentCast API Integration
-const RENTCAST_API_KEY = 'c5ad833affcf4a648df2ca97b5a870ff';
+// PropertyReach API Integration
+const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
 
 async function loadRentCastAVM() {
     const loadingDiv = document.getElementById('rentcastAVMLoading');
@@ -1143,75 +1142,103 @@ async function loadRentCastAVM() {
     if (compsDashboard) compsDashboard.style.display = 'none';
     
     try {
-        console.log('loadRentCastAVM starting...');
-        const address = encodeURIComponent(currentAddress);
-        console.log('Encoded address:', address);
+        console.log('loadRentCastAVM starting... (PropertyReach)');
         
-        // Call AVM API with compCount=15 and daysOld=365 to get comparables
-        const url = `https://api.rentcast.io/v1/avm/value?address=${address}&compCount=15&daysOld=365`;
-        console.log('Fetching URL:', url);
+        // Parse address into components
+        const addressParts = currentAddress.split(',').map(s => s.trim());
+        const streetAddress = addressParts[0] || '';
+        const city = addressParts[1] || '';
+        const state = addressParts[2]?.split(' ')[0] || '';
         
-        const response = await fetch(url, { 
+        // Step 1: Get property details (ARV, estimated value)
+        const propertyUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+        console.log('Fetching property:', propertyUrl);
+        
+        const propertyResponse = await fetch(propertyUrl, { 
             headers: { 
-                'X-Api-Key': RENTCAST_API_KEY,
+                'x-api-key': PROPERTYREACH_API_KEY,
                 'Accept': 'application/json'
             } 
         });
         
-        console.log('Response received:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`RentCast API error: ${response.status}`);
+        if (!propertyResponse.ok) {
+            throw new Error(`PropertyReach property API error: ${propertyResponse.status}`);
         }
         
-        const data = await response.json();
-        console.log('Data received:', data);
+        const propertyData = await propertyResponse.json();
+        console.log('Property data:', propertyData);
         
-        // Store data globally for sharing
-        window.compMeDaddyData = {
-            address: currentAddress,
-            avm: data,
-            timestamp: new Date().toISOString()
-        };
+        if (!propertyData.property) {
+            throw new Error('Property not found');
+        }
         
-        // Extract subject property data
-        const subjectProperty = data.subjectProperty || {};
-        const rentcastValue = data.price || 0;
-        const lowRange = data.priceRangeLow || Math.round(rentcastValue * 0.92);
-        const highRange = data.priceRangeHigh || Math.round(rentcastValue * 1.08);
+        const subjectProperty = propertyData.property;
+        const estimatedValue = subjectProperty.estimatedValue || 0;
+        const lowRange = Math.round(estimatedValue * 0.92);
+        const highRange = Math.round(estimatedValue * 1.08);
         
-        // Process comparables
-        let allComps = data.comparables || [];
-
-        // Sort by correlation score descending
-        allComps.sort((a, b) => (b.correlation || 0) - (a.correlation || 0));
+        // Step 2: Get comparables
+        const compsUrl = 'https://api.propertyreach.com/v1/comparables';
+        console.log('Fetching comps:', compsUrl);
+        
+        const compsResponse = await fetch(compsUrl, { 
+            method: 'POST',
+            headers: { 
+                'x-api-key': PROPERTYREACH_API_KEY,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                target: { streetAddress, city, state },
+                limit: 15
+            })
+        });
+        
+        if (!compsResponse.ok) {
+            throw new Error(`PropertyReach comps API error: ${compsResponse.status}`);
+        }
+        
+        const compsData = await compsResponse.json();
+        console.log('Comps data:', compsData);
+        
+        // Process PropertyReach comparables
+        let allComps = compsData.properties || [];
+        
+        // Sort by distance
+        allComps.sort((a, b) => (a.distanceFromSubject || 999) - (b.distanceFromSubject || 999));
 
         // Filter: valid price AND decent finish level (exclude fixer-uppers for reno deals)
         const validComps = allComps.filter(comp => {
-            const price = Number(comp.lastSalePrice || comp.salePrice || comp.price || comp.soldPrice || 0);
-            const sqft = Number(comp.squareFootage || comp.sqft || comp.livingArea || 1);
+            const price = Number(comp.lastSaleAmount || comp.lastSalePrice || 0);
+            const sqft = Number(comp.squareFeet || 1);
             const pricePerSqft = sqft > 0 ? price / sqft : 0;
 
             // Skip if price is invalid
             if (price <= 0) return false;
 
             // Skip "needs work" and "fixer-upper" comps (below $85/sqft)
-            // We're renovating to average/updated standards, so fixer comps skew ARV down
             if (pricePerSqft < 85) return false;
 
             return true;
         }).slice(0, 5);
         
+        // Store data globally for sharing
+        window.compMeDaddyData = {
+            address: currentAddress,
+            avm: { price: estimatedValue, priceRangeLow: lowRange, priceRangeHigh: highRange, subjectProperty },
+            timestamp: new Date().toISOString()
+        };
+        
         // Store selected comps
         window.compMeDaddyData.selectedComps = validComps;
         
-        // Calculate HIGH-END ARV based on filtered comps (excludes fixers)
-        const subjectSqft = subjectProperty.squareFootage || data.squareFootage || 0;
+        // Calculate HIGH-END ARV based on filtered comps
+        const subjectSqft = subjectProperty.squareFeet || 0;
         const highEndCompsPPSF = validComps
-            .filter(c => (c.squareFootage || c.sqft || c.livingArea) > 0)
+            .filter(c => c.squareFeet > 0)
             .map(c => {
-                const price = Number(c.lastSalePrice || c.salePrice || c.price || c.soldPrice || 0);
-                const sqft = Number(c.squareFootage || c.sqft || c.livingArea || 1);
+                const price = Number(c.lastSaleAmount || c.lastSalePrice || 0);
+                const sqft = Number(c.squareFeet || 1);
                 return price / sqft;
             });
         
@@ -1235,22 +1262,22 @@ async function loadRentCastAVM() {
             ? compPricesPerSqft[Math.floor(compPricesPerSqft.length / 2)] 
             : 0;
         
-        // Calculate subject property price/sqft (subjectSqft already declared above)
-        const subjectPricePerSqft = subjectSqft > 0 ? rentcastValue / subjectSqft : 0;
+        // Calculate subject property price/sqft
+        const subjectPricePerSqft = subjectSqft > 0 ? estimatedValue / subjectSqft : 0;
         
         // Generate AVM justification
         console.log('Generating AVM justification...');
-        generateAVMJustification(rentcastValue, subjectPricePerSqft, medianCompPricePerSqft, validComps);
+        generateAVMJustification(estimatedValue, subjectPricePerSqft, medianCompPricePerSqft, validComps);
 
         // Populate detailed comps table
         console.log('Populating detailed comps...');
         populateDetailedComps();
 
-        // Generate property take (uses currentPropertyData.comps)
+        // Generate property take
         console.log('Generating property take...');
         generatePropertyTake();
 
-        // Display map using RentCast API data only
+        // Display map
         console.log('Displaying map...');
         displayCompMap(subjectProperty, validComps);
         
@@ -1260,7 +1287,7 @@ async function loadRentCastAVM() {
         
         // Update basic AVM display
         if (document.getElementById('rentcastEstimate')) {
-            document.getElementById('rentcastEstimate').textContent = formatCurrency(rentcastValue);
+            document.getElementById('rentcastEstimate').textContent = formatCurrency(estimatedValue);
             document.getElementById('rentcastEstimate').style.color = '#00FFFF';
         }
         if (document.getElementById('rentcastRange')) {
@@ -1273,18 +1300,19 @@ async function loadRentCastAVM() {
             document.getElementById('compAvgPPSF').textContent = '$' + avgPPSF.toFixed(0) + '/sqft';
         }
         if (document.getElementById('rentcastConfidence')) {
-            const confScore = data.confidenceScore || 0;
+            // PropertyReach doesn't have confidence score, estimate based on comp count
+            const compCount = validComps.length;
             let confText = 'MEDIUM';
             let confColor = '#FFFF00';
-            if (confScore >= 80) {
+            if (compCount >= 5) {
                 confText = 'HIGH';
                 confColor = '#00FF00';
-            } else if (confScore < 50) {
+            } else if (compCount < 2) {
                 confText = 'LOW';
                 confColor = '#FF0000';
             }
             const confEl = document.getElementById('rentcastConfidence');
-            confEl.textContent = confText + (confScore > 0 ? ` (${confScore}%)` : '');
+            confEl.textContent = confText + ` (${compCount} comps)`;
             confEl.style.color = confColor;
         }
         
@@ -1297,7 +1325,7 @@ async function loadRentCastAVM() {
         if (compsDashboard) compsDashboard.style.display = 'block';
         
     } catch (error) {
-        console.error('Error loading RentCast AVM:', error);
+        console.error('Error loading PropertyReach data:', error);
         if (loadingDiv) loadingDiv.style.display = 'none';
 
         // Show error in dashboard
@@ -1315,32 +1343,36 @@ async function loadRentCastAVM() {
     }
 }
 
-// Fetch RentCast property data including taxes
+// Fetch PropertyReach property data including taxes
 async function loadRentCastPropertyData(address) {
     try {
-        const encodedAddress = encodeURIComponent(address);
-        const url = `https://api.rentcast.io/v1/properties?address=${encodedAddress}`;
+        const addressParts = address.split(',').map(s => s.trim());
+        const streetAddress = addressParts[0] || '';
+        const city = addressParts[1] || '';
+        const state = addressParts[2]?.split(' ')[0] || '';
+        
+        const url = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
         
         const response = await fetch(url, {
             headers: {
-                'X-Api-Key': RENTCAST_API_KEY,
+                'x-api-key': PROPERTYREACH_API_KEY,
                 'Accept': 'application/json'
             }
         });
         
         if (!response.ok) {
-            console.warn('RentCast property API error:', response.status);
+            console.warn('PropertyReach property API error:', response.status);
             return null;
         }
         
         const data = await response.json();
         
-        if (data && data.length > 0) {
-            const property = data[0];
+        if (data && data.property) {
+            const property = data.property;
             return {
-                sqft: property.squareFootage || property.livingArea || 0,
-                annualTaxes: property.propertyTaxes?.annualAmount || 0,
-                monthlyTaxes: property.propertyTaxes?.annualAmount ? Math.round(property.propertyTaxes.annualAmount / 12) : 0,
+                sqft: property.squareFeet || property.livingSquareFeet || 0,
+                annualTaxes: property.taxAmount || 0,
+                monthlyTaxes: property.taxAmount ? Math.round(property.taxAmount / 12) : 0,
                 yearBuilt: property.yearBuilt || 0,
                 bedrooms: property.bedrooms || 0,
                 bathrooms: property.bathrooms || 0
@@ -1349,33 +1381,33 @@ async function loadRentCastPropertyData(address) {
         
         return null;
     } catch (error) {
-        console.error('RentCast property data error:', error);
+        console.error('PropertyReach property data error:', error);
         return null;
     }
 }
 
 function populateDetailedComps() {
     const tbody = document.getElementById('detailedCompsBody');
-    // Use actual RentCast comps from API response
+    // Use PropertyReach comps from API response
     const comps = window.compMeDaddyData?.selectedComps || [];
 
     if (!comps.length) {
-        tbody.innerHTML = '<tr><td colspan="7" align="center"><font color="#FF0000">No comps available from RentCast API</font></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" align="center"><font color="#FF0000">No comps available from PropertyReach API</font></td></tr>';
         return;
     }
 
     tbody.innerHTML = comps.map((comp, index) => {
-        // Handle different API response formats - try all possible property names
-        const salePrice = Number(comp.lastSalePrice || comp.salePrice || comp.price || comp.soldPrice || 0);
-        const sqft = Number(comp.squareFootage || comp.sqft || comp.livingArea || comp.square_footage || 0);
+        // Handle PropertyReach response format
+        const salePrice = Number(comp.lastSaleAmount || comp.lastSalePrice || 0);
+        const sqft = Number(comp.squareFeet || 0);
         const pricePerSqft = sqft > 0 ? Math.round(salePrice / sqft) : '-';
-        const distance = comp.distance ? Number(comp.distance).toFixed(2) : 'N/A';
+        const distance = comp.distanceFromSubject ? Number(comp.distanceFromSubject).toFixed(2) : 'N/A';
         const finishLevel = determineFinishLevel(comp, pricePerSqft === '-' ? 0 : pricePerSqft);
         const finishColor = getFinishColor(finishLevel);
         
-        // Parse date from ISO format (listedDate for active listings)
+        // Parse date from ISO format
         let saleDate = 'N/A';
-        const dateStr = comp.listedDate || comp.saleDate || comp.lastSaleDate || comp.removedDate;
+        const dateStr = comp.lastSaleDate;
         if (dateStr) {
             try {
                 const d = new Date(dateStr);
@@ -1385,10 +1417,11 @@ function populateDetailedComps() {
             } catch (e) {}
         }
         
-        // Correlation score
-        const correlation = comp.correlation ? (comp.correlation * 100).toFixed(1) + '%' : 'N/A';
+        // Distance score (instead of correlation)
+        const distanceScore = comp.distanceFromSubject ? 
+            (comp.distanceFromSubject < 0.2 ? 'HIGH' : comp.distanceFromSubject < 0.5 ? 'MEDIUM' : 'LOW') : 'N/A';
         
-        const address = comp.formattedAddress || comp.addressLine1 || comp.address || comp.streetAddress || comp.fullAddress || 'N/A';
+        const address = comp.streetAddress || 'N/A';
 
         return `
             <tr bgcolor="${index % 2 === 0 ? '#000033' : '#000066'}">
@@ -1397,7 +1430,7 @@ function populateDetailedComps() {
                 <td align="center"><font color="#FF9900">$${pricePerSqft}</font></td>
                 <td align="center"><font color="#FFFF00">${saleDate}</font></td>
                 <td align="center"><font color="#00FFFF">${distance} mi</font></td>
-                <td align="center"><font color="#00FF00">${correlation}</font></td>
+                <td align="center"><font color="#00FF00">${distanceScore}</font></td>
                 <td align="center"><font color="${finishColor}"><b>${finishLevel}</b></font></td>
             </tr>
         `;
@@ -1729,7 +1762,7 @@ function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPrice
             <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #ff6b6b; border-radius: 10px; padding: 20px; margin: 15px 0;">
                 <font face="Papyrus" color="#ff6b6b" size="4"><b>📊 AVM ASSESSMENT: AGGRESSIVE</b></font><br><br>
                 <font face="Courier New" color="#ffffff" size="2">
-                The RentCast AVM of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
                 <b>${diffPercent.toFixed(1)}% higher</b> than the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
                 
                 This aggressive valuation is likely supported by <b>${highestCompAddress}</b>, which sold at 
@@ -1746,7 +1779,7 @@ function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPrice
             <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #4ecdc4; border-radius: 10px; padding: 20px; margin: 15px 0;">
                 <font face="Papyrus" color="#4ecdc4" size="4"><b>📊 AVM ASSESSMENT: CONSERVATIVE</b></font><br><br>
                 <font face="Courier New" color="#ffffff" size="2">
-                The RentCast AVM of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
                 <b>${Math.abs(diffPercent).toFixed(1)}% lower</b> than the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
                 
                 This conservative valuation may reflect historical data patterns or the subject's last sale price. 
@@ -1762,7 +1795,7 @@ function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPrice
             <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #00ff00; border-radius: 10px; padding: 20px; margin: 15px 0;">
                 <font face="Papyrus" color="#00ff00" size="4"><b>📊 AVM ASSESSMENT: STRONGLY SUPPORTED</b></font><br><br>
                 <font face="Courier New" color="#ffffff" size="2">
-                The RentCast AVM of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
                 <b>within ${Math.abs(diffPercent).toFixed(1)}%</b> of the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
                 
                 This AVM is strongly supported by the local market data. The selected comparables show consistent 
@@ -1988,7 +2021,7 @@ function shareCompMeDaddy() {
     
     const data = window.compMeDaddyData;
     const avm = data.avm || {};
-    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 RentCast AVM: ${formatCurrency(avm.price || 0)}\n📊 Confidence: ${avm.confidenceScore || 'N/A'}%\n📍 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\nPowered by The Slopulator! 🔥`;
+    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 PropertyReach ARV: ${formatCurrency(avm.price || 0)}\n📊 Data Source: PropertyReach API\n📍 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\nPowered by The Slopulator! 🔥`;
     
     if (navigator.share) {
         navigator.share({

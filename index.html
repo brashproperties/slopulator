@@ -314,7 +314,7 @@
                                     return fullAddress;
                                 }
                                 
-                                const RENTCAST_KEY = 'c5ad833affcf4a648df2ca97b5a870ff';
+                                const PROPERTYREACH_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
                                 
                                 let mainPropertyMap = null;
                                 
@@ -324,7 +324,7 @@
                                     
                                     if (!imgContainer || !mapDiv) return;
                                     
-                                    // Use coordinates from RentCast data or window globals
+                                    // Use coordinates from PropertyReach data or window globals
                                     const lat = parseFloat(propertyData?.latitude || window.selectedLat);
                                     const lon = parseFloat(propertyData?.longitude || window.selectedLon);
                                     
@@ -391,140 +391,75 @@
                                     if (imgContainer) imgContainer.style.display = 'none';
                                 }
                                 
-                                async function loadRentCastData(address) {
+                                async function loadPropertyReachData(address) {
                                     try {
                                         // Clear all fields first
                                         clearAllFields();
                                         
-                                        // Fetch AVM value data
-                                        const response = await fetch(`https://api.rentcast.io/v1/avm/value?address=${encodeURIComponent(address)}`, {
-                                            headers: { 'X-Api-Key': RENTCAST_KEY, 'Accept': 'application/json' }
+                                        // Parse address
+                                        const addressParts = address.split(',').map(s => s.trim());
+                                        const streetAddress = addressParts[0] || '';
+                                        const city = addressParts[1] || '';
+                                        const state = addressParts[2]?.split(' ')[0] || '';
+                                        
+                                        // Fetch property data from PropertyReach
+                                        const propUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+                                        const response = await fetch(propUrl, {
+                                            headers: { 'x-api-key': PROPERTYREACH_KEY, 'Accept': 'application/json' }
                                         });
                                         
                                         if (response.ok) {
                                             const data = await response.json();
-                                            document.getElementById('zestimate').value = data.price || '';
-                                            document.getElementById('priceRangeLow').value = data.priceRangeLow || data.price || '';
-                                            document.getElementById('priceRangeHigh').value = data.priceRangeHigh || data.price || '';
-                                        }
-                                        
-                                        // Fetch rent estimate data
-                                        const rentResponse = await fetch(`https://api.rentcast.io/v1/avm/rent/long-term?address=${encodeURIComponent(address)}`, {
-                                            headers: { 'X-Api-Key': RENTCAST_KEY, 'Accept': 'application/json' }
-                                        });
-                                        
-                                        if (rentResponse.ok) {
-                                            const rentData = await rentResponse.json();
-                                            document.getElementById('rentRangeLow').value = rentData.rentRangeLow || '';
-                                            document.getElementById('rentRangeHigh').value = rentData.rentRangeHigh || '';
-                                            // Calculate average rent for Property Details section
-                                            if (rentData.rentRangeLow && rentData.rentRangeHigh) {
-                                                const avgRent = Math.round((rentData.rentRangeLow + rentData.rentRangeHigh) / 2);
-                                                document.getElementById('rentEstimate').value = avgRent;
-                                            } else if (rentData.rent) {
-                                                document.getElementById('rentEstimate').value = rentData.rent;
-                                            } else {
-                                                document.getElementById('rentEstimate').placeholder = 'N/A';
-                                            }
-                                        } else {
-                                            // Rent API returned error - mark as unavailable
-                                            document.getElementById('rentRangeLow').placeholder = 'N/A';
-                                            document.getElementById('rentRangeHigh').placeholder = 'N/A';
-                                            document.getElementById('rentEstimate').placeholder = 'N/A';
-                                        }
-                                        
-                                        // Fetch property details for sqft, taxes, year built, sale history, image
-                                        const propResponse = await fetch(`https://api.rentcast.io/v1/properties?address=${encodeURIComponent(address)}&limit=1`, {
-                                            headers: { 'X-Api-Key': RENTCAST_KEY, 'Accept': 'application/json' }
-                                        });
-                                        
-                                        if (propResponse.ok) {
-                                            const propData = await propResponse.json();
-                                            console.log('Property API response:', propData);
+                                            console.log('PropertyReach response:', data);
                                             
-                                            // Handle both array and object responses
-                                            let p = propData;
-                                            if (Array.isArray(propData) && propData.length > 0) {
-                                                p = propData[0];
-                                            }
-                                            
+                                            const p = data.property;
                                             if (p) {
-                                                console.log('Processing property:', p);
+                                                // estimatedValue (ARV)
+                                                document.getElementById('zestimate').value = p.estimatedValue || '';
+                                                // Range estimate (±8%)
+                                                const val = p.estimatedValue || 0;
+                                                document.getElementById('priceRangeLow').value = Math.round(val * 0.92);
+                                                document.getElementById('priceRangeHigh').value = Math.round(val * 1.08);
                                                 
-                                                // squareFootage from API
-                                                const sqft = p.squareFootage || '';
-                                                console.log('Setting sqft to:', sqft);
-                                                document.getElementById('sqft').value = sqft;
-                                                if (!sqft) document.getElementById('sqft').placeholder = 'N/A';
+                                                // Rent estimate
+                                                document.getElementById('rentEstimate').value = p.estimatedRentAmount || '';
+                                                document.getElementById('rentRangeLow').placeholder = 'N/A';
+                                                document.getElementById('rentRangeHigh').placeholder = 'N/A';
                                                 
-                                                // yearBuilt from API
-                                                console.log('Setting yearBuilt to:', p.yearBuilt);
+                                                // Square feet
+                                                document.getElementById('sqft').value = p.squareFeet || p.livingSquareFeet || '';
+                                                if (!p.squareFeet) document.getElementById('sqft').placeholder = 'N/A';
+                                                
+                                                // Year built
                                                 document.getElementById('yearBuilt').value = p.yearBuilt || '';
                                                 if (!p.yearBuilt) document.getElementById('yearBuilt').placeholder = 'N/A';
                                                 
-                                                // propertyTaxes from API - nested by year, get most recent
-                                                let hasTaxes = false;
-                                                console.log('Checking propertyTaxes:', p.propertyTaxes);
-                                                if (p.propertyTaxes) {
-                                                    const taxYears = Object.keys(p.propertyTaxes).sort().reverse();
-                                                    console.log('Tax years found:', taxYears);
-                                                    if (taxYears.length > 0) {
-                                                        const latestTax = p.propertyTaxes[taxYears[0]];
-                                                        console.log('Latest tax:', latestTax);
-                                                        if (latestTax?.total) {
-                                                            const monthlyTax = Math.round(latestTax.total / 12);
-                                                            console.log('Setting monthlyTaxes to:', monthlyTax);
-                                                            document.getElementById('monthlyTaxes').value = monthlyTax;
-                                                            hasTaxes = true;
-                                                        }
-                                                    }
+                                                // Monthly taxes
+                                                if (p.taxAmount) {
+                                                    document.getElementById('monthlyTaxes').value = Math.round(p.taxAmount / 12);
+                                                } else {
+                                                    document.getElementById('monthlyTaxes').placeholder = 'N/A';
                                                 }
-                                                if (!hasTaxes) document.getElementById('monthlyTaxes').placeholder = 'N/A';
                                                 
-                                                // Calculate insurance based on sqft ($0.50 per sqft annually)
+                                                // Insurance (estimate $0.50/sqft)
+                                                const sqft = p.squareFeet || 0;
                                                 if (sqft) {
-                                                    const insurance = Math.round(sqft * 0.5);
-                                                    console.log('Setting annualInsurance to:', insurance);
-                                                    document.getElementById('annualInsurance').value = insurance;
+                                                    document.getElementById('annualInsurance').value = Math.round(sqft * 0.5);
                                                 } else {
                                                     document.getElementById('annualInsurance').placeholder = 'N/A';
                                                 }
                                                 
-                                                // Find most recent sale from history (object with date keys)
-                                                let hasSaleHistory = false;
-                                                console.log('Checking history:', p.history);
-                                                if (p.history && typeof p.history === 'object') {
-                                                    const sales = Object.values(p.history).filter(h => h.event === 'Sale');
-                                                    console.log('Sales found:', sales);
-                                                    if (sales.length > 0) {
-                                                        // Sort by date descending and get most recent
-                                                        sales.sort((a, b) => new Date(b.date) - new Date(a.date));
-                                                        const lastSale = sales[0];
-                                                        console.log('Setting lastSalePrice to:', lastSale.price);
-                                                        console.log('Setting lastSaleDate to:', lastSale.date);
-                                                        document.getElementById('lastSalePrice').value = lastSale.price || '';
-                                                        document.getElementById('lastSaleDate').value = lastSale.date ? lastSale.date.split('T')[0] : '';
-                                                        hasSaleHistory = true;
-                                                    }
-                                                }
-                                                if (!hasSaleHistory) {
-                                                    // Fallback to lastSalePrice/Date fields if available
-                                                    console.log('Falling back to lastSalePrice/Date fields:', p.lastSalePrice, p.lastSaleDate);
-                                                    if (p.lastSalePrice) {
-                                                        document.getElementById('lastSalePrice').value = p.lastSalePrice;
-                                                        document.getElementById('lastSaleDate').value = p.lastSaleDate ? p.lastSaleDate.split('T')[0] : '';
-                                                    } else {
-                                                        document.getElementById('lastSalePrice').placeholder = 'N/A';
-                                                        document.getElementById('lastSaleDate').placeholder = 'N/A';
-                                                    }
-                                                }
+                                                // Last sale
+                                                document.getElementById('lastSalePrice').value = p.lastSaleAmount || '';
+                                                document.getElementById('lastSaleDate').value = p.lastSaleDate || '';
+                                                if (!p.lastSaleAmount) document.getElementById('lastSalePrice').placeholder = 'N/A';
                                                 
-                                                // Show property exterior image
+                                                // Show property image
                                                 showPropertyImage(p);
                                             }
                                         }
                                     } catch (err) {
-                                        console.error('RentCast error:', err);
+                                        console.error('PropertyReach error:', err);
                                     }
                                 }
                                 
@@ -538,7 +473,7 @@
                                     window.selectedLat = lat;
                                     window.selectedLon = lon;
                                     // Load data immediately
-                                    loadRentCastData(shortAddr);
+                                    loadPropertyReachData(shortAddr);
                                 }
                                 
                                 // Hide on click outside
@@ -616,7 +551,7 @@
                             <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>RentCast AVM ($):</b></font>
+                                        <font color="#FF9900"><b>PropertyReach Value ($):</b></font>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="zestimate" class="retro-input-small api-field" placeholder="Auto-populated">
@@ -826,7 +761,7 @@
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>ARV (RentCast AVM):</b></font>
+                                        <font color="#ff9900"><b>ARV (PropertyReach Value):</b></font>
                                     </td>
                                     <td bgcolor="#000000" id="flipARV"></td>
                                 </tr>
@@ -898,7 +833,7 @@
                                 <tr><td colspan="2" bgcolor="#000000" height="5"></td></tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>RentCast AVM:</b></font>
+                                        <font color="#ff9900"><b>PropertyReach Value:</b></font>
                                     </td>
                                     <td bgcolor="#000000" id="rentalAVM"></td>
                                 </tr>
@@ -1285,16 +1220,16 @@
                     
                     <br><br>
                     
-                    <!-- RentCast AVM Section -->
+                    <!-- PropertyReach Value Section -->
                     <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000066" style="border:5px groove #00FF00;">
                         <tr>
                             <td align="center">
                                 <font face="Comic Sans MS" color="#FFFF00" size="5">
-                                    <b>🏦 RENTCAST AVM - AUTOMATED VALUATION 🏦</b>
+                                    <b>🏦 PROPERTYREACH VALUE 🏦</b>
                                 </font>
                                 <br><br>
                                 <div id="rentcastAVMLoading">
-                                    <font color="#00FF00" face="Courier New">Loading RentCast data...</font>
+                                    <font color="#00FF00" face="Courier New">Loading PropertyReach data...</font>
                                     <br>
                                     <img src="https://web.archive.org/web/20091027082445/http://www.geocities.com/televisioncity/5828/computer.gif" alt="Loading">
                                 </div>
@@ -1302,7 +1237,7 @@
                                     <table border="2" cellpadding="10" cellspacing="0" width="100%">
                                         <tr>
                                             <td bgcolor="#330033" align="center">
-                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>RENTCAST ESTIMATE</b></font>
+                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>PROPERTYREACH VALUE</b></font>
                                                 <br>
                                                 <font color="#00FFFF" size="6" id="rentcastEstimate">$0</font>
                                             </td>
