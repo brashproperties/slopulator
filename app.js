@@ -1319,8 +1319,18 @@ async function loadPropertyReachAVM() {
         // Sort by distance
         allComps.sort((a, b) => (a.distanceFromSubject || 999) - (b.distanceFromSubject || 999));
 
+        // Deduplicate comps by address
+        const compMap = new Map();
+        for (const comp of allComps) {
+            const addr = comp.streetAddress || comp.addressLine1 || '';
+            if (!compMap.has(addr)) {
+                compMap.set(addr, comp);
+            }
+        }
+        const uniqueComps = Array.from(compMap.values());
+        
         // Filter: valid price AND decent finish level (exclude fixer-uppers for reno deals)
-        const validComps = allComps.filter(comp => {
+        const validComps = uniqueComps.filter(comp => {
             const price = Number(comp.lastSaleAmount || comp.lastSalePrice || 0);
             const sqft = Number(comp.squareFeet || 1);
             const pricePerSqft = sqft > 0 ? price / sqft : 0;
@@ -1649,10 +1659,7 @@ function generatePropertyTake() {
                     <td width="50%"><font color="#FFFF00"><b>Subject AVM:</b></font></td>
                     <td><font color="#00FFFF" size="4"><b>${formatCurrency(avmValue)}</b></font></td>
                 </tr>
-                <tr bgcolor="#000033">
-                    <td><font color="#FFFF00"><b>AVM Range:</b></font></td>
-                    <td><font color="#FFFF00">${formatCurrency(avmLow)} - ${formatCurrency(avmHigh)}</font></td>
-                </tr>
+
                 <tr bgcolor="#000066">
                     <td><font color="#FFFF00"><b>Subject $/sqft:</b></font></td>
                     <td><font color="#00FF00">$${subjectPricePerSqft.toFixed(0)}</font></td>
@@ -1872,13 +1879,13 @@ function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPrice
     if (diffPercent > 5) {
         justification = `
             <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #ff6b6b; border-radius: 10px; padding: 20px; margin: 15px 0;">
-                <font face="Papyrus" color="#ff6b6b" size="4"><b>📊 AVM ASSESSMENT: AGGRESSIVE</b></font><br><br>
+                <font face="Papyrus" color="#ff6b6b" size="4"><b>📊 PropertyReach Value ASSESSMENT: AGGRESSIVE</b></font><br><br>
                 <font face="Courier New" color="#ffffff" size="2">
-                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectSqft > 0 ? (avmValue / subjectSqft).toFixed(0) + "/sqft" : "N/A"}) is 
                 <b>${diffPercent.toFixed(1)}% higher</b> than the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
                 
                 This aggressive valuation is likely supported by <b>${highestCompAddress}</b>, which sold at 
-                $${highestCompPricePerSqft}/sqft and is only ${highestComp.distance?.toFixed(2) || 'unknown'} miles away.<br><br>
+                ${highestCompPricePerSqft ? "$" + highestCompPricePerSqft + "/sqft" : "N/A"} and is only ${highestComp.distance?.toFixed(2) || 'unknown'} miles away.<br><br>
                 
                 <font color="#ffd700"><b>💡 Appraisal Insight:</b></font> Expect the appraiser to anchor toward the 
                 median range unless your subject property has significant advantages (larger lot, better condition, 
@@ -1889,9 +1896,9 @@ function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPrice
     } else if (diffPercent < -5) {
         justification = `
             <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #4ecdc4; border-radius: 10px; padding: 20px; margin: 15px 0;">
-                <font face="Papyrus" color="#4ecdc4" size="4"><b>📊 AVM ASSESSMENT: CONSERVATIVE</b></font><br><br>
+                <font face="Papyrus" color="#4ecdc4" size="4"><b>📊 PropertyReach Value ASSESSMENT: CONSERVATIVE</b></font><br><br>
                 <font face="Courier New" color="#ffffff" size="2">
-                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectSqft > 0 ? (avmValue / subjectSqft).toFixed(0) + "/sqft" : "N/A"}) is 
                 <b>${Math.abs(diffPercent).toFixed(1)}% lower</b> than the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
                 
                 This conservative valuation may reflect historical data patterns or the subject's last sale price. 
@@ -1905,9 +1912,9 @@ function generateAVMJustification(avmValue, subjectPricePerSqft, medianCompPrice
     } else {
         justification = `
             <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 3px solid #00ff00; border-radius: 10px; padding: 20px; margin: 15px 0;">
-                <font face="Papyrus" color="#00ff00" size="4"><b>📊 AVM ASSESSMENT: STRONGLY SUPPORTED</b></font><br><br>
+                <font face="Papyrus" color="#00ff00" size="4"><b>📊 PropertyReach Value ASSESSMENT: STRONGLY SUPPORTED</b></font><br><br>
                 <font face="Courier New" color="#ffffff" size="2">
-                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectPricePerSqft.toFixed(0)}/sqft) is 
+                The PropertyReach ARV of <b>${formatCurrency(avmValue)}</b> (${subjectSqft > 0 ? (avmValue / subjectSqft).toFixed(0) + "/sqft" : "N/A"}) is 
                 <b>within ${Math.abs(diffPercent).toFixed(1)}%</b> of the median comp price/sqft of $${medianCompPricePerSqft.toFixed(0)}.<br><br>
                 
                 This AVM is strongly supported by the local market data. The selected comparables show consistent 
