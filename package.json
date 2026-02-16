@@ -1,11 +1,12 @@
 {
   "name": "slopulator",
   "version": "1.0.0",
+  "description": "The SLOPULATOR - Retro Property Evaluation Tool",
   "scripts": {
-    "start": "npx serve .",
-    "build": "echo 'No build needed'"
+    "start": "python3 -m http.server 8765",
+    "test": "echo 'Tests? This is retro, we don't need no stinkin' tests!'"
   },
-  "devDependencies": {
-    "serve": "^14.0.0"
-  }
+  "keywords": ["real-estate", "calculator", "retro", "geocities", "slopulator"],
+  "author": "Bradley @ Brash Properties",
+  "license": "MIT"
 }

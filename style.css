@@ -61,8 +61,8 @@ blink {
     position: absolute;
     font-size: 2rem;
     animation: bounce-around 8s ease-in-out infinite;
-    pointer-events: none;
-    cursor: default;
+    pointer-events: auto;
+    cursor: pointer;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
 }
 
@@ -424,36 +424,27 @@ marquee {
     position: absolute;
     background: #000;
     border: 3px outset #00FF00;
-    max-height: 250px;
-    max-width: 400px;
+    max-height: 300px;
     overflow-y: auto;
     z-index: 1000;
     display: none;
     box-shadow: 0 0 20px rgba(0,255,0,0.5);
-    border-radius: 8px;
 }
 
 .suggestion-item {
-    padding: 12px 15px;
+    padding: 15px;
     cursor: pointer;
     border-bottom: 1px solid #003300;
     color: #00FF00;
     font-family: 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.4;
     transition: all 0.2s ease;
-    white-space: normal;
-    word-wrap: break-word;
 }
 
 .suggestion-item:hover {
     background: #003300;
     color: #00FFFF;
-}
-
-.suggestion-item strong {
-    color: #FFFF00;
-    font-weight: bold;
+    padding-left: 25px;
+    text-shadow: 0 0 10px #00FFFF;
 }
 
 /* ============================================
@@ -640,203 +631,60 @@ marquee {
 }
 
 /* ============================================
-   MOBILE OVERFLOW PREVENTION
-   ============================================ */
-
-html, body {
-    max-width: 100vw;
-    overflow-x: hidden;
-}
-
-* {
-    max-width: 100vw;
-    box-sizing: border-box;
-}
-
-/* ============================================
-   MOBILE OPTIMIZATIONS
-   ============================================ */
-
-/* Disable bouncing emojis on mobile - kill battery/performance */
-@media (max-width: 768px) {
-    #bouncing-emojis {
-        display: none !important;
-    }
-    
-    /* Bigger touch targets */
-    .retro-input, .retro-input-small, input[type="text"], input[type="number"] {
-        min-height: 48px !important;
-        padding: 12px 15px !important;
-        font-size: 16px !important; /* Prevent zoom on iOS */
-        touch-action: manipulation;
-    }
-    
-    /* Bigger buttons */
-    .retro-button, .retro-button-calculate, .retro-button-comp, .retro-button-small {
-        min-height: 52px !important;
-        padding: 14px 20px !important;
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-    }
-    
-    /* Larger suggestions dropdown */
-    .suggestions {
-        font-size: 16px !important;
-    }
-    
-    .suggestion-item {
-        padding: 18px 15px !important;
-        min-height: 48px;
-    }
-}
-
-/* Sticky Calculate Button */
-#stickyCalculateBtn {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
-    background: linear-gradient(180deg, #FF0000 0%, #990000 50%, #FF0000 100%);
-    color: #FFFF00;
-    border: 4px outset #FF6666;
-    padding: 15px 40px;
-    font-family: 'Comic Sans MS', cursive;
-    font-size: 1.2rem;
-    cursor: pointer;
-    text-shadow: 2px 2px 4px #000;
-    box-shadow: 0 0 20px rgba(255,0,0,0.8);
-    border-radius: 10px;
-    animation: calculate-glow 1s ease-in-out infinite;
-}
-
-@media (max-width: 768px) {
-    #stickyCalculateBtn {
-        display: block;
-        bottom: 10px;
-        padding: 12px 30px;
-        font-size: 1rem;
-        width: 90%;
-        max-width: 400px;
-    }
-}
-
-/* ============================================
    RESPONSIVE DESIGN (for those "modern" devices)
    ============================================ */
 
 @media (max-width: 768px) {
     body {
         background-size: 300px 300px, 200px 200px, 150px 150px;
-        padding: 5px;
-    }
-    
-    .main-table, .content-table, .input-table {
-        width: 100% !important;
-        max-width: 100vw !important;
-    }
-    
-    .main-table td, .content-table td, .input-table td {
-        display: block !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-        overflow-x: hidden !important;
-        text-overflow: ellipsis !important;
     }
     
     .big-blinking-number {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
     
     .retro-input {
-        width: 100% !important;
+        width: 90%;
         font-size: 1rem;
-        max-width: 100vw !important;
-    }
-    
-    .retro-input-small {
-        width: 100% !important;
     }
     
     .retro-button, .retro-button-calculate {
-        width: 100% !important;
-        font-size: 1rem;
-        padding: 12px 10px;
-    }
-    
-    .retro-button-comp {
-        width: 100% !important;
-        font-size: 1rem;
-        padding: 10px;
+        width: 90%;
+        font-size: 1.1rem;
+        padding: 12px 20px;
     }
     
     .digit {
-        font-size: 1.2rem;
-        padding: 2px 4px;
+        font-size: 1.5rem;
+        padding: 3px 5px;
     }
     
     .bouncing-emoji {
-        font-size: 1rem;
-    }
-    
-    /* Force everything in tables to wrap */
-    table {
-        width: 100% !important;
-        max-width: 100vw !important;
-    }
-    
-    td, th {
-        max-width: 100vw !important;
-        overflow-x: hidden !important;
-    }
-    
-    /* Compact inputs */
-    .input-table td {
-        padding: 5px !important;
-    }
-    
-    /* Smaller fonts */
-    font[size="5"] { font-size: 1.5rem !important; }
-    font[size="6"] { font-size: 1.8rem !important; }
-    font[size="7"] { font-size: 2rem !important; }
-}
-
-@media (max-width: 480px) {
-    html, body {
-        max-width: 100vw;
-        overflow-x: hidden;
-    }
-    
-    .big-blinking-number {
         font-size: 1.5rem;
     }
     
-    marquee {
-        font-size: 0.8rem;
+    table {
+        width: 100% !important;
+    }
+    
+    td {
+        display: block;
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .big-blinking-number {
+        font-size: 1.8rem;
     }
     
     marquee font[size="7"] {
-        font-size: 1.2rem;
+        font-size: 1.5rem;
     }
     
     .retro-button-calculate {
-        font-size: 0.9rem;
-        padding: 12px 8px;
-        width: 100% !important;
-    }
-    
-    .content-table, .main-table {
-        width: 100vw !important;
-        max-width: 100vw !important;
-    }
-    
-    .content-table td, .main-table td {
-        display: block !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-        padding: 3px !important;
-        font-size: 0.85rem !important;
+        font-size: 1rem;
+        padding: 15px;
     }
 }
 
