@@ -463,7 +463,7 @@ window.loadPropertyData = async function(address, lat, lon) {
             const city = addressParts[1] || '';
             const state = addressParts[2]?.split(' ')[0] || '';
             
-            const propertyUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+            const propertyUrl = `https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
             const response = await fetch(propertyUrl, {
                 headers: {
                     'x-api-key': PROPERTYREACH_API_KEY,
@@ -1151,7 +1151,7 @@ async function loadRentCastAVM() {
         const state = addressParts[2]?.split(' ')[0] || '';
         
         // Step 1: Get property details (ARV, estimated value)
-        const propertyUrl = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+        const propertyUrl = `https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
         console.log('Fetching property:', propertyUrl);
         
         const propertyResponse = await fetch(propertyUrl, { 
@@ -1178,7 +1178,7 @@ async function loadRentCastAVM() {
         const highRange = Math.round(estimatedValue * 1.08);
         
         // Step 2: Get comparables
-        const compsUrl = 'https://api.propertyreach.com/v1/comparables';
+        const compsUrl = 'https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/comparables';
         console.log('Fetching comps:', compsUrl);
         
         const compsResponse = await fetch(compsUrl, { 
@@ -1351,7 +1351,7 @@ async function loadRentCastPropertyData(address) {
         const city = addressParts[1] || '';
         const state = addressParts[2]?.split(' ')[0] || '';
         
-        const url = `https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+        const url = `https://srv1336418.hstgr.cloud/?url=https://api.propertyreach.com/v1/property?streetAddress=${encodeURIComponent(streetAddress)}&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
         
         const response = await fetch(url, {
             headers: {
