@@ -2119,7 +2119,6 @@ function selectAddress(addr, lat, lon) {
 function formatShortAddress(fullAddress) {
     const parts = fullAddress.split(',').map(p => p.trim());
     
-    // State name to abbreviation mapping
     const stateMap = {
         'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
         'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
@@ -2133,14 +2132,31 @@ function formatShortAddress(fullAddress) {
         'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
     };
     
-    // Rebuild address: "123 Main St, City, ST"
-    let street = parts[0] || '';
-    let city = parts[1] || '';
-    let state = parts[2] || '';
+    // Find state index - look for state name or abbreviation in parts
+    let stateIdx = -1;
+    let state = '';
+    for (let i = 1; i < parts.length; i++) {
+        const p = parts[i].toUpperCase();
+        if (stateMap[parts[i]] || Object.values(stateMap).includes(p)) {
+            stateIdx = i;
+            state = stateMap[parts[i]] || p;
+            break;
+        }
+    }
     
-    // Convert state name to abbreviation if needed
-    if (state.length > 2 && stateMap[state]) {
-        state = stateMap[state];
+    // City is typically part before state
+    let city = '';
+    if (stateIdx > 1) {
+        city = parts[stateIdx - 1];
+    } else if (parts.length > 1) {
+        city = parts[1];
+    }
+    
+    // Street is everything before city (usually parts[0])
+    let street = parts[0] || '';
+    if (stateIdx > 2) {
+        // Full OSM format: "num, street, city, county, state, zip"
+        street = parts.slice(0, stateIdx - 1).join(', ');
     }
     
     return `${street}, ${city}, ${state}`;
