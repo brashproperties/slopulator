@@ -2117,8 +2117,18 @@ function selectAddress(addr, lat, lon) {
 }
 
 function formatShortAddress(fullAddress) {
+    // Simple format: "123 Main St, Austin, TX" or full OSM format
     const parts = fullAddress.split(',').map(p => p.trim());
     
+    // Try simple format first: street, city, state
+    if (parts.length >= 3) {
+        const state = parts[2].length === 2 ? parts[2].toUpperCase() : '';
+        if (state) {
+            return `${parts[0]}, ${parts[1]}, ${state}`;
+        }
+    }
+    
+    // For full OSM format, extract just street, city, state
     const stateMap = {
         'ALABAMA':'AL','ALASKA':'AK','ARIZONA':'AZ','ARKANSAS':'AR','CALIFORNIA':'CA',
         'COLORADO':'CO','CONNECTICUT':'CT','DELAWARE':'DE','FLORIDA':'FL','GEORGIA':'GA',
@@ -2133,23 +2143,17 @@ function formatShortAddress(fullAddress) {
     };
     
     // Find state
-    let stateIdx = -1;
     let state = '';
+    let stateIdx = -1;
     for (let i = 1; i < parts.length; i++) {
-        const p = parts[i].toUpperCase();
-        if (stateMap[p]) {
+        if (stateMap[parts[i].toUpperCase()]) {
+            state = stateMap[parts[i].toUpperCase()];
             stateIdx = i;
-            state = stateMap[p];
-            break;
-        }
-        if (parts[i].length === 2 && Object.values(stateMap).includes(parts[i].toUpperCase())) {
-            stateIdx = i;
-            state = parts[i].toUpperCase();
             break;
         }
     }
     
-    // City is part before state, skipping county
+    // Find city (before state, skip county)
     let city = '';
     if (stateIdx > 1) {
         for (let i = stateIdx - 1; i >= 1; i--) {
@@ -2160,14 +2164,8 @@ function formatShortAddress(fullAddress) {
         }
     }
     
-    // Street is everything before city
-    let street = '';
-    if (city) {
-        const cityIdx = parts.indexOf(city);
-        street = parts.slice(0, cityIdx).join(', ');
-    } else {
-        street = parts[0] || '';
-    }
+    // Street: first part
+    const street = parts[0] || '';
     
     return `${street}, ${city}, ${state}`;
 }
