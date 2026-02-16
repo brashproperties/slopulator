@@ -1149,22 +1149,42 @@ const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
 // Better address parsing helper
 function parseAddressParts(address) {
     const parts = address.split(',').map(s => s.trim());
-    const result = { streetAddress: parts[0] || '', city: '', state: '' };
+    let result = { streetAddress: parts[0] || '', city: '', state: '' };
     
     const states = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
     const stateNames = ['Oklahoma','Texas','Indiana','California','Illinois','Ohio','Alabama','Alaska','Arizona','Arkansas','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
     
-    for (let i = 1; i < parts.length; i++) {
-        const part = parts[i];
-        if (states.includes(part.toUpperCase()) || stateNames.includes(part)) {
-            result.state = part.length === 2 ? part.toUpperCase() : part.substring(0, 2).toUpperCase();
-            result.city = parts[i-1] || '';
-            break;
+    // First check if last part is a 2-letter state code or state name (format: street, city, state)
+    const lastPart = parts[parts.length - 1];
+    const secondLast = parts[parts.length - 2];
+    
+    if (states.includes(lastPart?.toUpperCase())) {
+        // Simple format: street, city, state
+        result.state = lastPart.toUpperCase();
+        result.city = parts[1] || '';
+    } else if (stateNames.includes(lastPart)) {
+        result.state = lastPart.substring(0, 2).toUpperCase();
+        result.city = parts[1] || '';
+    } else {
+        // Full OSM format - look for state in middle
+        for (let i = 1; i < parts.length; i++) {
+            const part = parts[i];
+            if (states.includes(part.toUpperCase()) || stateNames.includes(part)) {
+                result.state = part.length === 2 ? part.toUpperCase() : part.substring(0, 2).toUpperCase();
+                result.city = (parts[2] && i >= 2) ? parts[2] : parts[1];
+                break;
+            }
         }
     }
     
-    if (!result.city) result.city = parts[1] || '';
+    // Fallbacks
     if (!result.state) result.state = parts[2]?.substring(0, 2).toUpperCase() || '';
+    if (!result.city) result.city = parts[1] || '';
+    
+    // If street has 2 parts (num + name), combine them
+    if (parts[1] && /^(S|South|N|North|E|East|W|West|St|Street|Ave|Avenue|Rd|Road|Dr|Drive|Ln|Lane|Way|Pl|Place|Ct|Court)$/i.test(parts[1].split(' ')[0])) {
+        result.streetAddress = parts[0] + ', ' + parts[1];
+    }
     
     return result;
 }
