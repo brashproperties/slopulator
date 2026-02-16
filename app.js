@@ -2256,18 +2256,19 @@ async function loadPropertyReachData(address) {
         // Find the property that matches our street address
         let prop = data.properties[0];
         const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
-        const streetName = (streetAddress.split(' ').slice(1).join(' ') || '').toLowerCase().replace(/\s+/g, '');
+        // Keep spaces for matching
+        const streetName = (streetAddress.split(' ').slice(1).join(' ') || '').toLowerCase();
         
         console.log('Looking for streetNum:', streetNum, 'streetName:', streetName);
         
         for (let p of data.properties) {
             const pStreet = (p.streetAddress || '').toLowerCase();
             const pStreetNum = pStreet.split(' ')[0] || '';
-            const pStreetName = pStreet.split(' ').slice(1).join(' ').replace(/\s+/g, '');
+            const pStreetName = pStreet.split(' ').slice(1).join(' ');
             
-            // Match on street number AND street name
-            if (pStreetNum === streetNum && pStreetName.includes(streetName.replace(/\s+/g, ''))) {
-                console.log('Found match:', p.streetAddress, p.city);
+            // Match: street number exact, and street name contains our search
+            if (pStreetNum === streetNum && pStreetName.includes(streetName.replace(/\b/g, ''))) {
+                console.log('Found match:', p.streetAddress, p.city, p.estimatedValue);
                 prop = p;
                 break;
             }
