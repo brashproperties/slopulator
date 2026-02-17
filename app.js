@@ -2447,21 +2447,24 @@ async function loadPropertyReachData(address) {
         }
         
         // Populate fields
-        document.getElementById('zestimate').value = prop.estimatedValue || '';
+        const estValue = prop?.estimatedValue || data.properties[0]?.estimatedValue || 0;
+        document.getElementById('zestimate').value = estValue;
+        document.getElementById('priceRangeLow').value = Math.round(estValue * 0.92);
+        document.getElementById('priceRangeHigh').value = Math.round(estValue * 1.08);
         // Set rent from API
-        const rentValue = prop.estimatedRentAmount || prop.rentalValue || 0;
+        const rentValue = prop?.estimatedRentAmount || prop?.rentalValue || data.properties[0]?.estimatedRentAmount || 0;
         const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
-        document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
-        document.getElementById('yearBuilt').value = prop.yearBuilt || '';
+        document.getElementById('sqft').value = prop?.squareFeet || prop?.livingSquareFeet || data.properties[0]?.squareFeet || '';
+        document.getElementById('yearBuilt').value = prop?.yearBuilt || data.properties[0]?.yearBuilt || '';
         // Try to find bedrooms/bathrooms fields
         const bedsEl = document.getElementById('bedrooms');
         if (bedsEl) bedsEl.value = prop.bedrooms || '';
         const bathsEl = document.getElementById('bathrooms');
         if (bathsEl) bathsEl.value = prop.bathrooms || '';
-        document.getElementById('monthlyTaxes').value = prop.taxAmount ? Math.round(prop.taxAmount/12) : '';
-        document.getElementById('annualInsurance').value = Math.round((prop.squareFeet || 1500) * 0.50);
-        document.getElementById('lastSalePrice').value = prop.lastSaleAmount || '';
-        document.getElementById('lastSaleDate').value = prop.lastSaleDate || '';
+        document.getElementById('monthlyTaxes').value = prop?.taxAmount ? Math.round(prop.taxAmount/12) : (data.properties[0]?.taxAmount ? Math.round(data.properties[0].taxAmount/12) : '');
+        document.getElementById('annualInsurance').value = Math.round((prop?.squareFeet || data.properties[0]?.squareFeet || 1500) * 0.50);
+        document.getElementById('lastSalePrice').value = prop?.lastSaleAmount || data.properties[0]?.lastSaleAmount || '';
+        document.getElementById('lastSaleDate').value = prop?.lastSaleDate || data.properties[0]?.lastSaleDate || '';
         
     } catch(e) {
         console.error(e);
