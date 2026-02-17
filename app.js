@@ -2408,6 +2408,7 @@ async function loadPropertyReachData(address) {
         const data = await resp.json();
         console.log('DEBUG: Parsed address:', streetAddress, city, state);
         console.log('DEBUG: streetAddress=' + streetAddress + ', city=' + city + ', state=' + state);
+        console.log('DEBUG: search body:', JSON.stringify(body));
         console.log('PropertyReach response:', data);
         
         if (!data.properties || data.properties.length === 0) {
@@ -2466,8 +2467,7 @@ async function loadPropertyReachData(address) {
         // Populate fields
         const estValue = prop?.estimatedValue || data.properties[0]?.estimatedValue || 0;
         document.getElementById('zestimate').value = estValue;
-        document.getElementById('priceRangeLow').value = Math.round(estValue * 0.92);
-        document.getElementById('priceRangeHigh').value = Math.round(estValue * 1.08);
+        // Price range deprecated - removed
         // Set rent from API
         const rentValue = prop?.estimatedRentAmount || prop?.rentalValue || data.properties[0]?.estimatedRentAmount || 0;
         const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
