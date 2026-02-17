@@ -1126,7 +1126,7 @@ async function loadPropertyDataForCompMeDaddy(address) {
         // Search for property
         const searchUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
         const body = {
-            target: { city, state },
+            target: { city, state: state?.toUpperCase() },
             filter: { streetAddress: streetAddress.split(' ')[0] },
             limit: 50
         };
