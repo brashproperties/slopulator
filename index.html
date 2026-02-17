@@ -190,9 +190,6 @@
                             </button>
                         </td>
                     </tr>
-
-                    <tr><td>&nbsp;</td></tr>
-
                     <!-- PURCHASE & REHAB (PRIORITY INPUTS) -->
                     <tr>
                         <td bgcolor="#003300" style="border: 5px groove #FF00FF;" align="center">
@@ -236,9 +233,6 @@
                             <br><br>
                         </td>
                     </tr>
-
-                    <tr><td>&nbsp;</td></tr>
-
                     <!-- API Data Section (MOVED UP) -->
                     <tr>
                         <td bgcolor="#003300" style="border: 5px groove #00FF00;">
@@ -332,9 +326,6 @@
                             </table>
                         </td>
                     </tr>
-
-                    <tr><td>&nbsp;</td></tr>
-
                     <!-- Property Details Section -->
                     <tr>
                         <td bgcolor="#003300" style="border: 5px groove #00FF00;" align="center">
@@ -373,18 +364,12 @@
 
                             <br><br>
 
-                            <button id="calculateBtn" class="retro-button-calculate" onclick="console.log('Calculate clicked'); if(window.runCalculations) { window.runCalculations(); } else { alert('Error: Analysis function not loaded. Please refresh the page.'); }">
-                                <marquee behavior="alternate" scrollamount="3" width="100%" style="background: transparent;">
-                                    <b>🧮 CALCULATE ANALYSIS!!! 🧮</b>
-                                </marquee>
+                            <button id="calculateBtn" onclick="if(window.runCalculations) { window.runCalculations(); }">
+                                [CALCULATE ANALYSIS]
                             </button>
-
-                            <br><br>
 
                         </td>
                     </tr>
-
-                    <tr><td>&nbsp;</td></tr>
 
                     <!-- Deal Analysis Section -->
                     <tr id="dealAnalysisSection" style="display: none;">
@@ -618,9 +603,6 @@
                             </table>
                         </td>
                     </tr>
-
-                    <tr><td>&nbsp;</td></tr>
-
                     <!-- Comps Section -->
                     <tr id="compsSection" style="display: none;">
                         <td bgcolor="#330000" style="border: 5px ridge #FF0000;" align="center">
@@ -643,9 +625,6 @@
                             </table>
                         </td>
                     </tr>
-
-                    <tr><td>&nbsp;</td></tr>
-
                     <!-- ARV Section -->
                     <tr id="arvSection" style="display: none;">
                         <td bgcolor="#000033" align="center" style="border: 8px double #00FFFF;">
@@ -660,9 +639,6 @@
                             
                         </td>
                     </tr>
-
-                    <tr><td>&nbsp;</td></tr>
-
                     <!-- Analysis Results Section -->
                     <tr id="resultsSection" style="display: none;">
                         <td align="center">
@@ -834,28 +810,6 @@
             </tr>
         </table>
     </div>
-
-    <!-- Easter Egg Modal -->
-    <div id="easterEggModal" class="retro-modal">
-        <table border="5" cellpadding="20" cellspacing="0" bgcolor="#FF00FF">
-            <tr>
-                <td align="center">
-                    
-                        <b>🎉 YOU FOUND THE EASTER EGG!!! 🎉</b>
-                    
-                    <br><br>
-                    
-                        House Flipping = BIG PROFITS!!!
-                    
-                    <br><br>
-                    <img src="https://web.archive.org/web/20091027082445/http://www.geocities.com/televisioncity/5828/money.gif" alt="Money">
-                    <br><br>
-                    <button onclick="closeEasterEgg()" class="retro-button-small">OK COOL!</button>
-                </td>
-            </tr>
-        </table>
-    </div>
-
     <!-- COMP ME DADDY - Detailed Analysis Page -->
     <div id="compMeDaddyPage" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; overflow-y:auto;">
         <table border="0" cellpadding="10" cellspacing="0" width="100%" height="100%">
@@ -865,11 +819,6 @@
                     <table border="5" cellpadding="20" cellspacing="0" width="95%" bgcolor="#000033" style="border:8px ridge #FF00FF;">
                         <tr>
                             <td align="center">
-                                <marquee behavior="alternate" scrollamount="10" bgcolor="#FF00FF">
-                                    
-                                        <b>💎💎💎 COMP ME DADDY - DETAILED ANALYSIS 💎💎💎</b>
-                                    
-                                </marquee>
                                 <br><br>
                                 
                                     <blink>★ DEEP DIVE INTO YOUR COMPS ★</blink>
