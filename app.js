@@ -475,7 +475,7 @@ window.loadPropertyData = async function(address, lat, lon) {
                     data = {
                         zestimate: prop.estimatedValue || 0,
                         realtor_estimate: prop.estimatedValue || 0,
-                        rent_estimate: prop.estimatedRentAmount || prop.rentalValue || 0),
+                        rent_estimate: prop.estimatedRentAmount || prop.rentalValue || 0,
                         annual_taxes: prop.taxAmount || 0,
                         monthly_taxes: prop.taxAmount ? Math.round(prop.taxAmount / 12) : 0,
                         annual_insurance: Math.round((prop.squareFeet || 1500) * 0.50),
@@ -1170,7 +1170,7 @@ async function loadPropertyDataForCompMeDaddy(address) {
             currentPropertyData = {
                 zestimate: prop.estimatedValue || 0,
                 realtor_estimate: prop.estimatedValue || 0,
-                rent_estimate: prop.estimatedRentAmount || prop.rentalValue || 0)
+                rent_estimate: prop.estimatedRentAmount || prop.rentalValue || 0
             };
             
             // Store values
