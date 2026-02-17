@@ -635,12 +635,12 @@ async function runCalculations() {
     const ppEl = document.getElementById('purchasePrice'); console.log('ppEl:', !!ppEl); const purchasePrice = ppEl ? (parseFloat(ppEl.value) || 0) : 0;
     const rcEl = document.getElementById('repairCost'); console.log('rcEl:', !!rcEl); const repairs = rcEl ? (parseFloat(rcEl.value) || 0) : 0;
     const zEstEl = document.getElementById('zestimate'); console.log('zEstEl:', !!zEstEl); const zestimate = zEstEl ? (parseFloat(zEstEl.value) || 0) : 0;
-    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow').value) || zestimate;
-    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh').value) || zestimate;
-    const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
-    const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
-    const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
-    const interestRate = parseFloat(document.getElementById('interestRate').value) || 6.8;
+    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow')?.value || 0) || zestimate;
+    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh')?.value || 0) || zestimate;
+    const rentEstimate = parseFloat(document.getElementById('rentEstimate')?.value || 0) || 0;
+    const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes')?.value || 0) || 0;
+    const insuranceAnnual = parseFloat(document.getElementById('annualInsurance')?.value || 0) || 0;
+    const interestRate = parseFloat(document.getElementById('interestRate')?.value || 0) || 6.8;
     const loanTerm = parseInt(document.getElementById('loanTerm').value) || 20;
     
     if (!purchasePrice) {
@@ -918,7 +918,7 @@ function saveEvaluation() {
     const evaluations = loadEvaluations();
     const ppEl = document.getElementById('purchasePrice'); console.log('ppEl:', !!ppEl); const purchasePrice = ppEl ? (parseFloat(ppEl.value) || 0) : 0;
     const rcEl = document.getElementById('repairCost'); console.log('rcEl:', !!rcEl); const repairs = rcEl ? (parseFloat(rcEl.value) || 0) : 0;
-    const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
+    const rentEstimate = parseFloat(document.getElementById('rentEstimate')?.value || 0) || 0;
     
     const newEval = {
         id: Date.now(),
