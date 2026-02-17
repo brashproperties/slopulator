@@ -1082,10 +1082,10 @@ window.runCompMeDaddyAnalysis = async function() {
         document.getElementById('rentcastAVMData').style.display = 'none';
     }
     if (document.getElementById('detailedCompsBody')) {
-        document.getElementById('detailedCompsBody').innerHTML = '<tr><td colspan="6" align="center"><font color="#00FF00">Loading comps...</font></td></tr>';
+        const dcb = document.getElementById('detailedCompsBody'); if (dcb) dcb.innerHTML = '<tr><td colspan="6" align="center"><font color="#00FF00">Loading comps...</font></td></tr>';
     }
     if (document.getElementById('propertyTake')) {
-        document.getElementById('propertyTake').innerHTML = '<font color="#00FF00" face="Courier New">Analyzing market data...</font>';
+        const pt = document.getElementById('propertyTake'); if (pt) pt.innerHTML = '<font color="#00FF00" face="Courier New">Analyzing market data...</font>';
     }
     if (document.getElementById('compsDashboard')) {
         document.getElementById('compsDashboard').style.display = 'none';
