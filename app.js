@@ -2178,8 +2178,8 @@ function shareDealAnalysis() {
     const repairs = document.getElementById('repairCost')?.value || '0';
     const arv = document.getElementById('zestimate')?.value || '0';
     const rating = document.getElementById('dealRating')?.textContent || '--';
-    const flipProfit = calculationResults?.flip?.profit || calculationResults?.flip_analysis?.profit || 0;
-    const monthlyCashFlow = calculationResults?.rental?.monthly_cashflow || calculationResults?.rental_analysis?.monthly_cashflow || 0;
+    const flipProfit = calculationResults?.flip?.profit || calculationResults?.flip_analysis?.profit || calculationResults?.flip_analysis?.profit || 0;
+    const monthlyCashFlow = calculationResults?.rental?.monthly_cashflow || calculationResults?.rental_analysis?.monthly_cashflow || calculationResults?.rental_analysis?.monthly_cashflow || 0;
     const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
     const maxRefi = calculationResults?.brrr?.max_refi || calculationResults?.brrr_analysis?.maxRefi || 0;
     
