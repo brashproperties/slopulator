@@ -1141,14 +1141,19 @@ async function loadPropertyDataForCompMeDaddy(address) {
         
         const data = await resp.json();
         
-        // Find matching property
+        // Find matching property - use better matching
         let prop = null;
-        const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
+        const streetParts = streetAddress.split(' ').map(p => p.toLowerCase());
+        const streetNum = streetParts[0] || '';
+        const streetName = streetParts.slice(1).join(' ').replace(/[^a-z]/g, '');
         
         if (data.properties && data.properties.length > 0) {
             for (let p of data.properties) {
                 const pStreet = (p.streetAddress || '').toLowerCase();
-                if (pStreet.startsWith(streetNum)) {
+                const pStreetNum = pStreet.split(' ')[0] || '';
+                const pStreetName = pStreet.split(' ').slice(1).join('').replace(/[^a-z]/g, '');
+                // Match street number AND at least 3 chars of street name
+                if (pStreetNum === streetNum && pStreetName.includes(streetName.substring(0, Math.min(6, streetName.length)))) {
                     prop = p;
                     break;
                 }
