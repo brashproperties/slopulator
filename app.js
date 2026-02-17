@@ -2448,8 +2448,6 @@ async function loadPropertyReachData(address) {
         
         // Populate fields
         document.getElementById('zestimate').value = prop.estimatedValue || '';
-        document.getElementById('priceRangeLow').value = Math.round(prop.estimatedValue * 0.92);
-        document.getElementById('priceRangeHigh').value = Math.round(prop.estimatedValue * 1.08);
         // Set rent from API
         const rentValue = prop.estimatedRentAmount || prop.rentalValue || 0;
         const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
