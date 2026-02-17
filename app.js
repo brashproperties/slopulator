@@ -2178,19 +2178,12 @@ function shareDealAnalysis() {
     const repairs = document.getElementById('repairCost')?.value || '0';
     const arv = document.getElementById('zestimate')?.value || '0';
     const rating = document.getElementById('dealRating')?.textContent || '--';
-    const flipProfit = document.getElementById('flipProfit')?.value || '0';
-    const monthlyCashFlow = document.getElementById('rentalCashFlow')?.value || '0';
-    const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
-    const maxRefi = document.getElementById('brrrMaxRefi')?.value || '0';
     
-    let cashOutPct = '0%';
-    const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairs || 0);
-    if (totalCost > 0) {
-        cashOutPct = Math.round((parseFloat(maxRefi || 0) / totalCost) * 100) + '%';
-    }
+    const shareText = `🏠 Deal Analysis for ${address}\n\n💵 Purchase: $${purchasePrice}\n🔨 Repairs: $${repairs}\n💎 ARV: $${arv}\n🏆 Rating: ${rating}\n\nPowered by The Slopulator! 🔥`;
     
-    const shareText = `🏠 Deal Analysis for ${address}\n\n💵 Purchase: $${purchasePrice}\n🔨 Repairs: $${repairs}\n💎 ARV: $${arv}\n🔨 Flip Profit: $${flipProfit}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n🏆 Rating: ${rating}\n\nPowered by The Slopulator! 🔥`;
-
+    if (navigator.share) {
+        navigator.share({
+            title: 'Deal Analysis - The Slopulator',
             text: shareText
         }).catch(err => console.log('Share cancelled'));
     } else {
