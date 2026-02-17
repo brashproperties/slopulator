@@ -2330,14 +2330,30 @@ async function loadPropertyReachData(address) {
         let streetAddress, city, state;
         
         if (address.includes(',')) {
-            // Comma separated format: "street, city, state"
+            // Comma separated format: "street, city, state" or "street, city, ST"
             const parts = address.split(",").map(s => s.trim());
             streetAddress = parts[0] || '';
             city = parts[1] || '';
-            state = parts[2]?.split(' ')[0] || '';
-            if (parts.length > 3) {
-                city = parts[2] || '';
-                state = parts[3] || '';
+            // Check if state is 2-letter abbreviation or full name
+            let stateRaw = parts[2]?.split(' ')[0] || '';
+            if (stateRaw.length === 2) {
+                // It's already an abbreviation
+                state = stateRaw;
+            } else {
+                // Full state name - convert to abbreviation
+                const stateMap = {
+                    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
+                    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
+                    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
+                    'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+                    'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
+                    'Montana':'MT','Nebraska':'NE','Nevada':'NV','NewHampshire':'NH','NewJersey':'NJ',
+                    'NewMexico':'NM','NewYork':'NY','NorthCarolina':'NC','NorthDakota':'ND','Ohio':'OH',
+                    'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','RhodeIsland':'RI','SouthCarolina':'SC',
+                    'SouthDakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
+                    'Virginia':'VA','Washington':'WA','WestVirginia':'WV','Wisconsin':'WI','Wyoming':'WY'
+                };
+                state = stateMap[stateRaw] || stateRaw.substring(0,2).toUpperCase();
             }
         } else {
             // Space separated - need to find state abbreviation at end
