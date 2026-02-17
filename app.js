@@ -630,8 +630,8 @@ async function runCalculations() {
     const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
     const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
     const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
-    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow')?.value) || zestimate;
-    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh')?.value) || zestimate;
+    const priceRangeLow = zestimate;
+    const priceRangeHigh = zestimate;
     const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
     const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
     const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
@@ -2151,7 +2151,7 @@ function shareCompMeDaddy() {
         cashOutPct = Math.min(100, Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100)) + "%";
     }
     
-    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n📊 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
+    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
     
     if (navigator.share) {
         navigator.share({
