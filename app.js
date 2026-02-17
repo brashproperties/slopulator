@@ -2189,7 +2189,7 @@ function shareDealAnalysis() {
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairs || 0);
     console.log("DEBUG maxRefi:", maxRefi, "totalCost:", totalCost); if (totalCost > 0 && maxRefi > 0) {
-        cashOutPct = Math.round((maxRefi / totalCost) * 100) + '%';
+        cashOutPct = Math.min(100, Math.round((maxRefi / totalCost) * 100)) + "%"';
     }
     
     const shareText = `🏠 Deal Analysis for ${address}\n\n💵 Purchase: $${purchasePrice}\n🔨 Repairs: $${repairs}\n💎 ARV: $${arv}\n🔨 Flip Profit: $${flipProfit}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n🏆 Rating: ${rating}\n\nPowered by The Slopulator! 🔥`;
