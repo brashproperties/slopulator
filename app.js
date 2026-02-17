@@ -2178,15 +2178,15 @@ function shareDealAnalysis() {
     const repairs = document.getElementById('repairCost')?.value || '0';
     const arv = document.getElementById('zestimate')?.value || '0';
     const rating = document.getElementById('dealRating')?.textContent || '--';
-    const flipProfit = (document.getElementById('flipProfit')?.textContent || '0').replace(/[$,]/g, '');
-    const monthlyCashFlow = (document.getElementById('rentalCashFlow')?.textContent || '0').replace(/[$,]/g, '');
-    const monthlyRent = (document.getElementById('rentEstimate')?.value || '0').replace(/[$,]/g, '');
-    const maxRefi = (document.getElementById('brrrMaxRefi')?.value || '0').replace(/[$,]/g, '');
+    const flipProfit = calculationResults?.flip?.profit || calculationResults?.flip_analysis?.profit || 0;
+    const monthlyCashFlow = calculationResults?.rental?.monthly_cashflow || calculationResults?.rental_analysis?.monthly_cashflow || 0;
+    const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
+    const maxRefi = calculationResults?.brrr?.max_refi || calculationResults?.brrr_analysis?.maxRefi || 0;
     
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairs || 0);
-    if (totalCost > 0) {
-        cashOutPct = Math.round((parseFloat(maxRefi || 0) / totalCost) * 100) + '%';
+    if (totalCost > 0 && maxRefi > 0) {
+        cashOutPct = Math.round((maxRefi / totalCost) * 100) + '%';
     }
     
     const shareText = `🏠 Deal Analysis for ${address}\n\n💵 Purchase: $${purchasePrice}\n🔨 Repairs: $${repairs}\n💎 ARV: $${arv}\n🔨 Flip Profit: $${flipProfit}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n🏆 Rating: ${rating}\n\nPowered by The Slopulator! 🔥`;
