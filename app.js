@@ -634,8 +634,6 @@ async function runCalculations() {
     const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
     const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
     const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
-    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow').value) || zestimate;
-    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh').value) || zestimate;
     const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
     const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
     const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
@@ -652,7 +650,6 @@ async function runCalculations() {
     await new Promise(r => setTimeout(r, 800));
     
     // Use PropertyReach ARV
-    const arv = zestimate || priceRangeHigh;
     
     // Comprehensive Analysis
     const analysis = performComprehensiveAnalysis({
@@ -1347,7 +1344,6 @@ async function loadPropertyReachAVM() {
         // Store data globally for sharing
         window.compMeDaddyData = {
             address: currentAddress,
-            avm: { price: estimatedValue, priceRangeLow: lowRange, priceRangeHigh: highRange, subjectProperty },
             timestamp: new Date().toISOString()
         };
         
@@ -1598,8 +1594,6 @@ function generatePropertyTake() {
     
     // Get AVM and subject property data
     const avmValue = avmData.price || 0;
-    const avmLow = avmData.priceRangeLow || 0;
-    const avmHigh = avmData.priceRangeHigh || 0;
     const subjectProperty = avmData.subjectProperty || {};
     const subjectSqft = subjectProperty.squareFootage || avmData.squareFootage || 0;
     const subjectPricePerSqft = subjectSqft > 0 ? avmValue / subjectSqft : 0;
@@ -2156,7 +2150,6 @@ function shareCompMeDaddy() {
         cashOutPct = Math.min(100, Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100)) + "%";
     }
     
-    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n📊 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
     
     if (navigator.share) {
         navigator.share({
@@ -2442,8 +2435,6 @@ async function loadPropertyReachData(address) {
         
         // Populate fields
         document.getElementById('zestimate')?.value = prop.estimatedValue || '';
-        document.getElementById('priceRangeLow').value = Math.round(prop.estimatedValue * 0.92);
-        document.getElementById('priceRangeHigh').value = Math.round(prop.estimatedValue * 1.08);
         // Set rent - use API value or calculate from value
         const rentValue = prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0);
         const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
