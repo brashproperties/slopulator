@@ -2178,13 +2178,13 @@ function shareDealAnalysis() {
     const repairs = document.getElementById('repairCost')?.value || '0';
     const arv = document.getElementById('zestimate')?.value || '0';
     const rating = document.getElementById('dealRating')?.textContent || '--';
-    // Fallback to DOM if calculationResults is empty
+    // Read from DOM elements - strip $ and convert to number
     const flipProfitEl = document.getElementById('flipProfit');
     const cashFlowEl = document.getElementById('rentalCashFlow');
     const brrrEl = document.getElementById('brrrMaxRefi');
-    const flipProfit = calculationResults?.flip?.profit || (flipProfitEl?.textContent?.replace(/[+$ ,]/g, '') || '0');
-    const monthlyCashFlow = calculationResults?.rental?.monthlyCashFlow || (cashFlowEl?.textContent?.replace(/[+$ ,]/g, '') || '0');
-    const maxRefi = calculationResults?.brrr?.maxRefinance || (brrrEl?.textContent?.replace(/[$,]/g, '') || '0');
+    const flipProfit = parseFloat(flipProfitEl?.textContent?.replace(/[+$, ]/g, '')) || 0;
+    const monthlyCashFlow = parseFloat(cashFlowEl?.textContent?.replace(/[+$, ]/g, '')) || 0;
+    const maxRefi = parseFloat(brrrEl?.textContent?.replace(/[+$, ]/g, '')) || 0;
     const monthlyCashFlow = calculationResults?.rental?.monthlyCashFlow || 0 || calculationResults?.rental_analysis?.monthly_cashflow || 0;
     const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
     const maxRefi = calculationResults?.brrr?.maxRefinance || 0;
