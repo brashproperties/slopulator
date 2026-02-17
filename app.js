@@ -256,11 +256,11 @@ function formatPercent(value) {
 }
 
 function showLoading() {
-    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('loadingOverlay')?.style?.display = 'flex';
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loadingOverlay')?.style?.display = 'none';
 }
 
 function debounce(func, wait) {
