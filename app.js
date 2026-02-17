@@ -870,7 +870,7 @@ function displayComprehensiveResults(analysis) {
     
     const actionEl = document.getElementById('actionPlanText');
     if (actionEl) {
-        actionEl.innerHTML = analysis.rating.actionPlan.replace(/\n/g, '<br>');
+        if (actionEl) actionEl.innerHTML = analysis.rating.actionPlan.replace(/\n/g, '<br>');
     }
     
     // Scroll to results
@@ -931,7 +931,7 @@ function saveEvaluation() {
     saveEvaluations(evaluations);
     
     // Celebrate!
-    createSparkles(document.getElementById('saveEvalBtn'));
+    try { createSparkles(document.getElementById('saveEvalBtn')); } catch(e) {}
     alert('Evaluation saved! 💾✨');
 }
 
@@ -940,7 +940,7 @@ function displayEvaluationsList() {
     const listEl = document.getElementById('evaluationsList');
     
     if (evaluations.length === 0) {
-        listEl.innerHTML = '<font color="#FF6666" size="4">No saved evaluations found!</font>';
+        if (listEl) listEl.innerHTML = '<font color="#FF6666" size="4">No saved evaluations found!</font>';
         return;
     }
     
