@@ -2152,8 +2152,8 @@ function shareCompMeDaddy() {
     // Calculate BRRRR cash out %
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairCost || 0);
-    console.log("DEBUG maxRefi:", maxRefi, "totalCost:", totalCost); if (totalCost > 0) {
-        cashOutPct = Math.min(100, Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100)) + "%"';
+    if (totalCost > 0) {
+        cashOutPct = Math.min(100, Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100)) + "%";
     }
     
     const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n📊 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
@@ -2188,8 +2188,8 @@ function shareDealAnalysis() {
     
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairs || 0);
-    console.log("DEBUG maxRefi:", maxRefi, "totalCost:", totalCost); if (totalCost > 0 && maxRefi > 0) {
-        cashOutPct = Math.min(100, Math.round((maxRefi / totalCost) * 100)) + "%"';
+    if (totalCost > 0 && maxRefi > 0) {
+        cashOutPct = Math.min(100, Math.round((maxRefi / totalCost) * 100)) + "%";
     }
     
     const shareText = `🏠 Deal Analysis for ${address}\n\n💵 Purchase: $${purchasePrice}\n🔨 Repairs: $${repairs}\n💎 ARV: $${arv}\n🔨 Flip Profit: $${flipProfit}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n🏆 Rating: ${rating}\n\nPowered by The Slopulator! 🔥`;
