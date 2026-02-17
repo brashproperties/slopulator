@@ -2145,9 +2145,9 @@ function shareCompMeDaddy() {
     // Get additional fields from DOM
     const repairCost = document.getElementById('repairCost')?.value || '0';
     const purchasePrice = document.getElementById('purchasePrice')?.value || '0';
-    const flipProfit = document.getElementById('flipProfit')?.value || '0';
+    const flipProfit = document.getElementById('flipProfit')?.textContent || '0';
     const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
-    const monthlyCashFlow = document.getElementById('rentalCashFlow')?.value || '0';
+    const monthlyCashFlow = document.getElementById('rentalCashFlow')?.textContent || '0';
     const maxRefi = document.getElementById('brrrMaxRefi')?.value || '0';
     
     // Calculate BRRRR cash out %
@@ -2178,8 +2178,8 @@ function shareDealAnalysis() {
     const repairs = document.getElementById('repairCost')?.value || '0';
     const arv = document.getElementById('zestimate')?.value || '0';
     const rating = document.getElementById('dealRating')?.textContent || '--';
-    const flipProfit = document.getElementById('flipProfit')?.value || '0';
-    const monthlyCashFlow = document.getElementById('rentalCashFlow')?.value || '0';
+    const flipProfit = document.getElementById('flipProfit')?.textContent || '0';
+    const monthlyCashFlow = document.getElementById('rentalCashFlow')?.textContent || '0';
     const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
     const maxRefi = document.getElementById('brrrMaxRefi')?.value || '0';
     
