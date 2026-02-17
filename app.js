@@ -633,15 +633,15 @@ function calculateFlipAnalysis(purchasePrice, repairs, arv, interestRate) {
 async function runCalculations() {
     try {
     const el = document.getElementById('purchasePrice'); console.log('pp el:', !!el, 'val:', el?.value); const purchasePrice = parseFloat(el?.value) || 0;
-    const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
-    const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
-    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow').value) || zestimate;
-    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh').value) || zestimate;
-    const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
-    const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
-    const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
-    const interestRate = parseFloat(document.getElementById('interestRate').value) || 6.8;
-    const loanTerm = parseInt(document.getElementById('loanTerm').value) || 20;
+    const repairs = parseFloat(document.getElementById('repairCost')?.value || '0') || 0;
+    const zestimate = parseFloat(document.getElementById('zestimate')?.value || '0') || 0;
+    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow')?.value || '0') || zestimate;
+    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh')?.value || '0') || zestimate;
+    const rentEstimate = parseFloat(document.getElementById('rentEstimate')?.value || '0') || 0;
+    const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes')?.value || '0') || 0;
+    const insuranceAnnual = parseFloat(document.getElementById('annualInsurance')?.value || '0') || 0;
+    const interestRate = parseFloat(document.getElementById('interestRate')?.value || '0') || 6.8;
+    const loanTerm = parseInt(document.getElementById('loanTerm')?.value || '0') || 20;
     
     if (!purchasePrice) {
         alert('Please fill in Purchase Price! 🏠');
@@ -913,8 +913,8 @@ function saveEvaluation() {
     
     const evaluations = loadEvaluations();
     const el = document.getElementById('purchasePrice'); console.log('pp el:', !!el, 'val:', el?.value); const purchasePrice = parseFloat(el?.value) || 0;
-    const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
-    const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
+    const repairs = parseFloat(document.getElementById('repairCost')?.value || '0') || 0;
+    const rentEstimate = parseFloat(document.getElementById('rentEstimate')?.value || '0') || 0;
     
     const newEval = {
         id: Date.now(),
