@@ -479,7 +479,7 @@ window.loadPropertyData = async function(address, lat, lon) {
                     data = {
                         zestimate: prop.estimatedValue || 0,
                         realtor_estimate: prop.estimatedValue || 0,
-                        rent_estimate: prop.estimatedRentAmount || 0,
+                        rent_estimate: prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0),
                         annual_taxes: prop.taxAmount || 0,
                         monthly_taxes: prop.taxAmount ? Math.round(prop.taxAmount / 12) : 0,
                         annual_insurance: Math.round((prop.squareFeet || 1500) * 0.50),
@@ -1174,7 +1174,7 @@ async function loadPropertyDataForCompMeDaddy(address) {
             currentPropertyData = {
                 zestimate: prop.estimatedValue || 0,
                 realtor_estimate: prop.estimatedValue || 0,
-                rent_estimate: prop.estimatedRentAmount || 0
+                rent_estimate: prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0)
             };
             
             // Store values
@@ -2444,7 +2444,9 @@ async function loadPropertyReachData(address) {
         document.getElementById('zestimate').value = prop.estimatedValue || '';
         document.getElementById('priceRangeLow').value = Math.round(prop.estimatedValue * 0.92);
         document.getElementById('priceRangeHigh').value = Math.round(prop.estimatedValue * 1.08);
-        const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = prop.estimatedRentAmount || '');
+        // Set rent - use API value or calculate from value
+        const rentValue = prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0);
+        const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
         document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
         document.getElementById('yearBuilt').value = prop.yearBuilt || '';
         // Try to find bedrooms/bathrooms fields
