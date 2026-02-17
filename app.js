@@ -2217,6 +2217,7 @@ window.shareDealAnalysis = shareDealAnalysis;
 let acTimeout;
 
 function handleAddressInput(value) {
+    console.log('handleAddressInput called:', value);
     clearTimeout(acTimeout);
     const el = document.getElementById('addressSuggestions');
     if (value.length < 3) { el.style.display = 'none'; return; }
