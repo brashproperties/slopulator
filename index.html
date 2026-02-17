@@ -128,12 +128,7 @@
         <!-- Background MIDI would go here -->
     </div>
 
-    <!-- Sticky Calculate Button -->
-    <button id="stickyCalculateBtn" onclick="console.log('Sticky Calculate clicked'); if(window.runCalculations) { window.runCalculations(); } else { alert('Error: Analysis function not loaded.'); }">
-        <b>🧮 CALCULATE ANALYSIS 🧮</b>
-    </button>
-
-    <!-- Bouncing Emojis Container -->
+        <!-- Bouncing Emojis Container -->
     <div id="bouncing-emojis"></div>
 
     <!-- Sparkle Container -->
@@ -190,9 +185,6 @@
                                 <div id="addressSuggestions" class="suggestions" style="left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px;"></div>
                             </div>
                             <br><br>
-                            <button id="searchBtn" class="retro-button" onclick="fireConfetti(); playWhipSound();">
-                                <b>🔎 SEARCH NOW!!! 🔎</b>
-                            </button>
                             <br><br>
                             <br><br>
                             <button id="compMeDaddyBtn" class="retro-button-comp" style="background: linear-gradient(45deg, #FF00FF, #00FFFF); padding: 15px 30px; font-size: 18px; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative; z-index: 100;" onclick="window.openCompMeDaddy(); return false;">
@@ -217,13 +209,13 @@
                                         <font color="#00FFFF"><b>Purchase Price ($):</b></font>
                                     </td>
                                     <td bgcolor="#000000">
-                                        <input type="number" id="purchasePrice" class="retro-input-small" placeholder="0" oninput="document.getElementById('purchasePrice').value = this.value; document.querySelectorAll('#purchasePrice').forEach(el => { if(el !== this) el.value = this.value; });">
+                                        <input type="number" id="purchasePrice" class="retro-input-small" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" placeholder="0" oninput="document.getElementById('purchasePrice').value = this.value; document.querySelectorAll('#purchasePrice').forEach(el => { if(el !== this) el.value = this.value; });">
                                     </td>
                                     <td bgcolor="#000066" align="right">
                                         <font color="#00FFFF"><b>Repair Costs ($):</b></font>
                                     </td>
                                     <td bgcolor="#000000">
-                                        <input type="number" id="repairCost" class="retro-input-small" placeholder="0" oninput="document.getElementById('repairCost').value = this.value; document.querySelectorAll('#repairCost').forEach(el => { if(el !== this) el.value = this.value; });">
+                                        <input type="number" id="repairCost" class="retro-input-small" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" placeholder="0" oninput="document.getElementById('repairCost').value = this.value; document.querySelectorAll('#repairCost').forEach(el => { if(el !== this) el.value = this.value; });">
                                     </td>
                                 </tr>
                                 <tr>
@@ -231,7 +223,14 @@
                                         <font color="#00FFFF"><b>Monthly Rent ($):</b></font>
                                     </td>
                                     <td bgcolor="#000000" colspan="3">
-                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" placeholder="Auto from API" style="width: 100%;">
+                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" placeholder="Auto from API" style="width: 100%;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" align="center" bgcolor="#000000" style="padding: 15px;">
+                                        <button id="slopMyDealBtn" style="background: linear-gradient(45deg, #00ff00, #00aa00); padding: 15px 40px; font-size: 20px; font-weight: bold; cursor: pointer; border: 3px solid #00ff00;" onclick="console.log('Slop my deal clicked'); if(window.runCalculations) { window.runCalculations(); } else { alert('Error: Analysis function not loaded.'); }">
+                                            🔮 SLOP MY DEAL! 🔮
+                                        </button>
                                     </td>
                                 </tr>
                             </table>
@@ -373,7 +372,7 @@
                                         <font color="#00FFFF"><b>Monthly Rent Est ($):</b></font>
                                     </td>
                                     <td bgcolor="#000000">
-                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" placeholder="Auto from rent range">
+                                        <input type="number" id="rentEstimate" class="retro-input-small api-field" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" placeholder="Auto from rent range">
                                     </td>
                                     <td bgcolor="#000066"></td>
                                     <td bgcolor="#000000"></td>
