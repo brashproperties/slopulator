@@ -256,11 +256,11 @@ function formatPercent(value) {
 }
 
 function showLoading() {
-    document.getElementById('loadingOverlay')?.style?.display = 'flex';
+    document.getElementById('loadingOverlay').style.display = 'flex';
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay')?.style?.display = 'none';
+    document.getElementById('loadingOverlay').style.display = 'none';
 }
 
 function debounce(func, wait) {
@@ -631,17 +631,16 @@ function calculateFlipAnalysis(purchasePrice, repairs, arv, interestRate) {
 }
 
 async function runCalculations() {
-    try {
-    const el = document.getElementById('purchasePrice'); console.log('pp el:', !!el, 'val:', el?.value); const purchasePrice = parseFloat(el?.value) || 0;
-    const repairs = parseFloat(document.getElementById('repairCost')?.value || '0') || 0;
-    const zestimate = parseFloat(document.getElementById('zestimate')?.value || '0') || 0;
-    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow')?.value || '0') || zestimate;
-    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh')?.value || '0') || zestimate;
-    const rentEstimate = parseFloat(document.getElementById('rentEstimate')?.value || '0') || 0;
-    const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes')?.value || '0') || 0;
-    const insuranceAnnual = parseFloat(document.getElementById('annualInsurance')?.value || '0') || 0;
-    const interestRate = parseFloat(document.getElementById('interestRate')?.value || '0') || 6.8;
-    const loanTerm = parseInt(document.getElementById('loanTerm')?.value || '0') || 20;
+    const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
+    const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
+    const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
+    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow').value) || zestimate;
+    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh').value) || zestimate;
+    const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
+    const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
+    const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
+    const interestRate = parseFloat(document.getElementById('interestRate').value) || 6.8;
+    const loanTerm = parseInt(document.getElementById('loanTerm').value) || 20;
     
     if (!purchasePrice) {
         alert('Please fill in Purchase Price! 🏠');
@@ -678,7 +677,7 @@ async function runCalculations() {
     
     // Play sound
     playRetroSound('ka-ching');
-    } catch(e) { console.error("runCalc error:", e.message, e.stack); }}
+}
 
 function performComprehensiveAnalysis(data) {
     const { purchasePrice, repairs, arv, rentEstimate, monthlyTaxes, insuranceAnnual, interestRate, loanTerm } = data;
@@ -912,9 +911,9 @@ function saveEvaluation() {
     }
     
     const evaluations = loadEvaluations();
-    const el = document.getElementById('purchasePrice'); console.log('pp el:', !!el, 'val:', el?.value); const purchasePrice = parseFloat(el?.value) || 0;
-    const repairs = parseFloat(document.getElementById('repairCost')?.value || '0') || 0;
-    const rentEstimate = parseFloat(document.getElementById('rentEstimate')?.value || '0') || 0;
+    const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
+    const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
+    const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
     
     const newEval = {
         id: Date.now(),
@@ -2406,18 +2405,14 @@ async function loadPropertyReachData(address) {
         // Find the property that matches our street address
         let prop = null;
         const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
-        // Skip direction words (n, s, e, w) and street types (st, ave, dr, etc)
-        const dirs = ['n', 's', 'e', 'w', 'north', 'south', 'east', 'west'];
-        const streetNameRaw = streetAddress.split(' ').slice(1).join(' ').toLowerCase();
-        const streetName = streetNameRaw.split(' ').filter(w => !dirs.includes(w) && w.length > 2).join('');
+        const streetName = (streetAddress.split(' ').slice(1).join(' ') || '').toLowerCase().replace(/\s+/g, '');
         
         console.log('Looking for streetNum:', streetNum, 'streetName:', streetName);
         
         for (let p of data.properties) {
             const pStreet = (p.streetAddress || '').toLowerCase();
             const pStreetNum = pStreet.split(' ')[0] || '';
-            const pDirs = ['n', 's', 'e', 'w', 'north', 'south', 'east', 'west'];
-            const pStreetName = pStreet.split(' ').slice(1).filter(w => !pDirs.includes(w) && w.length > 2).join('');
+            const pStreetName = pStreet.split(' ').slice(1).join(' ').replace(/\s+/g, '');
             
             // Match street number and street name
             if (pStreetNum === streetNum && pStreetName.includes(streetName)) {
