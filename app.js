@@ -631,6 +631,7 @@ function calculateFlipAnalysis(purchasePrice, repairs, arv, interestRate) {
 }
 
 async function runCalculations() {
+    try {
     const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
     const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
     const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
@@ -677,6 +678,10 @@ async function runCalculations() {
     
     // Play sound
     playRetroSound('ka-ching');
+    } catch(e) {
+        console.error('runCalculations error:', e);
+        hideLoading();
+    }
 }
 
 function performComprehensiveAnalysis(data) {
