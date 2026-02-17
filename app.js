@@ -2405,14 +2405,18 @@ async function loadPropertyReachData(address) {
         // Find the property that matches our street address
         let prop = null;
         const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
-        const streetName = (streetAddress.split(' ').slice(1).join(' ') || '').toLowerCase().replace(/\s+/g, '');
+        // Skip direction words (n, s, e, w) and street types (st, ave, dr, etc)
+        const dirs = ['n', 's', 'e', 'w', 'north', 'south', 'east', 'west'];
+        const streetNameRaw = streetAddress.split(' ').slice(1).join(' ').toLowerCase();
+        const streetName = streetNameRaw.split(' ').filter(w => !dirs.includes(w) && w.length > 2).join('');
         
         console.log('Looking for streetNum:', streetNum, 'streetName:', streetName);
         
         for (let p of data.properties) {
             const pStreet = (p.streetAddress || '').toLowerCase();
             const pStreetNum = pStreet.split(' ')[0] || '';
-            const pStreetName = pStreet.split(' ').slice(1).join(' ').replace(/\s+/g, '');
+            const pDirs = ['n', 's', 'e', 'w', 'north', 'south', 'east', 'west'];
+            const pStreetName = pStreet.split(' ').slice(1).filter(w => !pDirs.includes(w) && w.length > 2).join('');
             
             // Match street number and street name
             if (pStreetNum === streetNum && pStreetName.includes(streetName)) {
