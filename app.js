@@ -504,7 +504,7 @@ window.loadPropertyData = async function(address, lat, lon) {
         currentPropertyData = data;
         
         // Populate fields
-        document.getElementById('zestimate')?.value = data.zestimate || '';
+        const el = document.getElementById('zestimate'); if(el) el.value = data.zestimate || '';
         document.getElementById('realtorEstimate').value = data.realtor_estimate || '';
         document.getElementById('rentEstimate').value = data.rent_estimate || '';
         document.getElementById('monthlyTaxes').value = data.monthly_taxes || '';
@@ -2434,7 +2434,7 @@ async function loadPropertyReachData(address) {
         }
         
         // Populate fields
-        document.getElementById('zestimate')?.value = prop.estimatedValue || '';
+        const _el = document.getElementById('zestimate'); if(_el) _el.value = prop.estimatedValue || '';
         // Set rent - use API value or calculate from value
         const rentValue = prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0);
         const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
