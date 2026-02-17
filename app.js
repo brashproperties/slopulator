@@ -475,7 +475,7 @@ window.loadPropertyData = async function(address, lat, lon) {
                     data = {
                         zestimate: prop.estimatedValue || 0,
                         realtor_estimate: prop.estimatedValue || 0,
-                        rent_estimate: prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0),
+                        rent_estimate: prop.estimatedRentAmount || prop.rentalValue || 0),
                         annual_taxes: prop.taxAmount || 0,
                         monthly_taxes: prop.taxAmount ? Math.round(prop.taxAmount / 12) : 0,
                         annual_insurance: Math.round((prop.squareFeet || 1500) * 0.50),
@@ -1170,7 +1170,7 @@ async function loadPropertyDataForCompMeDaddy(address) {
             currentPropertyData = {
                 zestimate: prop.estimatedValue || 0,
                 realtor_estimate: prop.estimatedValue || 0,
-                rent_estimate: prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0)
+                rent_estimate: prop.estimatedRentAmount || prop.rentalValue || 0)
             };
             
             // Store values
@@ -2397,21 +2397,20 @@ async function loadPropertyReachData(address) {
             throw new Error('No property found');
         }
         
-        // Find the property that matches our street address
+        // Find the property - be lenient on matching, just match street number
         let prop = null;
         const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
-        const streetName = (streetAddress.split(' ').slice(1).join(' ') || '').toLowerCase().replace(/\s+/g, '');
         
-        console.log('Looking for streetNum:', streetNum, 'streetName:', streetName);
+        console.log('Looking for streetNum:', streetNum);
         
         for (let p of data.properties) {
             const pStreet = (p.streetAddress || '').toLowerCase();
             const pStreetNum = pStreet.split(' ')[0] || '';
-            const pStreetName = pStreet.split(' ').slice(1).join(' ').replace(/\s+/g, '');
             
-            // Match street number and street name
-            if (pStreetNum === streetNum && pStreetName.includes(streetName)) {
-                console.log('Found match:', p.streetAddress, p.city, p.estimatedValue, 'rent:', p.estimatedRentAmount, 'tax:', p.taxAmount);
+            // Match just on street number
+            if (pStreetNum === streetNum) {
+                console.log('Found match:', p.streetAddress, p.city, p.estimatedValue);
+                
                 // Fetch full property details to get rent and tax
                 const propUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/property?streetAddress=' + encodeURIComponent(p.streetAddress) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state));
                 try {
@@ -2420,27 +2419,39 @@ async function loadPropertyReachData(address) {
                         const propData = await propResp.json();
                         if (propData.property) {
                             console.log('Full property rent:', propData.property.estimatedRentAmount, 'tax:', propData.property.taxAmount);
-                            p = propData.property;
+                            prop = propData.property;
                         }
                     }
                 } catch(e) { console.log('Error:', e); }
-                prop = p;
-                break;
+                
+                if (prop) break;
             }
         }
         
-        // If no match, use first result
+        // If no match, use first result and fetch its details
         if (!prop && data.properties.length > 0) {
-            prop = data.properties[0];
-            console.log('No exact match, using:', prop.streetAddress);
+            const firstProp = data.properties[0];
+            console.log('No exact match, using:', firstProp.streetAddress);
+            
+            // Fetch full details for first result too
+            const propUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/property?streetAddress=' + encodeURIComponent(firstProp.streetAddress) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state));
+            try {
+                const propResp = await fetch(propUrl);
+                if (propResp.ok) {
+                    const propData = await propResp.json();
+                    if (propData.property) {
+                        prop = propData.property;
+                    }
+                }
+            } catch(e) { console.log('Error:', e); }
         }
         
         // Populate fields
         document.getElementById('zestimate').value = prop.estimatedValue || '';
         document.getElementById('priceRangeLow').value = Math.round(prop.estimatedValue * 0.92);
         document.getElementById('priceRangeHigh').value = Math.round(prop.estimatedValue * 1.08);
-        // Set rent - use API value or calculate from value
-        const rentValue = prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0);
+        // Set rent from API
+        const rentValue = prop.estimatedRentAmount || prop.rentalValue || 0;
         const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
         document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
         document.getElementById('yearBuilt').value = prop.yearBuilt || '';
