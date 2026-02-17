@@ -668,7 +668,7 @@ async function runCalculations() {
     
     calculationResults = analysis;
     
-    displayComprehensiveResults(analysis);
+    try { displayComprehensiveResults(analysis); } catch(e) { console.error('Display error:', e); }
     
     hideLoading();
     
