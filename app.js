@@ -398,7 +398,7 @@ function mockPropertyData(address, lat, lon) {
     const bathrooms = 1 + (hash % 3);
     const sqft = 1000 + (hash % 2000);
     
-    // Zestimate with variance
+    // PropertyReach Estimate with variance
     const zestimate = basePrice + ((hash >> 4) % 50000) - 25000;
     const realtorEstimate = basePrice + ((hash >> 8) % 40000) - 20000;
     
@@ -565,7 +565,7 @@ function calculateARV(zestimate, realtorEstimate, comps) {
     const compPrices = comps.slice(0, 5).map(c => c.sale_price);
     const avgComps = compPrices.reduce((a, b) => a + b, 0) / compPrices.length;
     
-    // Weighted average: 30% Zestimate + 30% Realtor + 40% Comps
+    // Weighted average: 30% PropertyReach Estimate + 30% Realtor + 40% Comps
     const arv = (zestimate * 0.30) + (realtorEstimate * 0.30) + (avgComps * 0.40);
     return Math.round(arv / 1000) * 1000;
 }
