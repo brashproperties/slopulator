@@ -2154,7 +2154,7 @@ function shareCompMeDaddy() {
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairCost || 0);
     if (totalCost > 0) {
-        cashOutPct = Math.round((parseFloat(maxRefi || 0) / totalCost) * 100) + '%';
+        cashOutPct = Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100) + '%';
     }
     
     const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n📊 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
@@ -2181,11 +2181,11 @@ function shareDealAnalysis() {
     console.log('DEBUG shareDealAnalysis - calculationResults:', calculationResults); const flipProfit = calculationResults?.flip?.profit || calculationResults?.flip_analysis?.profit || calculationResults?.flip_analysis?.profit || 0;
     const monthlyCashFlow = calculationResults?.rental?.monthlyCashFlow || calculationResults?.rental_analysis?.monthly_cashflow || calculationResults?.rental_analysis?.monthly_cashflow || 0;
     const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
-    const maxRefi = calculationResults?.brrr?.max_refi || calculationResults?.brrr_analysis?.maxRefi || 0;
+    const maxRefi = calculationResults?.brrr?.max_refi || calculationResults?.brrr_analysis?.maxRefinance || 0;
     
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairs || 0);
-    if (totalCost > 0 && maxRefi > 0) {
+    if (totalCost > 0 && maxRefinance > 0) {
         cashOutPct = Math.round((maxRefi / totalCost) * 100) + '%';
     }
     
