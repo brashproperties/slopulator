@@ -2153,7 +2153,7 @@ function shareCompMeDaddy() {
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairCost || 0);
     console.log("DEBUG maxRefi:", maxRefi, "totalCost:", totalCost); if (totalCost > 0) {
-        cashOutPct = Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100) + '%';
+        cashOutPct = Math.min(100, Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100)) + "%"';
     }
     
     const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n📊 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
