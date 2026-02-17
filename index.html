@@ -19,7 +19,7 @@
         body {
             background-color: #000;
             color: #0f0;
-            font-family: 'Comic Sans MS', 'Chalkboard', 'Papyrus', cursive;
+            font-family: 'Courier New', 'Fira Code', 'Source Code Pro', monospace;
         }
         
         /* Firework animation */
@@ -148,17 +148,15 @@
                                 <div class="firework" style="font-size:60px; animation: firework 1s ease-out infinite;">🎆</div>
                                 
                                 <div style="display:inline-block; border:8px ridge #FF00FF; padding:30px; background:linear-gradient(180deg, #000033 0%, #330033 50%, #000033 100%); box-shadow:0 0 50px #FF00FF;">
-                                    <font face="Comic Sans MS" color="#00FFFF" size="7" style="text-shadow:4px 4px 8px #FF00FF, -4px -4px 8px #00FFFF;">
-                                        <b>★ THE SLOPULATOR ★</b>
-                                    </font>
+                                    <span style="font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 4px;">THE SLOPULATOR</span>
                                     <br><br>
-                                    <font face="Papyrus" color="#FFFF00" size="4">
+                                    
                                         <blink>🏠 Property Analysis Tool 💰</blink>
-                                    </font>
+                                    
                                     <br><br>
-                                    <font face="Courier New" color="#00FF00" size="2">
+                                    
                                         [v2.0 - Now with Comp Me Daddy!]
-                                    </font>
+                                    
                                 </div>
                                 
                                 <!-- Right Firework -->
@@ -176,9 +174,9 @@
                     <!-- Property Search Section -->
                     <tr>
                         <td bgcolor="#330033" style="border: 5px ridge #FF00FF; position: relative;" align="center">
-                            <font face="Comic Sans MS" color="#00FFFF" size="5">
+                            
                                 <b>🔍 ENTER PROPERTY ADDRESS 🔍</b>
-                            </font>
+                            
                             <br><br>
                             <div class="search-container" style="position: relative; display: inline-block; width: 100%; text-align: center;">
                                 <input type="text" id="addressInput" class="retro-input" placeholder="e.g., 123 Main St, Austin, TX" size="50" autocomplete="off" oninput="handleAddressInput(this.value)">
@@ -198,21 +196,21 @@
                     <!-- PURCHASE & REHAB (PRIORITY INPUTS) -->
                     <tr>
                         <td bgcolor="#003300" style="border: 5px groove #FF00FF;" align="center">
-                            <font face="Papyrus" color="#FFFF00" size="5">
+                            
                                 <b>💰 PURCHASE & REHAB 💰</b>
-                            </font>
+                            
                             <br><br>
                             
                             <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
                                 <tr>
                                     <td bgcolor="#000066" align="right">
-                                        <font color="#00FFFF"><b>Purchase Price ($):</b></font>
+                                        <b>Purchase Price ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="purchasePrice" class="retro-input-small" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" placeholder="0" oninput="document.getElementById('purchasePrice').value = this.value; document.querySelectorAll('#purchasePrice').forEach(el => { if(el !== this) el.value = this.value; });">
                                     </td>
                                     <td bgcolor="#000066" align="right">
-                                        <font color="#00FFFF"><b>Repair Costs ($):</b></font>
+                                        <b>Repair Costs ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="repairCost" class="retro-input-small" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" placeholder="0" oninput="document.getElementById('repairCost').value = this.value; document.querySelectorAll('#repairCost').forEach(el => { if(el !== this) el.value = this.value; });">
@@ -220,7 +218,7 @@
                                 </tr>
                                 <tr>
                                     <td bgcolor="#000066" align="right">
-                                        <font color="#00FFFF"><b>Monthly Rent ($):</b></font>
+                                        <b>Monthly Rent ($):</b>
                                     </td>
                                     <td bgcolor="#000000" colspan="3">
                                         <input type="number" id="rentEstimate" class="retro-input-small api-field" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" placeholder="Auto from API" style="width: 100%;">
@@ -244,19 +242,19 @@
                     <!-- API Data Section (MOVED UP) -->
                     <tr>
                         <td bgcolor="#003300" style="border: 5px groove #00FF00;">
-                            >> API DATA
+                            <div class="section-header">>> API DATA</div>
                             <br><br>
 
                             <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>PropertyReach Value ($):</b></font>
+                                        <b>PropertyReach Value ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="zestimate" class="retro-input-small api-field" placeholder="Auto-populated">
                                     </td>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Price Range Low ($):</b></font>
+                                        <b>Price Range Low ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="priceRangeLow" class="retro-input-small api-field" placeholder="Auto-populated">
@@ -264,14 +262,14 @@
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Price Range High ($):</b></font>
+                                        <b>Price Range High ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="priceRangeHigh" class="retro-input-small api-field" placeholder="Auto-populated">
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Property Sqft:</b></font>
+                                        <b>Property Sqft:</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="sqft" class="retro-input-small api-field" placeholder="Auto-populated">
@@ -279,13 +277,13 @@
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Monthly Taxes ($):</b></font>
+                                        <b>Monthly Taxes ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="monthlyTaxes" class="retro-input-small api-field" placeholder="Auto-populated">
                                     </td>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Annual Insurance ($):</b></font>
+                                        <b>Annual Insurance ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="annualInsurance" class="retro-input-small api-field" placeholder="Auto from sqft">
@@ -293,13 +291,13 @@
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Year Built:</b></font>
+                                        <b>Year Built:</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="yearBuilt" class="retro-input-small api-field" placeholder="Auto-populated">
                                     </td>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Last Sale Price ($):</b></font>
+                                        <b>Last Sale Price ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="lastSalePrice" class="retro-input-small api-field" placeholder="Auto-populated">
@@ -307,7 +305,7 @@
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#FF9900"><b>Last Sale Date:</b></font>
+                                        <b>Last Sale Date:</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="text" id="lastSaleDate" class="retro-input-small api-field" placeholder="Auto-populated">
@@ -325,9 +323,9 @@
                                         <div id="propertyImageContainer" style="display:none; max-width:500px; margin:0 auto;">
                                             <div id="mainPropertyMap" style="width:100%; height:350px; border:5px groove #FF00FF; border-radius:10px;"></div>
                                             <br>
-                                            <font face="Courier New" color="#00FF00" size="1">
+                                            
                                                 <i>📸 Property Location</i>
-                                            </font>
+                                            
                                         </div>
                                     </td>
                                 </tr>
@@ -340,22 +338,22 @@
                     <!-- Property Details Section -->
                     <tr>
                         <td bgcolor="#003300" style="border: 5px groove #00FF00;" align="center">
-                            <font face="Papyrus" color="#FF00FF" size="5">
+                            
                                 <b>💵 PROPERTY DETAILS 💵</b>
-                            </font>
+                            
                             <br><br>
                             
                             <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table">
                                 <!-- Purchase & Rehab moved to top - removed duplicate hidden fields -->
                                 <tr>
                                     <td bgcolor="#000066" align="right">
-                                        <font color="#00FFFF"><b>Interest Rate (%):</b></font>
+                                        <b>Interest Rate (%):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="interestRate" class="retro-input-small" value="6.8" step="0.1">
                                     </td>
                                     <td bgcolor="#000066" align="right">
-                                        <font color="#00FFFF"><b>Loan Term (years):</b></font>
+                                        <b>Loan Term (years):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="loanTerm" class="retro-input-small" value="20" step="1">
@@ -363,7 +361,7 @@
                                 </tr>
                                 <tr>
                                     <td bgcolor="#000066" align="right">
-                                        <font color="#00FFFF"><b>Monthly Rent Est ($):</b></font>
+                                        <b>Monthly Rent Est ($):</b>
                                     </td>
                                     <td bgcolor="#000000">
                                         <input type="number" id="rentEstimate" class="retro-input-small api-field" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" style="font-size: 20px; padding: 10px; font-weight: bold; background: #001a00; border: 2px solid #00ff00;" placeholder="Auto from rent range">
@@ -391,69 +389,69 @@
                     <!-- Deal Analysis Section -->
                     <tr id="dealAnalysisSection" style="display: none;">
                         <td bgcolor="#1a1a2e" style="border: 5px groove #ffd700;">
-                            <font face="Comic Sans MS" color="#ffd700" size="5">
+                            
                                 <b>📊 COMPREHENSIVE DEAL ANALYSIS 📊</b>
-                            </font>
+                            
                             <br>
-                            <font face="Courier New" color="#00ff00" size="2">
+                            
                                 <blink>★ FLIP vs RENTAL BREAKDOWN ★</blink>
-                            </font>
+                            
                             <br><br>
 
                             <!-- Flip Analysis -->
                             <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table" style="margin-bottom: 20px;">
                                 <tr bgcolor="#330000">
                                     <td colspan="2" align="center">
-                                        <font face="Papyrus" color="#ff6b6b" size="4">
+                                        
                                             <b>🔨 FLIP ANALYSIS (6 Month Hold) 🔨</b>
-                                        </font>
+                                        
                                     </td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right" width="50%">
-                                        <font color="#ff9900"><b>Purchase Price:</b></font>
+                                        <b>Purchase Price:</b>
                                     </td>
                                     <td bgcolor="#000000" id="flipPurchasePrice"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Repair Costs:</b></font>
+                                        <b>Repair Costs:</b>
                                     </td>
                                     <td bgcolor="#000000" id="flipRepairCosts"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Total Investment:</b></font>
+                                        <b>Total Investment:</b>
                                     </td>
                                     <td bgcolor="#000000" id="flipTotalInvestment"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Holding Costs (8% Interest Only):</b></font>
+                                        <b>Holding Costs (8% Interest Only):</b>
                                     </td>
                                     <td bgcolor="#000000" id="flipHoldingCosts"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Closing/Broker Fees (~6%):</b></font>
+                                        <b>Closing/Broker Fees (~6%):</b>
                                     </td>
                                     <td bgcolor="#000000" id="flipClosingCosts"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Total Costs:</b></font>
+                                        <b>Total Costs:</b>
                                     </td>
                                     <td bgcolor="#000000" id="flipTotalCosts"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>ARV (PropertyReach Value):</b></font>
+                                        <b>ARV (PropertyReach Value):</b>
                                     </td>
                                     <td bgcolor="#000000" id="flipARV"></td>
                                 </tr>
                                 <tr bgcolor="#003300">
                                     <td bgcolor="#003300" align="right">
-                                        <font color="#00ff00" size="4"><b>📈 ESTIMATED PROFIT:</b></font>
+                                        <b>📈 ESTIMATED PROFIT:</b>
                                     </td>
                                     <td bgcolor="#003300" id="flipProfit" style="font-size: 18px; font-weight: bold;"></td>
                                 </tr>
@@ -463,93 +461,93 @@
                             <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table" style="margin-bottom: 20px;">
                                 <tr bgcolor="#001a33">
                                     <td colspan="2" align="center">
-                                        <font face="Papyrus" color="#4ecdc4" size="4">
+                                        
                                             <b>🏠 RENTAL ANALYSIS (BRRR Strategy) 🏠</b>
-                                        </font>
+                                        
                                     </td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right" width="50%">
-                                        <font color="#ff9900"><b>Total Loan Amount (Price + Repairs):</b></font>
+                                        <b>Total Loan Amount (Price + Repairs):</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalLoanAmount"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Interest Rate:</b></font>
+                                        <b>Interest Rate:</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalInterestRate"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Loan Term:</b></font>
+                                        <b>Loan Term:</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalLoanTerm"></td>
                                 </tr>
                                 <tr bgcolor="#000066">
                                     <td bgcolor="#000066" align="right">
-                                        <font color="#00ffff" size="3"><b>📊 PITI BREAKDOWN:</b></font>
+                                        <b>📊 PITI BREAKDOWN:</b>
                                     </td>
                                     <td bgcolor="#000066"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Principal & Interest (P&I):</b></font>
+                                        <b>Principal & Interest (P&I):</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalPI"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Monthly Taxes:</b></font>
+                                        <b>Monthly Taxes:</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalTaxes"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Monthly Insurance:</b></font>
+                                        <b>Monthly Insurance:</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalInsurance"></td>
                                 </tr>
                                 <tr bgcolor="#003300">
                                     <td bgcolor="#003300" align="right">
-                                        <font color="#00ff00" size="3"><b>💰 TOTAL PITI:</b></font>
+                                        <b>💰 TOTAL PITI:</b>
                                     </td>
                                     <td bgcolor="#003300" id="rentalPITI" style="font-size: 16px; font-weight: bold;"></td>
                                 </tr>
                                 <tr><td colspan="2" bgcolor="#000000" height="5"></td></tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>PropertyReach Value:</b></font>
+                                        <b>PropertyReach Value:</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalAVM"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Current LTV:</b></font>
+                                        <b>Current LTV:</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalCurrentLTV"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Monthly Rent Estimate (95% Occ):</b></font>
+                                        <b>Monthly Rent Estimate (95% Occ):</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalMonthlyRent"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Effective Monthly Rent:</b></font>
+                                        <b>Effective Monthly Rent:</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalEffectiveRent"></td>
                                 </tr>
                                 <tr bgcolor="#003300">
                                     <td bgcolor="#003300" align="right">
-                                        <font color="#00ff00" size="3"><b>💵 MONTHLY CASH FLOW:</b></font>
+                                        <b>💵 MONTHLY CASH FLOW:</b>
                                     </td>
                                     <td bgcolor="#003300" id="rentalCashFlow" style="font-size: 16px; font-weight: bold;"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Annual Cash Flow:</b></font>
+                                        <b>Annual Cash Flow:</b>
                                     </td>
                                     <td bgcolor="#000000" id="rentalAnnualCashFlow"></td>
                                 </tr>
@@ -559,32 +557,32 @@
                             <table border="2" cellpadding="8" cellspacing="0" width="100%" class="input-table" style="margin-bottom: 20px;">
                                 <tr bgcolor="#1a0033">
                                     <td colspan="2" align="center">
-                                        <font face="Papyrus" color="#ff00ff" size="4">
+                                        
                                             <b>🔄 BRRR ANALYSIS (Refinance @ 80% LTV) 🔄</b>
-                                        </font>
+                                        
                                     </td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right" width="50%">
-                                        <font color="#ff9900"><b>Max Refinance Amount (80% of AVM):</b></font>
+                                        <b>Max Refinance Amount (80% of AVM):</b>
                                     </td>
                                     <td bgcolor="#000000" id="brrrMaxRefi"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Total Cash Invested:</b></font>
+                                        <b>Total Cash Invested:</b>
                                     </td>
                                     <td bgcolor="#000000" id="brrrCashInvested"></td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#663300" align="right">
-                                        <font color="#ff9900"><b>Cash Left in Deal:</b></font>
+                                        <b>Cash Left in Deal:</b>
                                     </td>
                                     <td bgcolor="#000000" id="brrrCashLeft"></td>
                                 </tr>
                                 <tr bgcolor="#003300">
                                     <td bgcolor="#003300" align="right">
-                                        <font color="#00ff00" size="3"><b>✅ 100% PULL-OUT POSSIBLE?</b></font>
+                                        <b>✅ 100% PULL-OUT POSSIBLE?</b>
                                     </td>
                                     <td bgcolor="#003300" id="brrrPulloutPossible" style="font-size: 16px; font-weight: bold;"></td>
                                 </tr>
@@ -594,22 +592,22 @@
                             <table border="3" cellpadding="12" cellspacing="0" width="100%" style="border-color: #ffd700;">
                                 <tr bgcolor="#000000">
                                     <td align="center">
-                                        <font face="Comic Sans MS" color="#ffd700" size="5">
+                                        
                                             <b>🏆 DEAL RATING 🏆</b>
-                                        </font>
+                                        
                                         <br><br>
-                                        <font face="Papyrus" size="6" id="dealRating" style="text-shadow: 2px 2px 4px #000;">
+                                        
                                             <b>--</b>
-                                        </font>
+                                        
                                         <br><br>
-                                        <font face="Courier New" color="#00ff00" size="3" id="dealRecommendation">
+                                        
                                             <b>--</b>
-                                        </font>
+                                        
                                         <br><br>
                                         <div id="dealActionPlan" style="background: #001a33; padding: 15px; border: 2px solid #00ff00; margin-top: 10px; text-align: left;">
-                                            <font face="Courier New" color="#ffffff" size="2" id="actionPlanText">
+                                            
                                                 --
-                                            </font>
+                                            
                                         </div>
                                         <br><br>
                                         <button onclick="shareDealAnalysis()" class="retro-button" style="background: linear-gradient(45deg, #00ff00, #00aa00);">
@@ -626,19 +624,19 @@
                     <!-- Comps Section -->
                     <tr id="compsSection" style="display: none;">
                         <td bgcolor="#330000" style="border: 5px ridge #FF0000;" align="center">
-                            <font face="Comic Sans MS" color="#FF6666" size="5">
+                            
                                 <b>🏘️ RECENT COMPS (SAME BLOCK) 🏘️</b>
-                            </font>
+                            
                             <br><br>
                             <table border="3" cellpadding="8" cellspacing="0" width="100%" class="comps-table" id="compsTable">
                                 <thead>
                                     <tr bgcolor="#660000">
-                                        <th><font color="#FFFF00">Address</font></th>
-                                        <th><font color="#FFFF00">Sale Price</font></th>
-                                        <th><font color="#FFFF00">Date</font></th>
-                                        <th><font color="#FFFF00">Beds</font></th>
-                                        <th><font color="#FFFF00">Baths</font></th>
-                                        <th><font color="#FFFF00">SqFt</font></th>
+                                        <th>Address</th>
+                                        <th>Sale Price</th>
+                                        <th>Date</th>
+                                        <th>Beds</th>
+                                        <th>Baths</th>
+                                        <th>SqFt</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -651,15 +649,15 @@
                     <!-- ARV Section -->
                     <tr id="arvSection" style="display: none;">
                         <td bgcolor="#000033" align="center" style="border: 8px double #00FFFF;">
-                            <font face="Papyrus" color="#FFFF00" size="6">
+                            
                                 <b>💎 AFTER REPAIR VALUE (ARV) 💎</b>
-                            </font>
+                            
                             <br><br>
                             <div id="arvValue" class="big-blinking-number">$0</div>
                             <br>
-                            <font face="Courier New" color="#00FF00" size="2">
+                            
                                 Weighted avg: 30% Zillow + 30% Realtor + 40% Comps
-                            </font>
+                            
                         </td>
                     </tr>
 
@@ -675,55 +673,55 @@
                                         <table border="5" cellpadding="10" cellspacing="0" width="100%" bgcolor="#003300" style="border-color: #00FF00;">
                                             <tr>
                                                 <td align="center" bgcolor="#006600">
-                                                    <font face="Comic Sans MS" color="#FFFF00" size="5">
+                                                    
                                                         <b>📈 RENTAL ANALYSIS 📈</b>
-                                                    </font>
+                                                    
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td>
                                                     <table border="0" cellpadding="5" cellspacing="0" width="100%" class="results-table">
                                                         <tr>
-                                                            <td><font color="#00FFFF">Monthly Rent (100%):</font></td>
-                                                            <td align="right"><font color="#00FF00" id="rentalGross">$0</font></td>
+                                                            <td>Monthly Rent (100%):</td>
+                                                            <td align="right">$0</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><font color="#00FFFF">Effective (90% occ.):</font></td>
-                                                            <td align="right"><font color="#00FF00" id="rentalEffective">$0</font></td>
-                                                        </tr>
-                                                        <tr><td colspan="2"><hr color="#00FF00"></td></tr>
-                                                        <tr>
-                                                            <td><font color="#FF6666">Mortgage Payment:</font></td>
-                                                            <td align="right"><font color="#FF0000" id="rentalMortgage">-$0</font></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><font color="#FF6666">Property Taxes:</font></td>
-                                                            <td align="right"><font color="#FF0000" id="rentalTaxes">-$0</font></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><font color="#FF6666">Insurance:</font></td>
-                                                            <td align="right"><font color="#FF0000" id="rentalInsurance">-$0</font></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><font color="#FF6666">Maintenance (5%):</font></td>
-                                                            <td align="right"><font color="#FF0000" id="rentalMaintenance">-$0</font></td>
+                                                            <td>Effective (90% occ.):</td>
+                                                            <td align="right">$0</td>
                                                         </tr>
                                                         <tr><td colspan="2"><hr color="#00FF00"></td></tr>
                                                         <tr>
-                                                            <td><font color="#FFFF00"><b>Total Expenses:</b></font></td>
-                                                            <td align="right"><font color="#FF0000" id="rentalTotalExpenses">-$0</font></td>
+                                                            <td>Mortgage Payment:</td>
+                                                            <td align="right">-$0</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Property Taxes:</td>
+                                                            <td align="right">-$0</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Insurance:</td>
+                                                            <td align="right">-$0</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Maintenance (5%):</td>
+                                                            <td align="right">-$0</td>
+                                                        </tr>
+                                                        <tr><td colspan="2"><hr color="#00FF00"></td></tr>
+                                                        <tr>
+                                                            <td><b>Total Expenses:</b></td>
+                                                            <td align="right">-$0</td>
                                                         </tr>
                                                         <tr bgcolor="#006600">
-                                                            <td><font color="#FFFF00"><b>★ MONTHLY CASHFLOW ★</b></font></td>
-                                                            <td align="right"><font size="5" color="#00FF00"><b id="rentalCashflow">$0</b></font></td>
+                                                            <td><b>★ MONTHLY CASHFLOW ★</b></td>
+                                                            <td align="right"><b id="rentalCashflow">$0</b></td>
                                                         </tr>
                                                         <tr>
-                                                            <td><font color="#00FFFF">Annual Cashflow:</font></td>
-                                                            <td align="right"><font color="#00FF00" id="rentalAnnualCashflow">$0</font></td>
+                                                            <td>Annual Cashflow:</td>
+                                                            <td align="right">$0</td>
                                                         </tr>
                                                         <tr bgcolor="#000066">
-                                                            <td><font color="#FFFF00"><b>★ CASH-ON-CASH ★</b></font></td>
-                                                            <td align="right"><font size="4" color="#00FFFF"><b id="rentalCashOnCash">0%</b></font></td>
+                                                            <td><b>★ CASH-ON-CASH ★</b></td>
+                                                            <td align="right"><b id="rentalCashOnCash">0%</b></td>
                                                         </tr>
                                                     </table>
                                                 </td>
@@ -736,56 +734,56 @@
                                         <table border="5" cellpadding="10" cellspacing="0" width="100%" bgcolor="#330000" style="border-color: #FF0000;">
                                             <tr>
                                                 <td align="center" bgcolor="#660000">
-                                                    <font face="Comic Sans MS" color="#FFFF00" size="5">
+                                                    
                                                         <b>🔨 FLIP ANALYSIS 🔨</b>
-                                                    </font>
+                                                    
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td>
                                                     <table border="0" cellpadding="5" cellspacing="0" width="100%" class="results-table">
                                                         <tr>
-                                                            <td><font color="#00FFFF">ARV (Sale Price):</font></td>
-                                                            <td align="right"><font color="#00FF00" id="flipARV">$0</font></td>
+                                                            <td>ARV (Sale Price):</td>
+                                                            <td align="right">$0</td>
                                                         </tr>
                                                         <tr><td colspan="2"><hr color="#FF0000"></td></tr>
                                                         <tr>
-                                                            <td><font color="#FF6666">Purchase Price:</font></td>
-                                                            <td align="right"><font color="#FF0000" id="flipPurchase">-$0</font></td>
+                                                            <td>Purchase Price:</td>
+                                                            <td align="right">-$0</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><font color="#FF6666">Repair Costs:</font></td>
-                                                            <td align="right"><font color="#FF0000" id="flipRepairs">-$0</font></td>
+                                                            <td>Repair Costs:</td>
+                                                            <td align="right">-$0</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><font color="#FF6666">Holding Costs:</font></td>
-                                                            <td align="right"><font color="#FF0000" id="flipHolding">-$0</font></td>
+                                                            <td>Holding Costs:</td>
+                                                            <td align="right">-$0</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><font color="#FF6666">Selling Costs (7%):</font></td>
-                                                            <td align="right"><font color="#FF0000" id="flipSelling">-$0</font></td>
+                                                            <td>Selling Costs (7%):</td>
+                                                            <td align="right">-$0</td>
                                                         </tr>
                                                         <tr><td colspan="2"><hr color="#FF0000"></td></tr>
                                                         <tr>
-                                                            <td><font color="#FFFF00"><b>Total Investment:</b></font></td>
-                                                            <td align="right"><font color="#FF0000" id="flipTotalInvestment">-$0</font></td>
+                                                            <td><b>Total Investment:</b></td>
+                                                            <td align="right">-$0</td>
                                                         </tr>
                                                         <tr bgcolor="#660000">
-                                                            <td><font color="#FFFF00"><b>★ NET PROFIT ★</b></font></td>
-                                                            <td align="right"><font size="5" color="#00FF00"><b id="flipProfit">$0</b></font></td>
+                                                            <td><b>★ NET PROFIT ★</b></td>
+                                                            <td align="right"><b id="flipProfit">$0</b></td>
                                                         </tr>
                                                         <tr bgcolor="#000066">
-                                                            <td><font color="#FFFF00"><b>★ ROI ★</b></font></td>
-                                                            <td align="right"><font size="4" color="#00FFFF"><b id="flipROI">0%</b></font></td>
+                                                            <td><b>★ ROI ★</b></td>
+                                                            <td align="right"><b id="flipROI">0%</b></td>
                                                         </tr>
                                                         <tr><td colspan="2"><hr color="#FF0000"></td></tr>
                                                         <tr>
-                                                            <td><font color="#FF9900">MAO (70% Rule):</font></td>
-                                                            <td align="right"><font color="#FF9900" id="flipMAO">$0</font></td>
+                                                            <td>MAO (70% Rule):</td>
+                                                            <td align="right">$0</td>
                                                         </tr>
                                                         <tr bgcolor="#663300">
-                                                            <td><font color="#FFFF00"><b>SUGGESTED OFFER:</b></font></td>
-                                                            <td align="right"><font size="4" color="#FF00FF"><b id="flipSuggested">$0</b></font></td>
+                                                            <td><b>SUGGESTED OFFER:</b></td>
+                                                            <td align="right"><b id="flipSuggested">$0</b></td>
                                                         </tr>
                                                     </table>
                                                 </td>
@@ -810,9 +808,9 @@
         <table border="5" cellpadding="20" cellspacing="0" class="modal-table" bgcolor="#000033">
             <tr>
                 <td align="center">
-                    <font face="Comic Sans MS" color="#00FFFF" size="5">
+                    
                         <b>📂 LOAD SAVED EVALUATION 📂</b>
-                    </font>
+                    
                     <br><br>
                     <span class="close-modal" onclick="closeModal()">[X] CLOSE</span>
                     <br><br>
@@ -829,9 +827,9 @@
                 <td align="center">
                     <img src="https://web.archive.org/web/20091027045555/http://www.geocities.com/EnchantedForest/Dell/2347/construction-worker.gif" alt="Working..." class="loading-gif">
                     <br><br>
-                    <font face="Comic Sans MS" color="#FFFF00" size="5">
+                    
                         <blink>🚧 LOADING... PLEASE WAIT!!! 🚧</blink>
-                    </font>
+                    
                 </td>
             </tr>
         </table>
@@ -842,13 +840,13 @@
         <table border="5" cellpadding="20" cellspacing="0" bgcolor="#FF00FF">
             <tr>
                 <td align="center">
-                    <font face="Comic Sans MS" color="#FFFF00" size="6">
+                    
                         <b>🎉 YOU FOUND THE EASTER EGG!!! 🎉</b>
-                    </font>
+                    
                     <br><br>
-                    <font face="Papyrus" color="#000" size="5">
+                    
                         House Flipping = BIG PROFITS!!!
-                    </font>
+                    
                     <br><br>
                     <img src="https://web.archive.org/web/20091027082445/http://www.geocities.com/televisioncity/5828/money.gif" alt="Money">
                     <br><br>
@@ -868,14 +866,14 @@
                         <tr>
                             <td align="center">
                                 <marquee behavior="alternate" scrollamount="10" bgcolor="#FF00FF">
-                                    <font size="6" face="Comic Sans MS" color="#FFFF00">
+                                    
                                         <b>💎💎💎 COMP ME DADDY - DETAILED ANALYSIS 💎💎💎</b>
-                                    </font>
+                                    
                                 </marquee>
                                 <br><br>
-                                <font face="Papyrus" color="#00FFFF" size="4">
+                                
                                     <blink>★ DEEP DIVE INTO YOUR COMPS ★</blink>
-                                </font>
+                                
                                 <br><br>
                                 <button onclick="window.closeCompMeDaddy()" class="retro-button-small">
                                     <b>👈 BACK TO SLOPULATOR</b>
@@ -890,9 +888,9 @@
                     <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#330033" style="border:5px ridge #FF00FF;">
                         <tr>
                             <td align="center">
-                                <font face="Comic Sans MS" color="#00FFFF" size="5">
+                                
                                     <b>🔍 ENTER PROPERTY ADDRESS 🔍</b>
-                                </font>
+                                
                                 <br><br>
                                 <input type="text" id="compMeDaddyAddress" class="retro-input" placeholder="e.g., 123 Main St, Evansville, IN" size="50">
                                 <br><br>
@@ -910,12 +908,12 @@
                     <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000066" style="border:5px groove #00FF00;">
                         <tr>
                             <td align="center">
-                                <font face="Comic Sans MS" color="#FFFF00" size="5">
+                                
                                     <b>🏦 PROPERTYREACH VALUE 🏦</b>
-                                </font>
+                                
                                 <br><br>
                                 <div id="rentcastAVMLoading">
-                                    <font color="#00FF00" face="Courier New">Loading PropertyReach data...</font>
+                                    Loading PropertyReach data...
                                     <br>
                                     <img src="https://web.archive.org/web/20091027082445/http://www.geocities.com/televisioncity/5828/computer.gif" alt="Loading">
                                 </div>
@@ -923,19 +921,19 @@
                                     <table border="2" cellpadding="10" cellspacing="0" width="100%">
                                         <tr>
                                             <td bgcolor="#330033" align="center">
-                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>PROPERTYREACH VALUE</b></font>
+                                                <b>PROPERTYREACH VALUE</b>
                                                 <br>
-                                                <font color="#00FFFF" size="6" id="rentcastEstimate">$0</font>
+                                                $0
                                             </td>
                                             <td bgcolor="#330033" align="center">
-                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>CONFIDENCE</b></font>
+                                                <b>CONFIDENCE</b>
                                                 <br>
-                                                <font color="#00FF00" size="6" id="rentcastConfidence">HIGH</font>
+                                                HIGH
                                             </td>
                                             <td bgcolor="#330033" align="center">
-                                                <font color="#FF00FF" face="Comic Sans MS" size="4"><b>PRICE RANGE</b></font>
+                                                <b>PRICE RANGE</b>
                                                 <br>
-                                                <font color="#FFFF00" size="5" id="rentcastRange">$0 - $0</font>
+                                                $0 - $0
                                             </td>
                                         </tr>
                                     </table>
@@ -943,11 +941,11 @@
                                     <table border="2" cellpadding="10" cellspacing="0" width="100%">
                                         <tr>
                                             <td bgcolor="#003300" align="center" style="border: 3px solid #00FF00;">
-                                                <font color="#00FF00" face="Comic Sans MS" size="4"><b>🔥 RENOVATED ARV (High-End Finish)</b></font>
+                                                <b>🔥 RENOVATED ARV (High-End Finish)</b>
                                                 <br>
-                                                <font color="#00FF00" size="6" id="renovatedARV">$0</font>
+                                                $0
                                                 <br>
-                                                <font color="#FFFF00" size="3">Based on avg <span id="compAvgPPSF">$0</span> from quality comps only</font>
+                                                Based on avg <span id="compAvgPPSF">$0</span> from quality comps only
                                             </td>
                                         </tr>
                                     </table>
@@ -977,20 +975,20 @@
                     <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000033" style="border:5px ridge #00FFFF;">
                         <tr>
                             <td align="center">
-                                <font face="Comic Sans MS" color="#00FFFF" size="5">
+                                
                                     <b>📊 DETAILED COMP ANALYSIS 📊</b>
-                                </font>
+                                
                                 <br><br>
                                 <table border="3" cellpadding="8" cellspacing="0" width="100%" id="detailedCompsTable">
                                     <thead>
                                         <tr bgcolor="#330066">
-                                            <th><font color="#FFFF00">ADDRESS</font></th>
-                                            <th><font color="#FFFF00">PRICE</font></th>
-                                            <th><font color="#FFFF00">$/SQFT</font></th>
-                                            <th><font color="#FFFF00">DATE</font></th>
-                                            <th><font color="#FFFF00">MILES</font></th>
-                                            <th><font color="#FFFF00">CORRELATION</font></th>
-                                            <th><font color="#FFFF00">FINISH</font></th>
+                                            <th>ADDRESS</th>
+                                            <th>PRICE</th>
+                                            <th>$/SQFT</th>
+                                            <th>DATE</th>
+                                            <th>MILES</th>
+                                            <th>CORRELATION</th>
+                                            <th>FINISH</th>
                                         </tr>
                                     </thead>
                                     <tbody id="detailedCompsBody">
@@ -1007,12 +1005,12 @@
                     <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#1a1a2e" style="border:5px groove #ffd700;">
                         <tr>
                             <td align="center">
-                                <font face="Comic Sans MS" color="#ffd700" size="5">
+                                
                                     <b>🎯 THE TAKE - PROPERTY VALUATION 🎯</b>
-                                </font>
+                                
                                 <br><br>
                                 <div id="propertyTake" style="text-align:left;">
-                                    <font color="#00FF00" face="Courier New">Analyzing property value...</font>
+                                    Analyzing property value...
                                 </div>
                             </td>
                         </tr>
@@ -1024,9 +1022,9 @@
                     <table border="5" cellpadding="15" cellspacing="0" width="95%" bgcolor="#000033" style="border:5px ridge #FF00FF;">
                         <tr>
                             <td align="center">
-                                <font face="Comic Sans MS" color="#FF00FF" size="5">
+                                
                                     <b>🗺️ LOCATION MAP - PROXIMITY VIEW 🗺️</b>
-                                </font>
+                                
                                 <br><br>
                                 <div id="compMap" style="width:100%; height:450px; border:3px solid #FF00FF; border-radius:10px;"></div>
                             </td>
