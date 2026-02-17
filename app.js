@@ -167,14 +167,14 @@ function fireConfetti() {
 
 function showEasterEgg() {
     const modal = document.getElementById('easterEggModal');
-    modal.style.display = 'flex';
+    modal.style?.display = 'flex';
     
     // Play a "ka-ching" sound effect (placeholder)
     playRetroSound('ka-ching');
 }
 
 function closeEasterEgg() {
-    document.getElementById('easterEggModal').style.display = 'none';
+    document.getElementById('easterEggModal').style?.display = 'none';
 }
 
 function playRetroSound(type) {
@@ -256,11 +256,11 @@ function formatPercent(value) {
 }
 
 function showLoading() {
-    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('loadingOverlay').style?.display = 'flex';
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loadingOverlay').style?.display = 'none';
 }
 
 function debounce(func, wait) {
@@ -291,7 +291,7 @@ async function fetchAddressSuggestions(query) {
     if (!suggestionsEl) return;
     
     if (query.length < 3) {
-        suggestionsEl.style.display = 'none';
+        suggestionsEl.style?.display = 'none';
         return;
     }
     
@@ -339,11 +339,11 @@ async function fetchAddressSuggestions(query) {
                 const osmData = await osmResponse.json();
                 displaySuggestions(osmData);
             } else {
-                suggestionsEl.style.display = 'none';
+                suggestionsEl.style?.display = 'none';
             }
         } catch (error) {
             console.error('Autocomplete error:', error);
-            suggestionsEl.style.display = 'none';
+            suggestionsEl.style?.display = 'none';
         }
     }, 200);
 }
@@ -352,7 +352,7 @@ function displaySuggestions(suggestions) {
     const suggestionsEl = document.getElementById('addressSuggestions');
     
     if (!suggestions || suggestions.length === 0) {
-        suggestionsEl.style.display = 'none';
+        suggestionsEl.style?.display = 'none';
         return;
     }
 
@@ -365,14 +365,14 @@ function displaySuggestions(suggestions) {
         </div>
     `).join('');
 
-    suggestionsEl.style.display = 'block';
+    suggestionsEl.style?.display = 'block';
 
     // Add click handlers
     suggestionsEl.querySelectorAll('.suggestion-item').forEach(item => {
         item.addEventListener('click', () => {
             document.getElementById('addressInput').value = item.dataset.address;
             currentAddress = item.dataset.address;
-            suggestionsEl.style.display = 'none';
+            suggestionsEl.style?.display = 'none';
             loadPropertyData(item.dataset.address, item.dataset.lat, item.dataset.lon);
         });
     });
@@ -519,7 +519,7 @@ window.loadPropertyData = async function(address, lat, lon) {
         
         // Populate comps table
         populateCompsTable(data.comps || []);
-        document.getElementById('compsSection').style.display = 'table-row';
+        document.getElementById('compsSection').style?.display = 'table-row';
         
         // Create sparkles
         const searchBtn = document.getElementById('searchBtn');
@@ -805,7 +805,7 @@ function displayComprehensiveResults(analysis) {
     // Show deal analysis section
     const dealSection = document.getElementById('dealAnalysisSection');
     if (dealSection) {
-        dealSection.style.display = 'table-row';
+        dealSection.style?.display = 'table-row';
     }
     
     // FLIP ANALYSIS
@@ -1007,7 +1007,7 @@ function deleteEvaluation(id) {
 }
 
 function closeModal() {
-    document.getElementById('loadModal').style.display = 'none';
+    document.getElementById('loadModal').style?.display = 'none';
 }
 
 // ============================================
@@ -1017,10 +1017,10 @@ function closeModal() {
 function showCompMeDaddyButton() {
     const btn = document.getElementById('compMeDaddyBtn');
     if (btn && currentPropertyData) {
-        btn.style.display = 'inline-block';
+        btn.style?.display = 'inline-block';
         // Add sparkle animation
         setInterval(() => {
-            if (btn.style.display !== 'none') {
+            if (btn.style?.display !== 'none') {
                 createSparkles(btn);
             }
         }, 3000);
@@ -1039,7 +1039,7 @@ window.openCompMeDaddy = function() {
     window.currentAddress = addr;
     
     // Show page
-    document.getElementById('compMeDaddyPage').style.display = 'block';
+    document.getElementById('compMeDaddyPage').style?.display = 'block';
     document.body.style.overflow = 'hidden';
     
     // Pre-fill address
@@ -1076,10 +1076,10 @@ window.runCompMeDaddyAnalysis = async function() {
     
     // Show loading state
     if (document.getElementById('rentcastAVMLoading')) {
-        document.getElementById('rentcastAVMLoading').style.display = 'block';
+        document.getElementById('rentcastAVMLoading').style?.display = 'block';
     }
     if (document.getElementById('rentcastAVMData')) {
-        document.getElementById('rentcastAVMData').style.display = 'none';
+        document.getElementById('rentcastAVMData').style?.display = 'none';
     }
     if (document.getElementById('detailedCompsBody')) {
         const dcb = document.getElementById('detailedCompsBody'); if (dcb) dcb.innerHTML = '<tr><td colspan="6" align="center"><font color="#00FF00">Loading comps...</font></td></tr>';
@@ -1088,10 +1088,10 @@ window.runCompMeDaddyAnalysis = async function() {
         const pt = document.getElementById('propertyTake'); if (pt) pt.innerHTML = '<font color="#00FF00" face="Courier New">Analyzing market data...</font>';
     }
     if (document.getElementById('compsDashboard')) {
-        document.getElementById('compsDashboard').style.display = 'none';
+        document.getElementById('compsDashboard').style?.display = 'none';
     }
     if (document.getElementById('avmJustification')) {
-        document.getElementById('avmJustification').style.display = 'none';
+        document.getElementById('avmJustification').style?.display = 'none';
     }
     
     // Load mock property data for this address
@@ -1193,7 +1193,7 @@ async function loadPropertyDataForCompMeDaddy(address) {
 }
 
 window.closeCompMeDaddy = function() {
-    document.getElementById('compMeDaddyPage').style.display = 'none';
+    document.getElementById('compMeDaddyPage').style?.display = 'none';
     document.body.style.overflow = 'auto';
 }
 
@@ -1206,9 +1206,9 @@ async function loadPropertyReachAVM() {
     const dataDiv = document.getElementById('rentcastAVMData');
     const compsDashboard = document.getElementById('compsDashboard');
     
-    if (loadingDiv) loadingDiv.style.display = 'block';
-    if (dataDiv) dataDiv.style.display = 'none';
-    if (compsDashboard) compsDashboard.style.display = 'none';
+    if (loadingDiv) loadingDiv.style?.display = 'block';
+    if (dataDiv) dataDiv.style?.display = 'none';
+    if (compsDashboard) compsDashboard.style?.display = 'none';
     
     try {
         console.log('loadPropertyReachAVM starting... (PropertyReach)');
@@ -1410,7 +1410,7 @@ async function loadPropertyReachAVM() {
         
         // Show avm justification
         const avmJust = document.getElementById('avmJustification');
-        if (avmJust) avmJust.style.display = 'block';
+        if (avmJust) avmJust.style?.display = 'block';
         
         // Update basic AVM display
         if (document.getElementById('rentcastEstimate')) {
@@ -1447,13 +1447,13 @@ async function loadPropertyReachAVM() {
         generateShareLink();
         
         // Show the dashboard
-        if (loadingDiv) loadingDiv.style.display = 'none';
-        if (dataDiv) dataDiv.style.display = 'block';
-        if (compsDashboard) compsDashboard.style.display = 'block';
+        if (loadingDiv) loadingDiv.style?.display = 'none';
+        if (dataDiv) dataDiv.style?.display = 'block';
+        if (compsDashboard) compsDashboard.style?.display = 'block';
         
     } catch (error) {
         console.error('Error loading PropertyReach data:', error);
-        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (loadingDiv) loadingDiv.style?.display = 'none';
 
         // Show error in dashboard
         const dashboard = document.getElementById('compsDashboard');
@@ -1465,7 +1465,7 @@ async function loadPropertyReachAVM() {
                     <font color="#00FF00">Please check the address and try again.</font>
                 </div>
             `;
-            dashboard.style.display = 'block';
+            dashboard.style?.display = 'block';
         }
     }
 }
@@ -1773,7 +1773,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const suggestionsEl = document.getElementById('addressSuggestions');
         const searchContainer = document.querySelector('.search-container');
         if (suggestionsEl && searchContainer && !searchContainer.contains(e.target)) {
-            suggestionsEl.style.display = 'none';
+            suggestionsEl.style?.display = 'none';
         }
     });
     
@@ -1832,7 +1832,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('loadEvalBtn').addEventListener('click', () => {
         displayEvaluationsList();
-        document.getElementById('loadModal').style.display = 'flex';
+        document.getElementById('loadModal').style?.display = 'flex';
     });
     
     document.getElementById('printBtn').addEventListener('click', () => {
@@ -2229,7 +2229,7 @@ let acTimeout;
 function handleAddressInput(value) {
     clearTimeout(acTimeout);
     const el = document.getElementById('addressSuggestions');
-    if (value.length < 3) { el.style.display = 'none'; return; }
+    if (value.length < 3) { el.style?.display = 'none'; return; }
     
     acTimeout = setTimeout(async () => {
         try {
@@ -2252,13 +2252,13 @@ function handleAddressInput(value) {
                     
                     return `<div class="suggestion-item" style="padding:10px;cursor:pointer;border-bottom:1px solid #030;" onclick="selectAddress('${place.display_name.replace(/'/g, "\\'")}', ${place.lat}, ${place.lon})">${display}</div>`;
                 }).join('');
-                el.style.display = 'block';
+                el.style?.display = 'block';
             } else {
-                el.style.display = 'none';
+                el.style?.display = 'none';
             }
         } catch (err) {
             console.error('Autocomplete error:', err);
-            el.style.display = 'none';
+            el.style?.display = 'none';
         }
     }, 300);
 }
@@ -2266,7 +2266,7 @@ function handleAddressInput(value) {
 function selectAddress(addr, lat, lon) {
     const shortAddr = formatShortAddress(addr);
     document.getElementById('addressInput').value = shortAddr;
-    document.getElementById('addressSuggestions').style.display = 'none';
+    document.getElementById('addressSuggestions').style?.display = 'none';
     loadPropertyReachData(shortAddr);
 }
 
