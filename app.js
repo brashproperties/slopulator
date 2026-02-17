@@ -60,8 +60,9 @@ function animateVisitorCounter() {
 // ============================================
 
 function initBouncingEmojis() {
+    // Disabled - element removed
     const container = document.getElementById('bouncing-emojis');
-    const emojis = ['🏠', '💰', '🔨', '📈', '💵', '🏗️'];
+    if (!container) return;
     
     emojis.forEach((emoji, index) => {
         const span = document.createElement('span');
@@ -99,9 +100,13 @@ function createSparkles(element) {
 // ============================================
 
 function fireConfetti() {
-    const colors = ['#FF00FF', '#00FFFF', '#FFFF00', '#00FF00', '#FF0000', '#FF9900'];
+    // Subtle visual feedback
+    document.body.style.transition = 'box-shadow 0.2s';
+    document.body.style.boxShadow = 'inset 0 0 30px rgba(0,255,0,0.2)';
+    setTimeout(() => { document.body.style.boxShadow = 'none'; }, 200);
+    // Old confetti code disabled
     const container = document.getElementById('sparkles');
-    
+    if (!container) return;
     // Create many confetti particles
     for (let i = 0; i < 100; i++) {
         setTimeout(() => {
