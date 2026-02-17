@@ -2178,10 +2178,16 @@ function shareDealAnalysis() {
     const repairs = document.getElementById('repairCost')?.value || '0';
     const arv = document.getElementById('zestimate')?.value || '0';
     const rating = document.getElementById('dealRating')?.textContent || '--';
-    console.log('DEBUG shareDealAnalysis - calculationResults:', calculationResults); const flipProfit = calculationResults?.flip?.profit || calculationResults?.flip_analysis?.profit || calculationResults?.flip_analysis?.profit || 0;
-    const monthlyCashFlow = calculationResults?.rental?.monthlyCashFlow || calculationResults?.rental_analysis?.monthly_cashflow || calculationResults?.rental_analysis?.monthly_cashflow || 0;
+    // Fallback to DOM if calculationResults is empty
+    const flipProfitEl = document.getElementById('flipProfit');
+    const cashFlowEl = document.getElementById('rentalCashFlow');
+    const brrrEl = document.getElementById('brrrMaxRefi');
+    const flipProfit = calculationResults?.flip?.profit || (flipProfitEl?.textContent?.replace(/[+$ ,]/g, '') || '0');
+    const monthlyCashFlow = calculationResults?.rental?.monthlyCashFlow || (cashFlowEl?.textContent?.replace(/[+$ ,]/g, '') || '0');
+    const maxRefi = calculationResults?.brrr?.maxRefinance || (brrrEl?.textContent?.replace(/[$,]/g, '') || '0');
+    const monthlyCashFlow = calculationResults?.rental?.monthlyCashFlow || 0 || calculationResults?.rental_analysis?.monthly_cashflow || 0;
     const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
-    const maxRefi = calculationResults?.brrr?.max_refi || calculationResults?.brrr_analysis?.maxRefinance || 0;
+    const maxRefi = calculationResults?.brrr?.maxRefinance || 0;
     
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairs || 0);
