@@ -2153,7 +2153,7 @@ function shareCompMeDaddy() {
     // Calculate BRRRR cash out %
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairCost || 0);
-    if (totalCost > 0) {
+    console.log("DEBUG maxRefi:", maxRefi, "totalCost:", totalCost); if (totalCost > 0) {
         cashOutPct = Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100) + '%';
     }
     
@@ -2185,7 +2185,7 @@ function shareDealAnalysis() {
     
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairs || 0);
-    if (totalCost > 0 && maxRefi > 0) {
+    console.log("DEBUG maxRefi:", maxRefi, "totalCost:", totalCost); if (totalCost > 0 && maxRefi > 0) {
         cashOutPct = Math.round((maxRefi / totalCost) * 100) + '%';
     }
     
