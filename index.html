@@ -223,7 +223,7 @@
                                 </tr>
                                 <tr>
                                     <td colspan="4" align="center" bgcolor="#000000" style="padding: 15px;">
-                                        <button id="slopMyDealBtn" style="background: linear-gradient(45deg, #00ff00, #00aa00); padding: 15px 40px; font-size: 20px; font-weight: bold; cursor: pointer; border: 3px solid #00ff00;" onclick="runCalculations();"">
+                                        <button type="button" id="slopMyDealBtn" style="background: linear-gradient(45deg, #00ff00, #00aa00); padding: 15px 40px; font-size: 20px; font-weight: bold; cursor: pointer; border: 3px solid #00ff00;" onclick="console.log('Slop my deal clicked'); if(window.runCalculations) { window.runCalculations(); } else { alert('Error: Analysis function not loaded.'); }">
                                             🔮 SLOP MY DEAL! 🔮
                                         </button>
                                     </td>
@@ -970,6 +970,6 @@
         </table>
     </div>
 
-    <script src="app.js?v=10003"></script>
+    <script src="app.js?v=10002"></script>
 </body>
 </html>

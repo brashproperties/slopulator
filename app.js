@@ -60,9 +60,8 @@ function animateVisitorCounter() {
 // ============================================
 
 function initBouncingEmojis() {
-    // Disabled - element removed
     const container = document.getElementById('bouncing-emojis');
-    if (!container) return;
+    const emojis = ['🏠', '💰', '🔨', '📈', '💵', '🏗️'];
     
     emojis.forEach((emoji, index) => {
         const span = document.createElement('span');
@@ -73,7 +72,16 @@ function initBouncingEmojis() {
         span.style.top = `${10 + (index * 10)}%`;
         span.style.animationDuration = `${6 + Math.random() * 4}s`;
         
-
+        // Easter egg: click house emoji
+        span.addEventListener('click', () => {
+            if (emoji === '🏠') {
+                showEasterEgg();
+            } else {
+                createSparkles(span);
+                span.style.transform = 'scale(2)';
+                setTimeout(() => span.style.transform = 'scale(1)', 200);
+            }
+        });
         
         container.appendChild(span);
     });
@@ -100,13 +108,9 @@ function createSparkles(element) {
 // ============================================
 
 function fireConfetti() {
-    // Subtle visual feedback
-    document.body.style.transition = 'box-shadow 0.2s';
-    document.body.style.boxShadow = 'inset 0 0 30px rgba(0,255,0,0.2)';
-    setTimeout(() => { document.body.style.boxShadow = 'none'; }, 200);
-    // Old confetti code disabled
+    const colors = ['#FF00FF', '#00FFFF', '#FFFF00', '#00FF00', '#FF0000', '#FF9900'];
     const container = document.getElementById('sparkles');
-    if (!container) return;
+    
     // Create many confetti particles
     for (let i = 0; i < 100; i++) {
         setTimeout(() => {
@@ -170,7 +174,7 @@ function showEasterEgg() {
 }
 
 function closeEasterEgg() {
-    // Disabled - element removed
+    document.getElementById('easterEggModal').style.display = 'none';
 }
 
 function playRetroSound(type) {
@@ -475,7 +479,7 @@ window.loadPropertyData = async function(address, lat, lon) {
                     data = {
                         zestimate: prop.estimatedValue || 0,
                         realtor_estimate: prop.estimatedValue || 0,
-                        rent_estimate: prop.estimatedRentAmount || prop.rentalValue || 0,
+                        rent_estimate: prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0),
                         annual_taxes: prop.taxAmount || 0,
                         monthly_taxes: prop.taxAmount ? Math.round(prop.taxAmount / 12) : 0,
                         annual_insurance: Math.round((prop.squareFeet || 1500) * 0.50),
@@ -630,8 +634,8 @@ async function runCalculations() {
     const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
     const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
     const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
-    const priceRangeLow = zestimate;
-    const priceRangeHigh = zestimate;
+    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow').value) || zestimate;
+    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh').value) || zestimate;
     const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
     const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
     const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
@@ -1141,19 +1145,14 @@ async function loadPropertyDataForCompMeDaddy(address) {
         
         const data = await resp.json();
         
-        // Find matching property - use better matching
+        // Find matching property
         let prop = null;
-        const streetParts = streetAddress.split(' ').map(p => p.toLowerCase());
-        const streetNum = streetParts[0] || '';
-        const streetName = streetParts.slice(1).join(' ').replace(/[^a-z]/g, '');
+        const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
         
         if (data.properties && data.properties.length > 0) {
             for (let p of data.properties) {
                 const pStreet = (p.streetAddress || '').toLowerCase();
-                const pStreetNum = pStreet.split(' ')[0] || '';
-                const pStreetName = pStreet.split(' ').slice(1).join('').replace(/[^a-z]/g, '');
-                // Match street number AND at least 3 chars of street name
-                if (pStreetNum === streetNum && pStreetName.includes(streetName.substring(0, Math.min(6, streetName.length)))) {
+                if (pStreet.startsWith(streetNum)) {
                     prop = p;
                     break;
                 }
@@ -1175,7 +1174,7 @@ async function loadPropertyDataForCompMeDaddy(address) {
             currentPropertyData = {
                 zestimate: prop.estimatedValue || 0,
                 realtor_estimate: prop.estimatedValue || 0,
-                rent_estimate: prop.estimatedRentAmount || prop.rentalValue || 0
+                rent_estimate: prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0)
             };
             
             // Store values
@@ -1736,6 +1735,7 @@ function generateStrategyText(finishLevel, avmValue, avgCompPrice, subjectPpsf, 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize
     initVisitorCounter();
+    initBouncingEmojis();
     
     // Welcome alert (retro style)
     setTimeout(() => {
@@ -2156,7 +2156,7 @@ function shareCompMeDaddy() {
         cashOutPct = Math.min(100, Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100)) + "%";
     }
     
-    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
+    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n📊 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
     
     if (navigator.share) {
         navigator.share({
@@ -2222,7 +2222,6 @@ window.shareDealAnalysis = shareDealAnalysis;
 let acTimeout;
 
 function handleAddressInput(value) {
-    console.log('handleAddressInput called:', value);
     clearTimeout(acTimeout);
     const el = document.getElementById('addressSuggestions');
     if (value.length < 3) { el.style.display = 'none'; return; }
@@ -2335,30 +2334,14 @@ async function loadPropertyReachData(address) {
         let streetAddress, city, state;
         
         if (address.includes(',')) {
-            // Comma separated format: "street, city, state" or "street, city, ST"
+            // Comma separated format: "street, city, state"
             const parts = address.split(",").map(s => s.trim());
             streetAddress = parts[0] || '';
             city = parts[1] || '';
-            // Check if state is 2-letter abbreviation or full name
-            let stateRaw = parts[2]?.split(' ')[0] || '';
-            if (stateRaw.length === 2) {
-                // It's already an abbreviation
-                state = stateRaw;
-            } else {
-                // Full state name - convert to abbreviation
-                const stateMap = {
-                    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
-                    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
-                    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
-                    'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
-                    'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
-                    'Montana':'MT','Nebraska':'NE','Nevada':'NV','NewHampshire':'NH','NewJersey':'NJ',
-                    'NewMexico':'NM','NewYork':'NY','NorthCarolina':'NC','NorthDakota':'ND','Ohio':'OH',
-                    'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','RhodeIsland':'RI','SouthCarolina':'SC',
-                    'SouthDakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
-                    'Virginia':'VA','Washington':'WA','WestVirginia':'WV','Wisconsin':'WI','Wyoming':'WY'
-                };
-                state = stateMap[stateRaw] || stateRaw.substring(0,2).toUpperCase();
+            state = parts[2]?.split(' ')[0] || '';
+            if (parts.length > 3) {
+                city = parts[2] || '';
+                state = parts[3] || '';
             }
         } else {
             // Space separated - need to find state abbreviation at end
@@ -2394,7 +2377,7 @@ async function loadPropertyReachData(address) {
         // Call PropertyReach - search by city/state first, then filter for matching street
         const url = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/search');
         const body = {
-            target: { city, state },
+            target: { city, state: state?.toUpperCase() },
             filter: { streetAddress: streetAddress.split(' ')[0] },  // Filter by street number
             limit: 50
         };
@@ -2413,30 +2396,27 @@ async function loadPropertyReachData(address) {
         const data = await resp.json();
         console.log('DEBUG: Parsed address:', streetAddress, city, state);
         console.log('DEBUG: streetAddress=' + streetAddress + ', city=' + city + ', state=' + state);
-        console.log('DEBUG: search body:', JSON.stringify(body));
         console.log('PropertyReach response:', data);
         
         if (!data.properties || data.properties.length === 0) {
             throw new Error('No property found');
         }
         
-        // Find the property - match street number and more of street name
+        // Find the property that matches our street address
         let prop = null;
-        const streetParts = streetAddress.split(' ').map(p => p.toLowerCase());
-        const streetNum = streetParts[0] || '';
-        const streetName = streetParts.slice(1).join(' ').replace(/[^a-z]/g, '');
+        const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
+        const streetName = (streetAddress.split(' ').slice(1).join(' ') || '').toLowerCase().replace(/\s+/g, '');
         
         console.log('Looking for streetNum:', streetNum, 'streetName:', streetName);
         
         for (let p of data.properties) {
             const pStreet = (p.streetAddress || '').toLowerCase();
             const pStreetNum = pStreet.split(' ')[0] || '';
-            const pStreetName = pStreet.split(' ').slice(1).join('').replace(/[^a-z]/g, '');
+            const pStreetName = pStreet.split(' ').slice(1).join(' ').replace(/\s+/g, '');
             
-            // Match street number AND at least 3 chars of street name
-            if (pStreetNum === streetNum && pStreetName.includes(streetName.substring(0, Math.min(6, streetName.length)))) {
-                console.log('Found match:', p.streetAddress, p.city, p.estimatedValue);
-                
+            // Match street number and street name
+            if (pStreetNum === streetNum && pStreetName.includes(streetName)) {
+                console.log('Found match:', p.streetAddress, p.city, p.estimatedValue, 'rent:', p.estimatedRentAmount, 'tax:', p.taxAmount);
                 // Fetch full property details to get rent and tax
                 const propUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/property?streetAddress=' + encodeURIComponent(p.streetAddress) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state));
                 try {
@@ -2445,51 +2425,39 @@ async function loadPropertyReachData(address) {
                         const propData = await propResp.json();
                         if (propData.property) {
                             console.log('Full property rent:', propData.property.estimatedRentAmount, 'tax:', propData.property.taxAmount);
-                            prop = propData.property;
+                            p = propData.property;
                         }
                     }
                 } catch(e) { console.log('Error:', e); }
-                
-                if (prop) break;
+                prop = p;
+                break;
             }
         }
         
-        // If no match, use first result and fetch its details
+        // If no match, use first result
         if (!prop && data.properties.length > 0) {
-            const firstProp = data.properties[0];
-            console.log('No exact match, using:', firstProp.streetAddress);
-            
-            // Fetch full details for first result too
-            const propUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/property?streetAddress=' + encodeURIComponent(firstProp.streetAddress) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state));
-            try {
-                const propResp = await fetch(propUrl);
-                if (propResp.ok) {
-                    const propData = await propResp.json();
-                    if (propData.property) {
-                        prop = propData.property;
-                    }
-                }
-            } catch(e) { console.log('Error:', e); }
+            prop = data.properties[0];
+            console.log('No exact match, using:', prop.streetAddress);
         }
         
         // Populate fields
-        const estValue = prop?.estimatedValue || data.properties[0]?.estimatedValue || 0;
-        document.getElementById('zestimate').value = estValue;
-        // Price range deprecated - removed
-        // Set rent from API
-        const rentValue = prop?.estimatedRentAmount || prop?.rentalValue || data.properties[0]?.estimatedRentAmount || 0;
+        document.getElementById('zestimate').value = prop.estimatedValue || '';
+        document.getElementById('priceRangeLow').value = Math.round(prop.estimatedValue * 0.92);
+        document.getElementById('priceRangeHigh').value = Math.round(prop.estimatedValue * 1.08);
+        // Set rent - use API value or calculate from value
+        const rentValue = prop.estimatedRentAmount || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0);
         const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
-        document.getElementById('sqft').value = prop?.squareFeet || prop?.livingSquareFeet || data.properties[0]?.squareFeet || '';
-        document.getElementById('yearBuilt').value = prop?.yearBuilt || data.properties[0]?.yearBuilt || '';
+        document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
+        document.getElementById('yearBuilt').value = prop.yearBuilt || '';
         // Try to find bedrooms/bathrooms fields
         const bedsEl = document.getElementById('bedrooms');
         if (bedsEl) bedsEl.value = prop.bedrooms || '';
         const bathsEl = document.getElementById('bathrooms');
         if (bathsEl) bathsEl.value = prop.bathrooms || '';
-        document.getElementById('monthlyTaxes').value = prop?.taxAmount ? Math.round(prop.taxAmount/12) : (data.properties[0]?.taxAmount ? Math.round(data.properties[0].taxAmount/12) : '');
-        document.getElementById('annualInsurance').value = Math.round((prop?.squareFeet || data.properties[0]?.squareFeet || 1500) * 0.50);
-        document.getElementById('lastSalePrice').value = prop?.lastSaleAmount || data.properties[0]?.lastSaleAmount || '';
-        document.getElementById('lastSaleDate').value = prop?.lastSaleDate || data.properties[0]?.lastSaleDate || '';
+        document.getElementById('monthlyTaxes').value = prop.taxAmount ? Math.round(prop.taxAmount/12) : '';
+        document.getElementById('annualInsurance').value = Math.round((prop.squareFeet || 1500) * 0.50);
+        document.getElementById('lastSalePrice').value = prop.lastSaleAmount || '';
+        document.getElementById('lastSaleDate').value = prop.lastSaleDate || '';
         
     } catch(e) {
         console.error(e);
