@@ -630,8 +630,8 @@ async function runCalculations() {
     const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
     const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
     const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
-    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow').value) || zestimate;
-    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh').value) || zestimate;
+    const priceRangeLow = parseFloat(document.getElementById('priceRangeLow')?.value) || zestimate;
+    const priceRangeHigh = parseFloat(document.getElementById('priceRangeHigh')?.value) || zestimate;
     const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
     const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
     const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
@@ -2415,18 +2415,21 @@ async function loadPropertyReachData(address) {
             throw new Error('No property found');
         }
         
-        // Find the property - be lenient on matching, just match street number
+        // Find the property - match street number and more of street name
         let prop = null;
-        const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
+        const streetParts = streetAddress.split(' ').map(p => p.toLowerCase());
+        const streetNum = streetParts[0] || '';
+        const streetName = streetParts.slice(1).join(' ').replace(/[^a-z]/g, '');
         
-        console.log('Looking for streetNum:', streetNum);
+        console.log('Looking for streetNum:', streetNum, 'streetName:', streetName);
         
         for (let p of data.properties) {
             const pStreet = (p.streetAddress || '').toLowerCase();
             const pStreetNum = pStreet.split(' ')[0] || '';
+            const pStreetName = pStreet.split(' ').slice(1).join('').replace(/[^a-z]/g, '');
             
-            // Match just on street number
-            if (pStreetNum === streetNum) {
+            // Match street number AND at least 3 chars of street name
+            if (pStreetNum === streetNum && pStreetName.includes(streetName.substring(0, Math.min(6, streetName.length)))) {
                 console.log('Found match:', p.streetAddress, p.city, p.estimatedValue);
                 
                 // Fetch full property details to get rent and tax
