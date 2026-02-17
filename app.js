@@ -2141,7 +2141,23 @@ function shareCompMeDaddy() {
     
     const data = window.compMeDaddyData;
     const avm = data.avm || {};
-    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 PropertyReach ARV: ${formatCurrency(avm.price || 0)}\n📊 Data Source: PropertyReach API\n📍 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\nPowered by The Slopulator! 🔥`;
+    
+    // Get additional fields from DOM
+    const repairCost = document.getElementById('repairCost')?.value || '0';
+    const purchasePrice = document.getElementById('purchasePrice')?.value || '0';
+    const flipProfit = document.getElementById('flipProfit')?.value || '0';
+    const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
+    const monthlyCashFlow = document.getElementById('rentalCashFlow')?.value || '0';
+    const maxRefi = document.getElementById('brrrMaxRefi')?.value || '0';
+    
+    // Calculate BRRRR cash out %
+    let cashOutPct = '0%';
+    const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairCost || 0);
+    if (totalCost > 0) {
+        cashOutPct = Math.round((parseFloat(maxRefi || 0) / totalCost) * 100) + '%';
+    }
+    
+    const shareText = `🏠 Comp Analysis for ${data.address}\n\n💰 ARV: ${formatCurrency(avm.price || 0)}\n📊 Range: ${formatCurrency(avm.priceRangeLow || 0)} - ${formatCurrency(avm.priceRangeHigh || 0)}\n\n🔨 Flip Profit: $${flipProfit} | Budget: $${repairCost}\n💵 Cash Flow: $${monthlyCashFlow}/mo | Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
     
     if (navigator.share) {
         navigator.share({
