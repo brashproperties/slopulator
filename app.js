@@ -2402,24 +2402,18 @@ async function loadPropertyReachData(address) {
             throw new Error('No property found');
         }
         
-        // Find the property that matches our street address
+        // Find the property - match on street number only
         let prop = null;
         const streetNum = (streetAddress.split(' ')[0] || '').toLowerCase();
-        // Skip direction words (n, s, e, w) and street types (st, ave, dr, etc)
-        const dirs = ['n', 's', 'e', 'w', 'north', 'south', 'east', 'west'];
-        const streetNameRaw = streetAddress.split(' ').slice(1).join(' ').toLowerCase();
-        const streetName = streetNameRaw.split(' ').filter(w => !dirs.includes(w) && w.length > 2).join('');
         
-        console.log('Looking for streetNum:', streetNum, 'streetName:', streetName);
+        console.log('Looking for streetNum:', streetNum);
         
         for (let p of data.properties) {
             const pStreet = (p.streetAddress || '').toLowerCase();
             const pStreetNum = pStreet.split(' ')[0] || '';
-            const pDirs = ['n', 's', 'e', 'w', 'north', 'south', 'east', 'west'];
-            const pStreetName = pStreet.split(' ').slice(1).filter(w => !pDirs.includes(w) && w.length > 2).join('');
             
-            // Match street number and street name
-            if (pStreetNum === streetNum && pStreetName.includes(streetName)) {
+            // Match on street number only
+            if (pStreetNum === streetNum) {
                 console.log('Found match:', p.streetAddress, p.city, p.estimatedValue, 'rent:', p.estimatedRentAmount, 'tax:', p.taxAmount);
                 // Fetch full property details to get rent and tax
                 const propUrl = PROXY_URL + encodeURIComponent('https://api.propertyreach.com/v1/property?streetAddress=' + encodeURIComponent(p.streetAddress) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state));
