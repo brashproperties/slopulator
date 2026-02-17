@@ -2145,10 +2145,10 @@ function shareCompMeDaddy() {
     // Get additional fields from DOM
     const repairCost = document.getElementById('repairCost')?.value || '0';
     const purchasePrice = document.getElementById('purchasePrice')?.value || '0';
-    const flipProfit = document.getElementById('flipProfit')?.textContent || '0';
-    const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
-    const monthlyCashFlow = document.getElementById('rentalCashFlow')?.textContent || '0';
-    const maxRefi = document.getElementById('brrrMaxRefi')?.value || '0';
+    const flipProfit = (document.getElementById('flipProfit')?.textContent || '0').replace(/[$,]/g, '');
+    const monthlyRent = (document.getElementById('rentEstimate')?.value || '0').replace(/[$,]/g, '');
+    const monthlyCashFlow = (document.getElementById('rentalCashFlow')?.textContent || '0').replace(/[$,]/g, '');
+    const maxRefi = (document.getElementById('brrrMaxRefi')?.value || '0').replace(/[$,]/g, '');
     
     // Calculate BRRRR cash out %
     let cashOutPct = '0%';
@@ -2178,10 +2178,10 @@ function shareDealAnalysis() {
     const repairs = document.getElementById('repairCost')?.value || '0';
     const arv = document.getElementById('zestimate')?.value || '0';
     const rating = document.getElementById('dealRating')?.textContent || '--';
-    const flipProfit = document.getElementById('flipProfit')?.textContent || '0';
-    const monthlyCashFlow = document.getElementById('rentalCashFlow')?.textContent || '0';
-    const monthlyRent = document.getElementById('rentEstimate')?.value || '0';
-    const maxRefi = document.getElementById('brrrMaxRefi')?.value || '0';
+    const flipProfit = (document.getElementById('flipProfit')?.textContent || '0').replace(/[$,]/g, '');
+    const monthlyCashFlow = (document.getElementById('rentalCashFlow')?.textContent || '0').replace(/[$,]/g, '');
+    const monthlyRent = (document.getElementById('rentEstimate')?.value || '0').replace(/[$,]/g, '');
+    const maxRefi = (document.getElementById('brrrMaxRefi')?.value || '0').replace(/[$,]/g, '');
     
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairs || 0);
