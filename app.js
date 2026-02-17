@@ -72,16 +72,7 @@ function initBouncingEmojis() {
         span.style.top = `${10 + (index * 10)}%`;
         span.style.animationDuration = `${6 + Math.random() * 4}s`;
         
-        // Easter egg: click house emoji
-        span.addEventListener('click', () => {
-            if (emoji === '🏠') {
-                showEasterEgg();
-            } else {
-                createSparkles(span);
-                span.style.transform = 'scale(2)';
-                setTimeout(() => span.style.transform = 'scale(1)', 200);
-            }
-        });
+
         
         container.appendChild(span);
     });
@@ -174,7 +165,7 @@ function showEasterEgg() {
 }
 
 function closeEasterEgg() {
-    document.getElementById('easterEggModal').style.display = 'none';
+    // Disabled - element removed
 }
 
 function playRetroSound(type) {
@@ -1735,7 +1726,6 @@ function generateStrategyText(finishLevel, avmValue, avgCompPrice, subjectPpsf, 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize
     initVisitorCounter();
-    initBouncingEmojis();
     
     // Welcome alert (retro style)
     setTimeout(() => {
