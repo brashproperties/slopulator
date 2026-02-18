@@ -971,14 +971,7 @@ function loadEvaluation(id) {
     
     // Load property data if address exists
     if (eval.address) {
-        // Trigger a search
-        fetchAddressSuggestions(eval.address);
-        setTimeout(() => {
-            const suggestions = document.querySelectorAll('.suggestion-item');
-            if (suggestions.length > 0) {
-                suggestions[0].click();
-            }
-        }, 500);
+        loadPropertyReachData(eval.address);
     }
     
     alert('Evaluation loaded! Click CALCULATE to see results! 📊');
@@ -1787,13 +1780,16 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log('Address input found, attaching listeners');
         addressInput.addEventListener('input', (e) => {
-            console.log('Input event fired:', e.target.value);
-            fetchAddressSuggestions(e.target.value);
+            handleAddressInput(e.target.value);
         });
         
         addressInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                fetchAddressSuggestions(e.target.value);
+                // On Enter, if suggestions are showing, pick the first one
+                const el = document.getElementById('addressSuggestions');
+                const first = el?.querySelector('.suggestion-item');
+                if (first) { first.click(); }
+                else { handleAddressInput(e.target.value); }
             }
         });
     }
@@ -1801,8 +1797,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Hide suggestions when clicking outside
     document.addEventListener('click', (e) => {
         const suggestionsEl = document.getElementById('addressSuggestions');
-        const searchContainer = document.querySelector('.search-container');
-        if (suggestionsEl && searchContainer && !searchContainer.contains(e.target)) {
+        const addressInput = document.getElementById('addressInput');
+        if (suggestionsEl && e.target !== addressInput && !suggestionsEl.contains(e.target)) {
             suggestionsEl.style.display = 'none';
         }
     });
@@ -1811,7 +1807,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('searchBtn').addEventListener('click', () => {
         const query = addressInput.value;
         if (query.length >= 3) {
-            fetchAddressSuggestions(query);
+            handleAddressInput(query);
         } else {
             alert('Please enter at least 3 characters! 🔍');
         }
@@ -2326,41 +2322,88 @@ window.shareDealAnalysis = shareDealAnalysis;
 
 let acTimeout;
 
+// State detection helpers
+const STATE_ABBREVS = { 'OK': 'Oklahoma', 'IN': 'Indiana', 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming' };
+
+function hasStateInQuery(query) {
+    const q = query.toUpperCase();
+    // Check for state abbreviation after comma or at end: ", OK" ", IN" etc.
+    if (/,\s*[A-Z]{2}\b/.test(query)) return true;
+    // Check for full state names
+    for (const name of Object.values(STATE_ABBREVS)) {
+        if (query.toLowerCase().includes(name.toLowerCase())) return true;
+    }
+    return false;
+}
+
+async function nominatimSearch(query) {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=us`;
+    const resp = await fetch(url, { headers: { 'User-Agent': 'Slopulator/1.0' } });
+    if (!resp.ok) return [];
+    return await resp.json();
+}
+
 function handleAddressInput(value) {
     clearTimeout(acTimeout);
     const el = document.getElementById('addressSuggestions');
+    if (!el) return;
     if (value.length < 3) { el.style.display = 'none'; return; }
     
     acTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&limit=5&countrycodes=us`, {
-                headers: { 'User-Agent': 'Slopulator/1.0' }
-            });
-            
-            if (!response.ok) throw new Error('Search failed');
-            
-            const data = await response.json();
-            
-            if (data && data.length > 0) {
-                el.innerHTML = data.map(place => {
-                    const addr = place.display_name;
-                    const parts = addr.split(',').map(p => p.trim());
-                    
-                    const display = parts.length > 2 
-                        ? `<strong>${parts[0]}</strong><br><span style="color:#00FFFF;">${parts.slice(1, 3).join(', ')}</span>`
-                        : addr;
-                    
-                    return `<div class="suggestion-item" style="padding:10px;cursor:pointer;border-bottom:1px solid #030;" onclick="selectAddress('${place.display_name.replace(/'/g, "\\'")}', ${place.lat}, ${place.lon})">${display}</div>`;
+            let results = [];
+
+            if (hasStateInQuery(value)) {
+                // User already specified a state — search as-is
+                results = await nominatimSearch(value);
+            } else {
+                // No state specified — bias toward OK and IN in parallel
+                const [okResults, inResults, rawResults] = await Promise.all([
+                    nominatimSearch(value + ', Oklahoma'),
+                    nominatimSearch(value + ', Indiana'),
+                    nominatimSearch(value)
+                ]);
+                // Merge: OK first, then IN, then anything else from raw not already included
+                const seen = new Set();
+                for (const r of [...okResults, ...inResults, ...rawResults]) {
+                    const key = r.place_id || r.display_name;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        results.push(r);
+                    }
+                }
+                results = results.slice(0, 7);
+            }
+
+            if (results.length > 0) {
+                // Filter to house/building/address results only (exclude parks, counties, etc.)
+                const addressTypes = new Set(['house','building','residential','apartments','yes','street','road']);
+                const filtered = results.filter(p => {
+                    const t = (p.type || '').toLowerCase();
+                    const c = (p.class || '').toLowerCase();
+                    // Keep if it looks like an address (has a house number) or is a place type we want
+                    return p.display_name.match(/^\d/) || c === 'place' || c === 'highway' || addressTypes.has(t);
+                });
+                const toShow = filtered.length > 0 ? filtered : results;
+
+                el.innerHTML = toShow.slice(0, 6).map(place => {
+                    const short = formatShortAddress(place.display_name);
+                    const parts = place.display_name.split(',').map(p => p.trim());
+                    const city = parts[2] || parts[1] || '';
+                    const stateZip = parts.slice(-3, -1).join(', ');
+                    const display = `<strong style="color:#00FF00;">${parts[0]}</strong> <span style="color:#888;">${parts[1] ? parts[1] + ',' : ''}</span><br><span style="color:#00FFFF;font-size:0.85em;">${city}${stateZip ? ' · ' + stateZip : ''}</span>`;
+                    return `<div class="suggestion-item" style="padding:10px;cursor:pointer;border-bottom:1px solid #030;line-height:1.4;" onclick="selectAddress('${place.display_name.replace(/'/g, "\\'").replace(/"/g, '&quot;')}', ${place.lat}, ${place.lon})">${display}</div>`;
                 }).join('');
                 el.style.display = 'block';
             } else {
-                el.style.display = 'none';
+                el.innerHTML = '<div style="padding:10px;color:#FF6666;">No results found — try adding city and state</div>';
+                el.style.display = 'block';
             }
         } catch (err) {
             console.error('Autocomplete error:', err);
             el.style.display = 'none';
         }
-    }, 300);
+    }, 350);
 }
 
 function selectAddress(addr, lat, lon) {
