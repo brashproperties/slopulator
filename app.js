@@ -503,7 +503,7 @@ window.loadPropertyData = async function(address, lat, lon) {
         // Populate fields
         const el = document.getElementById('arvInput'); if(el) el.value = data.estimatedValue || '';
         document.getElementById('rentEstimate').value = data.rent_estimate || '';
-        if (document.getElementById('rentEstimateDetail')) document.getElementById('rentEstimateDetail').value = data.rent_estimate || '';
+        // rentEstimateDetail removed from DOM
         document.getElementById('monthlyTaxes').value = data.monthly_taxes || '';
         document.getElementById('annualInsurance').value = data.annual_insurance || '';
         document.getElementById('sqft').value = data.property_details?.sqft || '';
@@ -1814,7 +1814,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Calculate button
-    document.getElementById('calculateBtn').addEventListener('click', runCalculations);
+    // calculateBtn removed from DOM - SLOP MY DEAL is the single calculate trigger
+    if (document.getElementById('calculateBtn')) document.getElementById('calculateBtn').addEventListener('click', runCalculations);
     
     // Comp Me Daddy button (with null check)
     const compMeDaddyBtn = document.getElementById('compMeDaddyBtn');
@@ -2594,7 +2595,7 @@ async function loadPropertyReachData(address) {
         const rentValue = prop.estimatedRentAmount || 
             (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.01 / 25) * 25 : '');
         document.getElementById('rentEstimate').value = rentValue;
-        if (document.getElementById('rentEstimateDetail')) document.getElementById('rentEstimateDetail').value = rentValue;
+        // rentEstimateDetail removed from DOM
         document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
         document.getElementById('yearBuilt').value = prop.yearBuilt || '';
         // Try to find bedrooms/bathrooms fields
