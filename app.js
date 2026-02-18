@@ -502,7 +502,11 @@ window.loadPropertyData = async function(address, lat, lon) {
         
         // Populate fields
         const el = document.getElementById('arvInput'); if(el) el.value = data.estimatedValue || '';
-        document.getElementById('rentEstimate').value = data.rent_estimate || '';
+        // Rent: PropertyReach → RentCast → 1% rule
+        let rentVal = data.rent_estimate || 0;
+        if (!rentVal) rentVal = await fetchRentEstimate(address);
+        if (!rentVal && data.estimatedValue) rentVal = Math.round(data.estimatedValue * 0.01 / 25) * 25;
+        document.getElementById('rentEstimate').value = rentVal || '';
         // rentEstimateDetail removed from DOM
         document.getElementById('monthlyTaxes').value = data.monthly_taxes || '';
         document.getElementById('annualInsurance').value = data.annual_insurance || '';
@@ -1177,6 +1181,29 @@ window.closeCompMeDaddy = function() {
 
 // PropertyReach API Integration
 const PROPERTYREACH_API_KEY = 'live_u9JyD3Hmp58wmEQEnyZ5GosDjDcXHH5SuUN';
+const RENTCAST_API_KEY = 'c5ad833affcf4a648df2ca97b5a870ff';
+const PROXY_URL_GLOBAL = 'https://srv1336418.hstgr.cloud/?url=';
+
+// Fetch rent estimate from RentCast when PropertyReach has no data
+async function fetchRentEstimate(address) {
+    try {
+        const url = PROXY_URL_GLOBAL + encodeURIComponent(
+            `https://api.rentcast.io/v1/avm/rent/long-term?address=${encodeURIComponent(address)}&propertyType=Single%20Family`
+        );
+        const resp = await fetch(url, {
+            headers: { 'X-Api-Key': RENTCAST_API_KEY, 'Accept': 'application/json' }
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        if (data && data.rent && data.rent > 0) {
+            console.log('RentCast rent estimate:', data.rent, 'range:', data.rentRangeLow, '-', data.rentRangeHigh);
+            return Math.round(data.rent / 25) * 25; // Round to nearest $25
+        }
+    } catch(e) {
+        console.warn('RentCast fetch failed:', e);
+    }
+    return null;
+}
 
 async function loadPropertyReachAVM() {
     const PROXY_URL = 'https://srv1336418.hstgr.cloud/?url=';
@@ -2591,10 +2618,20 @@ async function loadPropertyReachData(address) {
         
         // Populate fields
         const _el = document.getElementById('arvInput'); if(_el) _el.value = prop.estimatedValue || '';
-        // Set rent - use API value if available, otherwise estimate via 1% rule
-        const rentValue = prop.estimatedRentAmount || 
-            (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.01 / 25) * 25 : '');
-        document.getElementById('rentEstimate').value = rentValue;
+
+        // Set rent — use PropertyReach if available, else try RentCast, else 1% rule fallback
+        let rentValue = prop.estimatedRentAmount || 0;
+        if (!rentValue) {
+            // Build best possible address for RentCast
+            const propAddress = prop.streetAddress 
+                ? `${prop.streetAddress}, ${prop.city || ''}, ${prop.state || ''}`.trim().replace(/,\s*,/g, ',')
+                : address;
+            rentValue = await fetchRentEstimate(propAddress);
+        }
+        if (!rentValue && prop.estimatedValue) {
+            rentValue = Math.round(prop.estimatedValue * 0.01 / 25) * 25;
+        }
+        document.getElementById('rentEstimate').value = rentValue || '';
         // rentEstimateDetail removed from DOM
         document.getElementById('sqft').value = prop.squareFeet || prop.livingSquareFeet || '';
         document.getElementById('yearBuilt').value = prop.yearBuilt || '';
