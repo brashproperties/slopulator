@@ -2324,6 +2324,7 @@ window.shareDealAnalysis = shareDealAnalysis;
 // ============================================
 
 let acTimeout;
+let acGeneration = 0; // Increments each keystroke; stale results check against this
 
 // State detection helpers
 const STATE_ABBREVS = { 'OK': 'Oklahoma', 'IN': 'Indiana', 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming' };
@@ -2352,6 +2353,8 @@ function handleAddressInput(value) {
     if (!el) return;
     if (value.length < 3) { el.style.display = 'none'; return; }
     
+    const gen = ++acGeneration; // Capture this search's generation
+
     acTimeout = setTimeout(async () => {
         try {
             let results = [];
@@ -2378,6 +2381,9 @@ function handleAddressInput(value) {
                 results = results.slice(0, 7);
             }
 
+            // Discard if a newer search already fired
+            if (gen !== acGeneration) return;
+
             if (results.length > 0) {
                 // Filter to house/building/address results only (exclude parks, counties, etc.)
                 const addressTypes = new Set(['house','building','residential','apartments','yes','street','road']);
@@ -2403,8 +2409,10 @@ function handleAddressInput(value) {
                 el.style.display = 'block';
             }
         } catch (err) {
-            console.error('Autocomplete error:', err);
-            el.style.display = 'none';
+            if (gen === acGeneration) {
+                console.error('Autocomplete error:', err);
+                el.style.display = 'none';
+            }
         }
     }, 350);
 }
