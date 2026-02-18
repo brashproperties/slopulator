@@ -649,7 +649,8 @@ async function runCalculations() {
     
     await new Promise(r => setTimeout(r, 800));
     
-    // Use PropertyReach ARV
+    // Use PropertyReach estimated value as ARV
+    const arv = zestimate;
     
     // Comprehensive Analysis
     const analysis = performComprehensiveAnalysis({
@@ -919,8 +920,8 @@ function saveEvaluation() {
         repairs: repairs,
         arv: calculationResults.arv,
         rent_estimate: rentEstimate,
-        monthly_cashflow: calculationResults.rental_analysis.monthly_cashflow,
-        flip_profit: calculationResults.flip_analysis.profit,
+        monthly_cashflow: calculationResults.rental.monthlyCashFlow,
+        flip_profit: calculationResults.flip.profit,
         created_at: new Date().toISOString()
     };
     
@@ -2134,22 +2135,27 @@ function shareCompMeDaddy() {
     }
     
     const data = window.compMeDaddyData;
-    const avm = data.avm || {};
     
     // Get additional fields from DOM
     const repairCost = document.getElementById('repairCost')?.value || '0';
     const purchasePrice = document.getElementById('purchasePrice')?.value || '0';
-    const flipProfit = (document.getElementById('flipProfit')?.textContent || '0').replace(/[$,]/g, '');
+    const flipProfit = (document.getElementById('flipProfit')?.textContent || '0').replace(/[+$, ]/g, '');
     const monthlyRent = (document.getElementById('rentEstimate')?.value || '0').replace(/[$,]/g, '');
-    const maxRefi = (document.getElementById('brrrMaxRefi')?.value || '0').replace(/[$,]/g, '');
+    const maxRefi = parseFloat((document.getElementById('brrrMaxRefi')?.textContent || '0').replace(/[$,]/g, '')) || 0;
     
     // Calculate BRRRR cash out %
     let cashOutPct = '0%';
     const totalCost = parseFloat(purchasePrice || 0) + parseFloat(repairCost || 0);
-    if (totalCost > 0) {
-        cashOutPct = Math.min(100, Math.round((parseFloat(maxRefinance || 0) / totalCost) * 100)) + "%";
+    if (totalCost > 0 && maxRefi > 0) {
+        cashOutPct = Math.min(100, Math.round((maxRefi / totalCost) * 100)) + "%";
     }
     
+    const renovatedARV = data.renovatedARV ? '$' + data.renovatedARV.toLocaleString() : 'N/A';
+    const avgPPSF = data.avgCompPPSF ? '$' + data.avgCompPPSF.toFixed(0) + '/sqft' : 'N/A';
+    const compCount = data.selectedComps ? data.selectedComps.length : 0;
+    const address = data.address || document.getElementById('addressInput')?.value || 'Property';
+    
+    const shareText = `🏠 Comp Analysis for ${address}\n\n💎 Renovated ARV: ${renovatedARV}\n📐 Avg Comp $/sqft: ${avgPPSF}\n📊 Comps Used: ${compCount}\n\n💵 Purchase: $${purchasePrice}\n🔨 Repairs: $${repairCost}\n🔨 Flip Profit: $${flipProfit}\n💵 Monthly Rent: $${monthlyRent}/mo\n🏦 BRRRR Cash Out: ${cashOutPct}\n\nPowered by The Slopulator! 🔥`;
     
     if (navigator.share) {
         navigator.share({
