@@ -1375,6 +1375,14 @@ async function loadPropertyReachAVM() {
         
         // Calculate subject property price/sqft
         const subjectPricePerSqft = subjectSqft > 0 ? estimatedValue / subjectSqft : 0;
+
+        // Store subject property data for generatePropertyTake and other consumers
+        window.compMeDaddyData.estimatedValue = estimatedValue;
+        window.compMeDaddyData.subjectSqft = subjectSqft;
+        window.compMeDaddyData.subjectPricePerSqft = subjectPricePerSqft;
+        window.compMeDaddyData.subjectBeds = subjectProperty.bedrooms || 0;
+        window.compMeDaddyData.subjectBaths = subjectProperty.bathrooms || 0;
+        window.compMeDaddyData.subjectYearBuilt = subjectProperty.yearBuilt || '';
         
         // Generate AVM justification
         console.log('Generating AVM justification...');
@@ -1383,6 +1391,10 @@ async function loadPropertyReachAVM() {
         // Populate detailed comps table
         console.log('Populating detailed comps...');
         populateDetailedComps();
+
+        // Display comps dashboard
+        console.log('Displaying comps dashboard...');
+        displayCompsDashboard(validComps, subjectProperty, { price: estimatedValue, squareFootage: subjectProperty.squareFeet || 0 });
 
         // Generate property take
         console.log('Generating property take...');
@@ -1425,6 +1437,29 @@ async function loadPropertyReachAVM() {
             const confEl = document.getElementById('rentcastConfidence');
             confEl.textContent = confText + ` (${compCount} comps)`;
             confEl.style.color = confColor;
+        }
+
+        // Inject subject property summary row into the AVM data div
+        const subjectInfoId = 'subjectPropertyInfo';
+        let subjectInfoEl = document.getElementById(subjectInfoId);
+        if (!subjectInfoEl && dataDiv) {
+            subjectInfoEl = document.createElement('div');
+            subjectInfoEl.id = subjectInfoId;
+            dataDiv.appendChild(subjectInfoEl);
+        }
+        if (subjectInfoEl) {
+            const beds = subjectProperty.bedrooms || '';
+            const baths = subjectProperty.bathrooms || '';
+            const sqftDisp = subjectSqft || 'N/A';
+            const yrBuilt = subjectProperty.yearBuilt || '';
+            const parts = [];
+            if (beds) parts.push(`🛏️ ${beds} Beds`);
+            if (baths) parts.push(`🛁 ${baths} Baths`);
+            if (sqftDisp !== 'N/A') parts.push(`📐 ${sqftDisp.toLocaleString()} sqft`);
+            if (yrBuilt) parts.push(`🏗️ Built ${yrBuilt}`);
+            subjectInfoEl.innerHTML = parts.length > 0
+                ? `<br><table border="2" cellpadding="8" cellspacing="0" width="100%"><tr><td bgcolor="#002200" align="center"><font face="Courier New" color="#00FF00" size="2"><b>SUBJECT PROPERTY:</b> ${parts.join(' &nbsp;|&nbsp; ')}</font></td></tr></table>`
+                : '';
         }
         
         // Generate share link
@@ -1575,29 +1610,42 @@ function getFinishColor(level) {
 function generatePropertyTake() {
     // Generate property valuation opinion based on comps
     const comps = window.compMeDaddyData?.selectedComps || [];
-    const avmData = window.compMeDaddyData?.avm || {};
     const container = document.getElementById('propertyTake');
     
     if (!container) return;
     
     if (!comps.length) {
-        container.innerHTML = '<font color="#FF0000" size="4"><b>No comps available.</b></font><br><font color="#FFFF00">Unable to generate valuation opinion without comparable sales data.</font>';
+        const avmFallback = window.compMeDaddyData?.estimatedValue || 0;
+        container.innerHTML = `
+            <div style="background: #1a0000; border: 3px solid #FF6600; border-radius: 10px; padding: 20px; text-align: center;">
+                <font color="#FF6600" size="4"><b>⚠️ No Qualifying Comparable Sales Found</b></font>
+                <br><br>
+                <font face="Courier New" color="#ffffff" size="2">
+                    A valuation opinion cannot be generated without comparable sales data.<br><br>
+                    <b style="color:#FFFF00;">Possible reasons:</b><br>
+                    • Property is in a rural or low-activity market<br>
+                    • No recent sales of similar properties within search radius<br>
+                    • Property may be unique or recently built<br>
+                    • Sales data may not yet be recorded in the database<br><br>
+                    ${avmFallback > 0 ? `<b style="color:#00FFFF;">PropertyReach Estimated Value: ${formatCurrency(avmFallback)}</b><br>(Based on automated model — no comp support)` : ''}
+                </font>
+            </div>
+        `;
         return;
     }
     
-    // Get AVM and subject property data
-    const avmValue = avmData.price || 0;
-    const subjectProperty = avmData.subjectProperty || {};
-    const subjectSqft = subjectProperty.squareFootage || avmData.squareFootage || 0;
-    const subjectPricePerSqft = subjectSqft > 0 ? avmValue / subjectSqft : 0;
+    // Get AVM and subject property data from stored compMeDaddyData
+    const avmValue = window.compMeDaddyData.estimatedValue || 0;
+    const subjectSqft = window.compMeDaddyData.subjectSqft || 0;
+    const subjectPricePerSqft = window.compMeDaddyData.subjectPricePerSqft || (subjectSqft > 0 ? avmValue / subjectSqft : 0);
     
     // Calculate comp metrics
-    const prices = comps.map(c => Number(c.lastSaleAmount || c.lastSalePrice || c.sale_price || c.price || 0));
+    const prices = comps.map(c => Number(c.lastSaleAmount || c.lastSalePrice || 0));
     const avgCompPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
     const minCompPrice = Math.min(...prices);
     const maxCompPrice = Math.max(...prices);
     
-    const sqfts = comps.map(c => Number(c.squareFeet || c.squareFootage || c.sqft || c.livingArea || 0)).filter(s => s > 0);
+    const sqfts = comps.map(c => Number(c.squareFeet || 0)).filter(s => s > 0);
     const avgCompSqft = sqfts.length > 0 ? sqfts.reduce((a, b) => a + b, 0) / sqfts.length : 0;
     const avgCompPricePerSqft = avgCompSqft > 0 ? Math.round(avgCompPrice / avgCompSqft) : 0;
     
@@ -1924,27 +1972,77 @@ function displayCompsDashboard(comps, subjectProperty, avmData) {
     if (!dashboard) return;
     
     const avmValue = avmData.price || 0;
-    const subjectSqft = subjectProperty.squareFootage || avmData.squareFootage || 0;
+    const subjectSqft = avmData.squareFootage || subjectProperty.squareFeet || 0;
+
+    // Handle zero comps case
+    if (!comps || comps.length === 0) {
+        dashboard.innerHTML = `
+            <div style="background: #0a0a0a; border: 3px groove #ffd700; padding: 30px; margin: 20px 0; text-align: center;">
+                <font face="Comic Sans MS" color="#ffd700" size="5"><b>🏘️ COMPARABLE SALES</b></font>
+                <br><br>
+                <font color="#FF6600" size="4"><b>⚠️ No Qualifying Comps Found</b></font>
+                <br><br>
+                <font face="Courier New" color="#ffffff" size="2">
+                    This can happen for several reasons:<br><br>
+                    • <b style="color:#FFFF00;">Rural area</b> — limited recent sales activity<br>
+                    • <b style="color:#FFFF00;">Recently built</b> — insufficient comparable sales history<br>
+                    • <b style="color:#FFFF00;">Unique property</b> — no similar homes nearby<br>
+                    • <b style="color:#FFFF00;">Data lag</b> — sales may not yet be recorded in the database<br><br>
+                    <font color="#00FF00">Try expanding your search area or adjusting filters.</font>
+                </font>
+            </div>
+        `;
+        dashboard.style.display = 'block';
+        return;
+    }
     
     let html = `
         <div style="background: #0a0a0a; border: 3px groove #ffd700; padding: 20px; margin: 20px 0;">
             <font face="Comic Sans MS" color="#ffd700" size="5">
-                <b>🏘️ TOP 5 COMPARABLE SALES</b>
+                <b>🏘️ TOP ${comps.length} COMPARABLE SALES</b>
             </font>
             <br><br>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
     `;
     
     comps.forEach((comp, index) => {
-        const salePrice = Number(comp.price || comp.lastSalePrice || 0);
-        const sqft = Number(comp.squareFootage || 0);
-        const pricePerSqft = sqft > 0 
-            ? (salePrice / sqft).toFixed(0) 
-            : 'N/A';
-        const saleDate = comp.listedDate || comp.lastSaleDate
-            ? new Date(comp.listedDate || comp.lastSaleDate).toLocaleDateString() 
-            : 'N/A';
-        const distance = comp.distance ? comp.distance.toFixed(2) : 'N/A';
+        const salePrice = Number(comp.lastSaleAmount || comp.lastSalePrice || 0);
+        const sqft = Number(comp.squareFeet || 0);
+        const pricePerSqft = sqft > 0 ? (salePrice / sqft).toFixed(0) : 'N/A';
+
+        // Format sale date nicely
+        let saleDate = 'N/A';
+        if (comp.lastSaleDate) {
+            try {
+                const d = new Date(comp.lastSaleDate);
+                saleDate = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            } catch(e) { saleDate = comp.lastSaleDate; }
+        }
+
+        const distance = comp.distanceFromSubject != null ? Number(comp.distanceFromSubject).toFixed(2) : 'N/A';
+
+        // Proximity score based on distance (closer = higher score)
+        let proximityScore = 'N/A';
+        if (comp.distanceFromSubject != null) {
+            const d = Number(comp.distanceFromSubject);
+            if (d < 0.25) proximityScore = '🟢 Very Close';
+            else if (d < 0.5) proximityScore = '🟡 Close';
+            else if (d < 1.0) proximityScore = '🟠 Moderate';
+            else proximityScore = '🔴 Far';
+        }
+
+        const address = comp.streetAddress || comp.addressLine1 || 'N/A';
+
+        // Beds/baths/year built extras
+        let extraDetails = '';
+        if (comp.bedrooms || comp.bathrooms) {
+            const beds = comp.bedrooms ? `${comp.bedrooms} bd` : '';
+            const baths = comp.bathrooms ? `${comp.bathrooms} ba` : '';
+            extraDetails += `<b>🛏️ Beds/Baths:</b> ${[beds, baths].filter(Boolean).join(' / ')}<br>`;
+        }
+        if (comp.yearBuilt) {
+            extraDetails += `<b>🏗️ Year Built:</b> ${comp.yearBuilt}<br>`;
+        }
         
         html += `
             <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 2px solid #00ff00; border-radius: 10px; padding: 15px;">
@@ -1952,19 +2050,35 @@ function displayCompsDashboard(comps, subjectProperty, avmData) {
                 <hr style="border-color: #333; margin: 10px 0;">
                 <font face="Courier New" color="#ffffff" size="2">
                     <b>📍 Address:</b><br>
-                    <span style="color: #00ffff;">${comp.formattedAddress || comp.addressLine1 || 'N/A'}</span><br><br>
+                    <span style="color: #00ffff;">${address}</span><br><br>
                     
                     <b>💰 Sale Price:</b> <span style="color: #00ff00; font-size: 16px;">${formatCurrency(salePrice)}</span><br>
                     <b>📅 Sold:</b> ${saleDate}<br>
                     <b>📏 Distance:</b> ${distance} miles<br>
-                    <b>📐 Sqft:</b> ${comp.squareFootage || 'N/A'}<br>
+                    <b>📐 Sqft:</b> ${sqft || 'N/A'}<br>
                     <b>💵 Price/Sqft:</b> <span style="color: #ffd700;">$${pricePerSqft}</span><br>
-                    <b>🎯 Correlation:</b> ${(comp.correlation * 100).toFixed(1)}%
+                    ${extraDetails}<b>📍 Proximity:</b> ${proximityScore}
                 </font>
             </div>
         `;
     });
+
+    // Subject property card
+    const subjectAddress = subjectProperty.streetAddress 
+        ? `${subjectProperty.streetAddress}, ${subjectProperty.city || ''}, ${subjectProperty.state || ''}`.replace(/, ,/, ',').replace(/,\s*$/, '')
+        : currentAddress;
+    const subjectBeds = window.compMeDaddyData?.subjectBeds || subjectProperty.bedrooms || '';
+    const subjectBaths = window.compMeDaddyData?.subjectBaths || subjectProperty.bathrooms || '';
+    const subjectYearBuilt = window.compMeDaddyData?.subjectYearBuilt || subjectProperty.yearBuilt || '';
     
+    let subjectExtras = '';
+    if (subjectBeds || subjectBaths) {
+        subjectExtras += ` | <b>Beds/Baths:</b> ${subjectBeds || '?'}bd / ${subjectBaths || '?'}ba`;
+    }
+    if (subjectYearBuilt) {
+        subjectExtras += ` | <b>Built:</b> ${subjectYearBuilt}`;
+    }
+
     html += `
             </div>
             
@@ -1972,10 +2086,10 @@ function displayCompsDashboard(comps, subjectProperty, avmData) {
                 <font face="Comic Sans MS" color="#ff6b6b" size="4"><b>🎯 SUBJECT PROPERTY</b></font>
                 <hr style="border-color: #ff6b6b;">
                 <font face="Courier New" color="#ffffff" size="3">
-                    <b>Address:</b> <span style="color: #00ffff;">${subjectProperty.formattedAddress || currentAddress}</span><br>
+                    <b>Address:</b> <span style="color: #00ffff;">${subjectAddress}</span><br>
                     <b>AVM Value:</b> <span style="color: #00ff00; font-size: 20px;">${formatCurrency(avmValue)}</span><br>
                     <b>Sqft:</b> ${subjectSqft || 'N/A'} | 
-                    <b>Price/Sqft:</b> <span style="color: #ffd700;">$${subjectSqft > 0 ? (avmValue / subjectSqft).toFixed(0) : 'N/A'}</span>
+                    <b>Price/Sqft:</b> <span style="color: #ffd700;">$${subjectSqft > 0 ? (avmValue / subjectSqft).toFixed(0) : 'N/A'}</span>${subjectExtras}
                 </font>
             </div>
         </div>
