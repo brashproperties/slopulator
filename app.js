@@ -399,8 +399,7 @@ function mockPropertyData(address, lat, lon) {
     const sqft = 1000 + (hash % 2000);
     
     // PropertyReach Estimate with variance
-    const zestimate = basePrice + ((hash >> 4) % 50000) - 25000;
-    const realtorEstimate = basePrice + ((hash >> 8) % 40000) - 20000;
+    const estimatedValue = basePrice + ((hash >> 4) % 50000) - 25000;
     
     // Generate comps
     const comps = [];
@@ -431,8 +430,7 @@ function mockPropertyData(address, lat, lon) {
     const annualInsurance = Math.round(sqft * insurancePerSqft);
     
     return {
-        zestimate: Math.round(zestimate / 1000) * 1000,
-        realtor_estimate: Math.round(realtorEstimate / 1000) * 1000,
+        estimatedValue: Math.round(estimatedValue / 1000) * 1000,
         comps: comps,
         annual_taxes: annualTaxes,
         monthly_taxes: Math.round(annualTaxes / 12),
@@ -477,8 +475,7 @@ window.loadPropertyData = async function(address, lat, lon) {
                 if (propertyData && propertyData.property) {
                     const prop = propertyData.property;
                     data = {
-                        zestimate: prop.estimatedValue || 0,
-                        realtor_estimate: prop.estimatedValue || 0,
+                        estimatedValue: prop.estimatedValue || 0,
                         rent_estimate: prop.estimatedRentAmount || 0 || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0),
                         annual_taxes: prop.taxAmount || 0,
                         monthly_taxes: prop.taxAmount ? Math.round(prop.taxAmount / 12) : 0,
@@ -504,9 +501,9 @@ window.loadPropertyData = async function(address, lat, lon) {
         currentPropertyData = data;
         
         // Populate fields
-        const el = document.getElementById('zestimate'); if(el) el.value = data.zestimate || '';
-        document.getElementById('realtorEstimate').value = data.realtor_estimate || '';
+        const el = document.getElementById('arvInput'); if(el) el.value = data.estimatedValue || '';
         document.getElementById('rentEstimate').value = data.rent_estimate || '';
+        if (document.getElementById('rentEstimateDetail')) document.getElementById('rentEstimateDetail').value = data.rent_estimate || '';
         document.getElementById('monthlyTaxes').value = data.monthly_taxes || '';
         document.getElementById('annualInsurance').value = data.annual_insurance || '';
         document.getElementById('sqft').value = data.property_details?.sqft || '';
@@ -557,16 +554,16 @@ function populateCompsTable(comps) {
 // CALCULATIONS
 // ============================================
 
-function calculateARV(zestimate, realtorEstimate, comps) {
+function calculateARV(estimatedValue, comps) {
     if (!comps || comps.length === 0) {
-        return Math.round((zestimate + realtorEstimate) / 2 / 1000) * 1000;
+        return Math.round(estimatedValue / 1000) * 1000;
     }
     
     const compPrices = comps.slice(0, 5).map(c => c.sale_price);
     const avgComps = compPrices.reduce((a, b) => a + b, 0) / compPrices.length;
     
-    // Weighted average: 30% PropertyReach Estimate + 30% Realtor + 40% Comps
-    const arv = (zestimate * 0.30) + (realtorEstimate * 0.30) + (avgComps * 0.40);
+    // Weighted average: 60% PropertyReach Estimate + 40% Comps
+    const arv = (estimatedValue * 0.60) + (avgComps * 0.40);
     return Math.round(arv / 1000) * 1000;
 }
 
@@ -633,7 +630,7 @@ function calculateFlipAnalysis(purchasePrice, repairs, arv, interestRate) {
 async function runCalculations() {
     const purchasePrice = parseFloat(document.getElementById('purchasePrice').value) || 0;
     const repairs = parseFloat(document.getElementById('repairCost').value) || 0;
-    const zestimate = parseFloat(document.getElementById('zestimate').value) || 0;
+    const arv = parseFloat(document.getElementById('arvInput').value) || 0;
     const rentEstimate = parseFloat(document.getElementById('rentEstimate').value) || 0;
     const monthlyTaxes = parseFloat(document.getElementById('monthlyTaxes').value) || 0;
     const insuranceAnnual = parseFloat(document.getElementById('annualInsurance').value) || 0;
@@ -648,9 +645,6 @@ async function runCalculations() {
     showLoading();
     
     await new Promise(r => setTimeout(r, 800));
-    
-    // Use PropertyReach estimated value as ARV
-    const arv = zestimate;
     
     // Comprehensive Analysis
     const analysis = performComprehensiveAnalysis({
@@ -1170,15 +1164,13 @@ async function loadPropertyDataForCompMeDaddy(address) {
             }
             
             currentPropertyData = {
-                zestimate: prop.estimatedValue || 0,
-                realtor_estimate: prop.estimatedValue || 0,
+                estimatedValue: prop.estimatedValue || 0,
                 rent_estimate: prop.estimatedRentAmount || 0 || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0)
             };
             
             // Store values
             if (!window.compMeDaddyData) window.compMeDaddyData = {};
-            window.compMeDaddyData.zestimate = prop.estimatedValue || 0;
-            window.compMeDaddyData.realtor_estimate = prop.estimatedValue || 0;
+            window.compMeDaddyData.estimatedValue = prop.estimatedValue || 0;
         }
     } catch(e) {
         console.error('Comp Me Daddy error:', e);
@@ -2174,7 +2166,7 @@ function shareDealAnalysis() {
     const address = document.getElementById('addressInput')?.value || 'Property';
     const purchasePrice = document.getElementById('purchasePrice')?.value || '0';
     const repairs = document.getElementById('repairCost')?.value || '0';
-    const arv = document.getElementById('zestimate')?.value || '0';
+    const arv = document.getElementById('arvInput')?.value || '0';
     const rating = document.getElementById('dealRating')?.textContent || '--';
     // Read from DOM elements - strip $ and convert to number
     const flipProfitEl = document.getElementById('flipProfit');
@@ -2440,7 +2432,7 @@ async function loadPropertyReachData(address) {
         }
         
         // Populate fields
-        const _el = document.getElementById('zestimate'); if(_el) _el.value = prop.estimatedValue || '';
+        const _el = document.getElementById('arvInput'); if(_el) _el.value = prop.estimatedValue || '';
         // Set rent - use API value or calculate from value
         const rentValue = prop.estimatedRentAmount || 0 || (prop.estimatedValue ? Math.round(prop.estimatedValue * 0.008 / 100) * 100 : 0);
         const rentEls = document.querySelectorAll('#rentEstimate'); rentEls.forEach(el => el.value = rentValue);
