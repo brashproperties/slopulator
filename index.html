@@ -37,12 +37,13 @@
     <div id="map"></div>
 
     <div class="ui-overlay legend">
-        <div class="legend-item"><div class="swatch" style="background: #ff6b6b;"></div> Tourists</div>
-        <div class="legend-item"><div class="swatch" style="background: #feca57;"></div> Rich</div>
-        <div class="legend-item"><div class="swatch" style="background: #96c93d;"></div> Uni</div>
-        <div class="legend-item"><div class="swatch" style="background: #45b7d1;"></div> Suits</div>
-        <div class="legend-item"><div class="swatch" style="background: #54a0ff;"></div> Normies</div>
-        <div class="legend-item"><div class="swatch" style="background: #5f27cd;"></div> Crime</div>
+        <!-- Dynamically generated legend from tactical_logic.js (or similar) -->
+        <!-- For now, hardcoding to match TACTICAL_TIERS in api/tactical_logic.py -->
+        <div class="legend-item"><div class="swatch" style="background: #96c93d;"></div> ELITE</div>
+        <div class="legend-item"><div class="swatch" style="background: #feca57;"></div> CORE GROWTH</div>
+        <div class="legend-item"><div class="swatch" style="background: #54a0ff;"></div> STABILITY</div>
+        <div class="legend-item"><div class="swatch" style="background: #ff9900;"></div> SPECULATIVE</div>
+        <div class="legend-item"><div class="swatch" style="background: #ff6b6b;"></div> HIGH YIELD / RISK</div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
