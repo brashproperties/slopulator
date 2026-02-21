@@ -63,9 +63,9 @@
                         if (feature.geometry.type === 'Polygon') {
                             return {
                                 fillColor: feature.properties.color,
-                                weight: 1,
+                                weight: 0, /* Removed borders */
                                 opacity: 0.3,
-                                color: '#fff',
+                                color: 'transparent', /* Make border color transparent */
                                 fillOpacity: 0.6
                             };
                         }

@@ -22,35 +22,39 @@ from .tactical_logic import TACTICAL_TIERS, ECONOMIC_DRIVERS
 
 # Function to fetch property data from PropertyReach
 # (Will require reverse geocoding or spatial search refinement)
-def fetch_property_data(latitude, longitude): # Removed async
+def fetch_property_data(latitude, longitude):
     # This is a placeholder. PropertyReach needs an address.
-    # For initial testing, simulate data.
-    return {"estimatedValue": np.random.uniform(50000, 500000), "crimeScore": np.random.uniform(0, 10)}
+    # For initial testing, simulate data. More variation now.
+    return {"estimatedValue": np.random.uniform(10000, 600000), "crimeScore": np.random.uniform(1, 10)}
 
 def get_vibe_score(latitude, longitude):
     """
     Calculates a 'vibe score' for a given lat/lon based on tactical logic,
     PropertyReach data, and crime statistics.
     """
-    vibe_score = 50 # Start with a neutral score
+    vibe_score = np.random.uniform(30, 70) # Start with a random baseline for more variation
 
-    # Simulate fetching property data
-    # In a real scenario, this would involve PropertyReach API calls
-    property_data = fetch_property_data(latitude, longitude) # Call directly, no await
+    # Simulate fetching property data (using the more varied data from fetch_property_data)
+    property_data = fetch_property_data(latitude, longitude)
     
     # Simulate crime data integration (placeholder for now, will refine with OSBI data)
-    crime_score = property_data.get("crimeScore", 5) # Default to 5 if not available
+    crime_score = property_data.get("crimeScore", 5) 
+    estimated_value = property_data.get("estimatedValue", 250000)
 
     # Apply TACTICAL_TIERS rules (simplified heuristic for now, will evolve with spatial lookups)
-    for tier in TACTICAL_TIERS:
-        # Adjust score based on random factors influenced by tier properties
-        if "HIGH YIELD / RISK" in tier["name"] and crime_score > 7:
-            vibe_score -= 20
-        if "ELITE" in tier["name"] and property_data["estimatedValue"] > 300000 and crime_score < 3:
-            vibe_score += 30
-        
-        # Clamp score between 0 and 100
-        vibe_score = max(0, min(100, vibe_score))
+    # These rules now have a stronger influence on the vibe_score
+    if crime_score > 7: # High crime pushes towards High Yield / Risk
+        vibe_score -= np.random.uniform(15, 30)
+    elif crime_score < 3: # Low crime pushes towards Elite/Core Growth
+        vibe_score += np.random.uniform(15, 30)
+
+    if estimated_value > 300000: # High value pushes towards Elite
+        vibe_score += np.random.uniform(10, 25)
+    elif estimated_value < 100000: # Low value pushes towards High Yield / Risk
+        vibe_score -= np.random.uniform(10, 25)
+
+    # Clamp score between 0 and 100
+    vibe_score = max(0, min(100, vibe_score))
 
     return vibe_score
 
@@ -87,14 +91,6 @@ def interpolate_vibe_scores(grid_points, vibe_scores):
             interpolated[i * num_lon + j] = np.mean(neighbors)
             
     return interpolated
-
-def interpolate_vibe_scores(grid_points, vibe_scores):
-    """
-    Interpolates vibe scores across the grid to create a smoother gradient.
-    Could use Inverse Distance Weighting (IDW) or Kriging.
-    """
-    # Placeholder: Implement interpolation logic
-    return vibe_scores # For now, no interpolation
 
 def assign_color_from_vibe(vibe_score):
     """
